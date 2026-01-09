@@ -1,15 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:job_finder/features/presentation/app_role_screen.dart';
-import 'package:job_finder/features/presentation/bloc/button_nav_cubit.dart';
 
 void main() {
-  runApp(
-    MultiBlocProvider(
-      providers: [BlocProvider(create: (_) => BottomNavCubit())],
-      child: const MyApp(),
-    ),
-  );
+  runApp(MyApp());
 }
 
 class MyApp extends StatelessWidget {

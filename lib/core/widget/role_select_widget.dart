@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:job_finder/core/widget/svg_icon.dart';
+import 'package:job_finder/core/widget/zomtap_animation.dart';
 
 class RoleSelectWidget extends StatelessWidget {
   final bool isSelected;
   final String title;
   final String subtitle;
-  final IconData icon;
+  final String icon;
   final Color color;
   final VoidCallback? onTap;
 
@@ -20,7 +22,7 @@ class RoleSelectWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
+    return ZomtapAnimation(
       onTap: onTap,
       child: Container(
         height: 250,
@@ -42,7 +44,7 @@ class RoleSelectWidget extends StatelessWidget {
                 color: color.withValues(alpha: 0.15),
                 shape: BoxShape.circle,
               ),
-              child: Icon(icon, color: color, size: 32),
+              child: AppSvgIcon(assetName: icon),
             ),
 
             const SizedBox(height: 18),

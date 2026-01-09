@@ -1,5 +1,5 @@
-class Assets {
-  Assets._();
+class AppIcon {
+  AppIcon._();
   static const String appLogo = "assets/jober.svg";
 
   //button navigation bar
@@ -13,4 +13,6 @@ class Assets {
   static const String messageBold = "assets/icon/ms.svg";
   static const String profile = "assets/icon/user.svg";
   static const String profileBold = "assets/icon/user_bold.svg";
+  static const String jobBage = "assets/icon/job_2.svg";
+  static const String recruter = "assetsicon/user_2.svg";
 }

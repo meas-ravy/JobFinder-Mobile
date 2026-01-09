@@ -69,7 +69,7 @@ class MainWrapper extends HookWidget {
                 duration: const Duration(milliseconds: 120),
                 curve: Curves.easeOut,
                 child: SvgPicture.asset(
-                  Assets.home,
+                  AppIcon.home,
                   width: 20,
                   colorFilter: const ColorFilter.mode(
                     Colors.grey,
@@ -82,7 +82,7 @@ class MainWrapper extends HookWidget {
                 duration: const Duration(milliseconds: 120),
                 curve: Curves.easeOut,
                 child: SvgPicture.asset(
-                  Assets.homeBold,
+                  AppIcon.homeBold,
                   width: 20,
                   colorFilter: const ColorFilter.mode(
                     Colors.blue,
@@ -99,7 +99,7 @@ class MainWrapper extends HookWidget {
                 duration: const Duration(milliseconds: 120),
                 curve: Curves.easeOut,
                 child: SvgPicture.asset(
-                  Assets.save,
+                  AppIcon.save,
                   width: 20,
                   colorFilter: const ColorFilter.mode(
                     Colors.grey,
@@ -112,7 +112,7 @@ class MainWrapper extends HookWidget {
                 duration: const Duration(milliseconds: 120),
                 curve: Curves.easeOut,
                 child: SvgPicture.asset(
-                  Assets.saveBold,
+                  AppIcon.saveBold,
                   width: 20,
                   // colorFilter: const ColorFilter.mode(
                   //   Colors.blue,
@@ -129,7 +129,7 @@ class MainWrapper extends HookWidget {
                 duration: const Duration(milliseconds: 120),
                 curve: Curves.easeOut,
                 child: SvgPicture.asset(
-                  Assets.application,
+                  AppIcon.application,
                   width: 27,
                   colorFilter: const ColorFilter.mode(
                     Colors.grey,
@@ -142,7 +142,7 @@ class MainWrapper extends HookWidget {
                 duration: const Duration(milliseconds: 120),
                 curve: Curves.easeOut,
                 child: SvgPicture.asset(
-                  Assets.applicationBold,
+                  AppIcon.applicationBold,
                   width: 27,
                   colorFilter: const ColorFilter.mode(
                     Colors.blue,
@@ -159,7 +159,7 @@ class MainWrapper extends HookWidget {
                 duration: const Duration(milliseconds: 120),
                 curve: Curves.easeOut,
                 child: SvgPicture.asset(
-                  Assets.message,
+                  AppIcon.message,
                   width: 25,
                   colorFilter: const ColorFilter.mode(
                     Colors.grey,
@@ -172,7 +172,7 @@ class MainWrapper extends HookWidget {
                 duration: const Duration(milliseconds: 120),
                 curve: Curves.easeOut,
                 child: SvgPicture.asset(
-                  Assets.messageBold,
+                  AppIcon.messageBold,
                   width: 25,
                   colorFilter: const ColorFilter.mode(
                     Colors.blue,
@@ -189,7 +189,7 @@ class MainWrapper extends HookWidget {
                 duration: const Duration(milliseconds: 120),
                 curve: Curves.easeOut,
                 child: SvgPicture.asset(
-                  Assets.profile,
+                  AppIcon.profile,
                   width: 25,
                   colorFilter: const ColorFilter.mode(
                     Colors.grey,
@@ -202,7 +202,7 @@ class MainWrapper extends HookWidget {
                 duration: const Duration(milliseconds: 120),
                 curve: Curves.easeOut,
                 child: SvgPicture.asset(
-                  Assets.profileBold,
+                  AppIcon.profileBold,
                   width: 25,
                   colorFilter: const ColorFilter.mode(
                     Colors.blue,

@@ -5,7 +5,6 @@ import 'package:job_finder/core/constants/assets.dart';
 import 'package:job_finder/core/enum/role.dart';
 import 'package:job_finder/core/widget/role_select_widget.dart';
 import 'package:job_finder/core/widget/svg_icon.dart';
-import 'package:iconsax_flutter/iconsax_flutter.dart';
 import 'package:job_finder/features/presentation/main_wrapper.dart';
 import 'package:job_finder/features/presentation/recruiter/screen/recruiter_home.dart';
 
@@ -40,7 +39,7 @@ class AppRoleScreen extends HookWidget {
                         isSelected: selectRole.value == UserRole.jobSeeker,
                         title: 'Find a job',
                         subtitle: 'Find your dream job here',
-                        icon: Iconsax.briefcase,
+                        icon: AppIcon.jobBage,
                         color: Colors.blue,
                         onTap: () => selectRole.value = UserRole.jobSeeker,
                       ),
@@ -52,7 +51,7 @@ class AppRoleScreen extends HookWidget {
                         title: 'Find an Employee',
                         subtitle: 'I want to find employees.',
                         onTap: () => selectRole.value = UserRole.employer,
-                        icon: Iconsax.user,
+                        icon: AppIcon.recruter,
                         color: Colors.orange,
                       ),
                     ),
@@ -102,7 +101,7 @@ class AppRoleScreen extends HookWidget {
       padding: const EdgeInsets.symmetric(horizontal: 24),
       child: Column(
         children: [
-          AppSvgIcon(assetName: Assets.appLogo, size: 120),
+          AppSvgIcon(assetName: AppIcon.appLogo, size: 120),
 
           const SizedBox(height: 60),
 
