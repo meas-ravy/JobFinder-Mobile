@@ -4,12 +4,8 @@ import 'package:flutter/material.dart';
 abstract class AppColor {
   const AppColor();
 
-  static const Color mainAppBarGradient1 = Color(0xff5F44B9);
-  static const Color mainAppBarGradient2 = Color(0xff8F5BE3);
-  static const Color mainAppBarGradient3 = Color(0xff9869e3);
-  static const Color mainAppBarGradient4 = Color(0xff8768DD);
-  static const Color mainAppBarGradient5 = Color(0xff7659d5);
-  static const Color mainAppBarGradient6 = Color(0xff5F44B9);
+  static const Color findEmp = Color(0xffFEA01D);
+  static const Color findJob = Color(0xff246BFD);
   static const Color snackBarSuccess = Color(0xff01E47A);
   static const Color snackBarFailed = Color(0xffFE5151);
   static const Color transparent = Colors.transparent;
@@ -18,7 +14,7 @@ abstract class AppColor {
   static const Color backgroundColorLight = Color(0xffffffff);
   static const Color onBackgroundColorLight = Color(0xff121212);
   static const Color bottomNavigationBarLight = Color(0xffffffff);
-  static const Color primaryLight = Color(0xff7050d9);
+  static const Color primaryLight = Color(0xff246BFD);
   static const Color onPrimaryLight = Color(0xfffefefe);
   static const Color secondaryLight = Color(0xff8768DD);
   static const Color onSecondaryLight = Color(0xff8596A0);
@@ -38,7 +34,7 @@ abstract class AppColor {
   static const Color backgroundColorDark = Color(0xff121212);
   static const Color onBackgroundColorDark = Color(0xffffffff);
   static const Color bottomNavigationBarDark = Color(0xff121212);
-  static const Color primaryDark = Color(0xff443463);
+  static const Color primaryDark = Color(0xff246BFD);
   static const Color onPrimaryDark = Color(0xffaaa1c2);
   static const Color secondaryDark = Color(0xff774efa);
   static const Color onSecondaryDark = Color(0xffBBB7C6);

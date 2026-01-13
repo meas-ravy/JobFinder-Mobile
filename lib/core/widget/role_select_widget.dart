@@ -7,7 +7,7 @@ class RoleSelectWidget extends StatelessWidget {
   final String title;
   final String subtitle;
   final String icon;
-  final Color color;
+  final Color bagColor, iconColor;
   final VoidCallback? onTap;
 
   const RoleSelectWidget({
@@ -16,12 +16,14 @@ class RoleSelectWidget extends StatelessWidget {
     required this.title,
     required this.subtitle,
     required this.icon,
-    required this.color,
+    required this.bagColor,
+    required this.iconColor,
     this.onTap,
   });
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
     return ZomtapAnimation(
       onTap: onTap,
       child: Container(
@@ -29,10 +31,12 @@ class RoleSelectWidget extends StatelessWidget {
         width: 200,
         padding: const EdgeInsets.all(20),
         decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(28),
+          borderRadius: BorderRadius.circular(36),
           border: Border.all(
-            color: isSelected ? Colors.blue : Colors.grey.shade300,
-            width: isSelected ? 2 : 1,
+            color: isSelected
+                ? colorScheme.primary
+                : colorScheme.outline.withValues(alpha: 0.08),
+            width: isSelected ? 2.5 : 1.5,
           ),
         ),
         child: Column(
@@ -41,20 +45,23 @@ class RoleSelectWidget extends StatelessWidget {
               height: 70,
               width: 70,
               decoration: BoxDecoration(
-                color: color.withValues(alpha: 0.15),
+                color: bagColor.withValues(alpha: 0.15),
                 shape: BoxShape.circle,
               ),
-              child: AppSvgIcon(assetName: icon),
+              child: Padding(
+                padding: const EdgeInsets.all(16),
+                child: AppSvgIcon(assetName: icon, color: iconColor),
+              ),
             ),
 
             const SizedBox(height: 18),
 
             Text(
               title,
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.w700,
-                color: Colors.black87,
+                color: Theme.of(context).colorScheme.onSurface,
               ),
               textAlign: TextAlign.center,
             ),

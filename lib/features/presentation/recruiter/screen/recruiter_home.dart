@@ -8,7 +8,7 @@ class RecruiterHome extends StatelessWidget {
     return Scaffold(
       body: Column(
         crossAxisAlignment: CrossAxisAlignment.center,
-        children: [Text("Not Yet Impelement ")],
+        children: [Center(child: Text("Not Yet Impelement "))],
       ),
     );
   }

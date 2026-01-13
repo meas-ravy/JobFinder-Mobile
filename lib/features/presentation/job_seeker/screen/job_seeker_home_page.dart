@@ -5,8 +5,6 @@ class JobSeekerHomePage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: SafeArea(child: Center(child: Text("Job Seeker Home Page thhgfhgfhgfgfhhghnhgnhghgnhnhg"))),
-    );
+    return Scaffold(body: Center(child: Text("Job Seeker Home Page")));
   }
 }

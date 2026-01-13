@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
-import 'package:job_finder/core/components/primary_button.dart';
+import 'package:job_finder/core/theme/app_color.dart';
+import 'package:job_finder/shared/components/primary_button.dart';
 import 'package:job_finder/core/constants/assets.dart';
 import 'package:job_finder/core/enum/role.dart';
 import 'package:job_finder/core/widget/role_select_widget.dart';
@@ -16,59 +17,47 @@ class AppRoleScreen extends HookWidget {
     final selectRole = useState<UserRole?>(null);
 
     return Scaffold(
-      body: SafeArea(
-        child: SingleChildScrollView(
-          physics: AlwaysScrollableScrollPhysics(),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              const SizedBox(height: 75),
-              logoSection(context),
-              const SizedBox(height: 32),
-              Container(
-                height: 1.5,
-                color: Colors.grey.withValues(alpha: 0.08),
-              ),
-              const SizedBox(height: 45),
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 24),
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: RoleSelectWidget(
-                        isSelected: selectRole.value == UserRole.jobSeeker,
-                        title: 'Find a job',
-                        subtitle: 'Find your dream job here',
-                        icon: AppIcon.jobBage,
-                        color: Colors.blue,
-                        onTap: () => selectRole.value = UserRole.jobSeeker,
-                      ),
-                    ),
-                    SizedBox(width: 16),
-                    Expanded(
-                      child: RoleSelectWidget(
-                        isSelected: selectRole.value == UserRole.employer,
-                        title: 'Find an Employee',
-                        subtitle: 'I want to find employees.',
-                        onTap: () => selectRole.value = UserRole.employer,
-                        icon: AppIcon.recruter,
-                        color: Colors.orange,
-                      ),
-                    ),
-                  ],
+      body: Column(
+        children: [
+          const SizedBox(height: 75),
+          logoSection(context),
+          const SizedBox(height: 32),
+          Container(height: 1.5, color: Colors.grey.withValues(alpha: 0.08)),
+          const SizedBox(height: 45),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 24),
+            child: Row(
+              children: [
+                Expanded(
+                  child: RoleSelectWidget(
+                    isSelected: selectRole.value == UserRole.jobSeeker,
+                    title: 'Find a job',
+                    subtitle: 'Find your dream job here',
+                    icon: AppIcon.applicationBold,
+                    iconColor: AppColor.findJob,
+                    bagColor: Colors.blue,
+                    onTap: () => selectRole.value = UserRole.jobSeeker,
+                  ),
                 ),
-              ),
-              const SizedBox(height: 45),
-              Container(
-                height: 1.5,
-                color: Colors.grey.withValues(alpha: 0.08),
-              ),
-              const SizedBox(height: 45),
-            ],
+                SizedBox(width: 16),
+                Expanded(
+                  child: RoleSelectWidget(
+                    isSelected: selectRole.value == UserRole.employer,
+                    title: 'Find an Employee',
+                    subtitle: 'I want to find employees.',
+                    onTap: () => selectRole.value = UserRole.employer,
+                    icon: AppIcon.profileBold,
+                    iconColor: AppColor.findEmp,
+                    bagColor: Colors.orange,
+                  ),
+                ),
+              ],
+            ),
           ),
-        ),
+          const SizedBox(height: 100),
+          Container(height: 1.5, color: Colors.grey.withValues(alpha: 0.08)),
+        ],
       ),
-
       bottomNavigationBar: Padding(
         padding: const EdgeInsets.all(24),
         child: SizedBox(
@@ -101,23 +90,31 @@ class AppRoleScreen extends HookWidget {
       padding: const EdgeInsets.symmetric(horizontal: 24),
       child: Column(
         children: [
-          AppSvgIcon(assetName: AppIcon.appLogo, size: 120),
-
+          AppSvgIcon(assetName: AppIcon.appLogoTwo, size: 95),
+          Text(
+            'Jober',
+            style: Theme.of(context).textTheme.titleLarge?.copyWith(
+              fontWeight: FontWeight.w600,
+              fontSize: 44,
+              // ignore: deprecated_member_use
+              color: Theme.of(context).colorScheme.onBackground,
+            ),
+          ),
           const SizedBox(height: 60),
 
           const Align(
             alignment: Alignment.centerLeft,
             child: Text(
-              'Select Your Role',
-              style: TextStyle(fontSize: 20, fontWeight: FontWeight.w600),
+              'Choose Your Job Type',
+              style: TextStyle(fontSize: 22, fontWeight: FontWeight.w600),
             ),
           ),
           const SizedBox(height: 4),
           const Align(
             alignment: Alignment.centerLeft,
             child: Text(
-              'select the role which suite you need',
-              style: TextStyle(fontSize: 13, color: Colors.grey),
+              'Choose whether you looking for job or you are organization need employees.',
+              style: TextStyle(fontSize: 14, color: Colors.grey),
             ),
           ),
         ],

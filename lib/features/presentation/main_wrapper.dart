@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:job_finder/core/constants/assets.dart';
+import 'package:job_finder/core/theme/app_color.dart';
 import 'package:job_finder/features/presentation/job_seeker/screen/job_seeker_aplicat.dart';
 import 'package:job_finder/features/presentation/job_seeker/screen/job_seeker_home_page.dart';
 import 'package:job_finder/features/presentation/job_seeker/screen/job_seeker_mesage_page.dart';
@@ -70,7 +71,7 @@ class MainWrapper extends HookWidget {
                 curve: Curves.easeOut,
                 child: SvgPicture.asset(
                   AppIcon.home,
-                  width: 20,
+                  width: 25,
                   colorFilter: const ColorFilter.mode(
                     Colors.grey,
                     BlendMode.srcIn,
@@ -83,9 +84,9 @@ class MainWrapper extends HookWidget {
                 curve: Curves.easeOut,
                 child: SvgPicture.asset(
                   AppIcon.homeBold,
-                  width: 20,
+                  width: 25,
                   colorFilter: const ColorFilter.mode(
-                    Colors.blue,
+                    AppColor.primaryDark,
                     BlendMode.srcIn,
                   ),
                 ),
@@ -100,7 +101,7 @@ class MainWrapper extends HookWidget {
                 curve: Curves.easeOut,
                 child: SvgPicture.asset(
                   AppIcon.save,
-                  width: 20,
+                  width: 25,
                   colorFilter: const ColorFilter.mode(
                     Colors.grey,
                     BlendMode.srcIn,
@@ -113,11 +114,11 @@ class MainWrapper extends HookWidget {
                 curve: Curves.easeOut,
                 child: SvgPicture.asset(
                   AppIcon.saveBold,
-                  width: 20,
-                  // colorFilter: const ColorFilter.mode(
-                  //   Colors.blue,
-                  //   BlendMode.srcIn,
-                  // ),
+                  width: 25,
+                  colorFilter: const ColorFilter.mode(
+                    AppColor.primaryDark,
+                    BlendMode.srcIn,
+                  ),
                 ),
               ),
             ),
@@ -130,7 +131,7 @@ class MainWrapper extends HookWidget {
                 curve: Curves.easeOut,
                 child: SvgPicture.asset(
                   AppIcon.application,
-                  width: 27,
+                  width: 25,
                   colorFilter: const ColorFilter.mode(
                     Colors.grey,
                     BlendMode.srcIn,
@@ -143,9 +144,9 @@ class MainWrapper extends HookWidget {
                 curve: Curves.easeOut,
                 child: SvgPicture.asset(
                   AppIcon.applicationBold,
-                  width: 27,
+                  width: 25,
                   colorFilter: const ColorFilter.mode(
-                    Colors.blue,
+                    AppColor.primaryDark,
                     BlendMode.srcIn,
                   ),
                 ),
@@ -175,7 +176,7 @@ class MainWrapper extends HookWidget {
                   AppIcon.messageBold,
                   width: 25,
                   colorFilter: const ColorFilter.mode(
-                    Colors.blue,
+                    AppColor.primaryDark,
                     BlendMode.srcIn,
                   ),
                 ),
@@ -205,7 +206,7 @@ class MainWrapper extends HookWidget {
                   AppIcon.profileBold,
                   width: 25,
                   colorFilter: const ColorFilter.mode(
-                    Colors.blue,
+                    AppColor.primaryDark,
                     BlendMode.srcIn,
                   ),
                 ),

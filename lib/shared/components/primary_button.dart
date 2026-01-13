@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:job_finder/core/theme/app_color.dart';
 
 class PrimaryButton extends StatelessWidget {
   const PrimaryButton({
@@ -22,7 +23,7 @@ class PrimaryButton extends StatelessWidget {
       child: ElevatedButton(
         onPressed: onPressed,
         style: ElevatedButton.styleFrom(
-          backgroundColor: const Color(0xFF1F7BFF),
+          backgroundColor: AppColor.primaryLight,
           elevation: 4,
           shadowColor: Colors.black.withValues(alpha: 0.2),
           shape: const StadiumBorder(),
