@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:job_finder/core/theme/app_color.dart';
+import 'package:job_finder/shared/widget/scale_tap.dart';
 
 class PrimaryButton extends StatelessWidget {
   const PrimaryButton({
@@ -20,16 +21,23 @@ class PrimaryButton extends StatelessWidget {
     return SizedBox(
       width: isFullWidth ? double.infinity : null,
       height: height,
-      child: ElevatedButton(
-        onPressed: onPressed,
-        style: ElevatedButton.styleFrom(
-          backgroundColor: AppColor.primaryLight,
-          elevation: 4,
-          shadowColor: Colors.black.withValues(alpha: 0.2),
-          shape: const StadiumBorder(),
-          textStyle: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+
+      child: ScaleTap(
+        onTap: onPressed,
+        child: ElevatedButton(
+          onPressed: onPressed,
+          style: ElevatedButton.styleFrom(
+            backgroundColor: AppColor.primaryLight,
+            elevation: 4,
+            shadowColor: Colors.black.withValues(alpha: 0.2),
+            shape: const StadiumBorder(),
+            textStyle: const TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+          child: Text(label, style: const TextStyle(color: Colors.white)),
         ),
-        child: Text(label, style: const TextStyle(color: Colors.white)),
       ),
     );
   }

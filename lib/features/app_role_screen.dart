@@ -4,10 +4,10 @@ import 'package:job_finder/core/theme/app_color.dart';
 import 'package:job_finder/shared/components/primary_button.dart';
 import 'package:job_finder/core/constants/assets.dart';
 import 'package:job_finder/core/enum/role.dart';
-import 'package:job_finder/core/widget/role_select_widget.dart';
-import 'package:job_finder/core/widget/svg_icon.dart';
-import 'package:job_finder/features/presentation/main_wrapper.dart';
-import 'package:job_finder/features/presentation/recruiter/screen/recruiter_home.dart';
+import 'package:job_finder/shared/widget/role_select_widget.dart';
+import 'package:job_finder/shared/widget/svg_icon.dart';
+import 'package:job_finder/features/main_wrapper.dart';
+import 'package:job_finder/features/recruiter/screen/recruiter_home.dart';
 
 class AppRoleScreen extends HookWidget {
   const AppRoleScreen({super.key});

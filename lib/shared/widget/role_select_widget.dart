@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:job_finder/core/widget/svg_icon.dart';
-import 'package:job_finder/core/widget/zomtap_animation.dart';
+import 'package:job_finder/shared/widget/svg_icon.dart';
+import 'package:job_finder/shared/widget/zomtap_animation.dart';
 
 class RoleSelectWidget extends StatelessWidget {
   final bool isSelected;

@@ -4,11 +4,11 @@ import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:job_finder/core/constants/assets.dart';
 import 'package:job_finder/core/theme/app_color.dart';
-import 'package:job_finder/features/presentation/job_seeker/screen/job_seeker_aplicat.dart';
-import 'package:job_finder/features/presentation/job_seeker/screen/job_seeker_home_page.dart';
-import 'package:job_finder/features/presentation/job_seeker/screen/job_seeker_mesage_page.dart';
-import 'package:job_finder/features/presentation/job_seeker/screen/job_seeker_profile_page.dart';
-import 'package:job_finder/features/presentation/job_seeker/screen/job_seeker_save_page.dart';
+import 'package:job_finder/features/job_seeker/screen/job_seeker_aplicat.dart';
+import 'package:job_finder/features/job_seeker/screen/job_seeker_home_page.dart';
+import 'package:job_finder/features/job_seeker/screen/job_seeker_mesage_page.dart';
+import 'package:job_finder/features/job_seeker/screen/job_seeker_profile_page.dart';
+import 'package:job_finder/features/job_seeker/screen/job_seeker_save_page.dart';
 
 class MainWrapper extends HookWidget {
   const MainWrapper({super.key});

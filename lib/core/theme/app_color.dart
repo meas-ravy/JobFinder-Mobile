@@ -23,6 +23,7 @@ abstract class AppColor {
   static const Color onErrorLight = Color(0xffffffff);
   static const Color surfaceLight = Color(0xff7050d9);
   static const Color onSurfaceLight = Color(0xffffffff);
+  static const Color surfaceContainerHighestLight = Color(0xfff5f4f4);
   static const Color bottomNavigationBarDividerColorLight = Color(0xffeeeeee);
   static const Color chatPageSystemNavigationBarColorLight = Color(0xff5F44B9);
   static const Color rightMessageColorLight = Color(0xffcecbff);
@@ -43,6 +44,7 @@ abstract class AppColor {
   static const Color onErrorDark = Color(0xffffffff);
   static const Color surfaceDark = Color(0xff7050d9);
   static const Color onSurfaceDark = Color(0xffBBB7C6);
+  static const Color surfaceContainerHighestDark = Color(0xff1e222a);
   static const Color bottomNavigationBarDividerColorDark = Color(0xff222222);
   static const Color chatPageSystemNavigationBarColorDark = Color(0xFF2F2653);
   static const Color rightMessageColorDark = Color(0xff5F44B9);
