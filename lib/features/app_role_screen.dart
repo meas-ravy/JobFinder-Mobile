@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:job_finder/core/theme/app_color.dart';
+import 'package:job_finder/features/buton_nav_recruiter.dart';
 import 'package:job_finder/shared/components/primary_button.dart';
 import 'package:job_finder/core/constants/assets.dart';
 import 'package:job_finder/core/enum/role.dart';
 import 'package:job_finder/shared/widget/role_select_widget.dart';
 import 'package:job_finder/shared/widget/svg_icon.dart';
 import 'package:job_finder/features/main_wrapper.dart';
-import 'package:job_finder/features/recruiter/screen/recruiter_home.dart';
 
 class AppRoleScreen extends HookWidget {
   const AppRoleScreen({super.key});
@@ -75,7 +75,7 @@ class AppRoleScreen extends HookWidget {
                     } else {
                       Navigator.pushReplacement(
                         context,
-                        MaterialPageRoute(builder: (_) => RecruiterHome()),
+                        MaterialPageRoute(builder: (_) => ButonNavRecruiter()),
                       );
                     }
                   },

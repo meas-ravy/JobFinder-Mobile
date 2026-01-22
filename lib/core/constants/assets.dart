@@ -14,4 +14,10 @@ class AppIcon {
   static const String messageBold = "assets/icon/Chat.svg";
   static const String profile = "assets/icon/Profile_border.svg";
   static const String profileBold = "assets/icon/Profile.svg";
+  static const String chart = "assets/icon/Chart.svg";
+  static const String chartBold = "assets/icon/Chart_border.svg";
+  static const String document = "assets/icon/Document.svg";
+  static const String documentBold = "assets/icon/Document_border.svg";
+  static const String homeStyleTwo = "assets/icon/Home-style-2.svg";
+  static const String homeStyleTwoBold = "assets/icon/Home-style-2-bold.svg";
 }

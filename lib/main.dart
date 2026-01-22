@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:job_finder/core/theme/app_theme.dart';
-import 'package:job_finder/features/auth/presentation/screen/send_otp.dart';
+import 'package:job_finder/features/app_role_screen.dart';
 
 void main() {
   runApp(MyApp());
@@ -15,7 +15,7 @@ class MyApp extends StatelessWidget {
       theme: AppTheme.light,
       darkTheme: AppTheme.dark,
       themeMode: ThemeMode.system,
-      home: SendOtpScreen(),
+      home: AppRoleScreen(),
     );
   }
 }
