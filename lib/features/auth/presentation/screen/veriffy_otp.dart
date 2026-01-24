@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:job_finder/core/constants/assets.dart';
 import 'package:job_finder/features/auth/presentation/widget/otp_box.dart';
 import 'package:job_finder/shared/widget/svg_icon.dart';
@@ -76,84 +75,90 @@ class _VeriffyOtpScreenState extends State<VeriffyOtpScreen> {
 
     return Scaffold(
       backgroundColor: colorScheme.surface,
-      body: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 24),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            // _TopBar(onBack: () => Navigator.maybePop(context)),
-            const SizedBox(height: 36),
-            Column(
+      body: SafeArea(
+        child: SingleChildScrollView(
+          physics: const NeverScrollableScrollPhysics(),
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(20, 20, 20, 10),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
+                Align(
+                  alignment: Alignment.centerLeft,
+                  child: IconButton(
+                    onPressed: () {
+                      Navigator.pop(context);
+                    },
+                    icon: AppSvgIcon(
+                      assetName: AppIcon.arrowLefe,
+                      size: 30,
+                      color: colorScheme.onSurface,
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 30),
                 AppSvgIcon(
                   assetName: AppIcon.appLogoTwo,
-                  size: 92,
+                  size: 82,
                   color: colorScheme.primary,
                 ),
-                const SizedBox(height: 14),
+                const SizedBox(height: 55),
                 Text(
-                  'Jober',
-                  style: GoogleFonts.poppins(
-                    fontSize: 30,
+                  'OTP Verification',
+                  style: textTheme.titleLarge?.copyWith(
                     fontWeight: FontWeight.w700,
-                    color: colorScheme.onSurface,
                   ),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  'Enter the verification code we just sent to your phone number',
+                  style: textTheme.bodyMedium?.copyWith(
+                    fontSize: 16,
+                    color: colorScheme.onSurface.withValues(alpha: 0.6),
+                    // height: 1.4,
+                  ),
+                ),
+                const SizedBox(height: 50),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: List.generate(
+                    4,
+                    (index) => OtpBox(
+                      controller: _controllers[index],
+                      focusNode: _focusNodes[index],
+                      onChanged: (value) => _handleChanged(index, value),
+                      onBackspace: () => _handleBackspace(index),
+                      isLast: index == 4 - 1,
+                      autofill: index == 0,
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 65),
+                PrimaryButton(label: 'Verification', onPressed: () {}),
+                const SizedBox(height: 65),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(
+                      'Resend OTP in ',
+                      style: textTheme.bodySmall?.copyWith(
+                        fontSize: 15,
+                        color: colorScheme.onSurface.withValues(alpha: 0.5),
+                      ),
+                    ),
+                    Text(
+                      ' 23s',
+                      style: textTheme.bodySmall?.copyWith(
+                        color: colorScheme.primary,
+                        fontSize: 15,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ],
                 ),
               ],
             ),
-            const SizedBox(height: 28),
-            Text(
-              'Verification Code',
-              style: textTheme.titleLarge?.copyWith(
-                fontWeight: FontWeight.w700,
-              ),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              'We have sent the code to verification to\n+855******1234',
-              style: textTheme.bodyMedium?.copyWith(
-                color: colorScheme.onSurface.withValues(alpha: 0.6),
-                height: 1.4,
-              ),
-            ),
-            const SizedBox(height: 22),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: List.generate(
-                4,
-                (index) => OtpBox(
-                  controller: _controllers[index],
-                  focusNode: _focusNodes[index],
-                  onChanged: (value) => _handleChanged(index, value),
-                  onBackspace: () => _handleBackspace(index),
-                  isLast: index == 4 - 1,
-                  autofill: index == 0,
-                ),
-              ),
-            ),
-            const SizedBox(height: 18),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Text(
-                  'Resend code after ',
-                  style: textTheme.bodySmall?.copyWith(
-                    color: colorScheme.onSurface.withValues(alpha: 0.5),
-                  ),
-                ),
-                Text(
-                  '1:32',
-                  style: textTheme.bodySmall?.copyWith(
-                    color: colorScheme.primary,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-              ],
-            ),
-            const Spacer(),
-            PrimaryButton(label: 'Verification', onPressed: () {}),
-            const SizedBox(height: 24),
-          ],
+          ),
         ),
       ),
     );

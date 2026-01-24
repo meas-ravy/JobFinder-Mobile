@@ -30,6 +30,12 @@ abstract class AppColor {
   static const Color leftMessageColorLight = Color(0xffffffff);
   static const Color rightMessageTextColorLight = Color(0xff222222);
   static const Color leftMessageTextColorLight = Color(0xff222222);
+  static const Color cardLight = Color(0xFF161E34);
+  static const Color cardBorderLight = Color(0xFF253054);
+  static const Color textMutedLight = Color(0xFF8A94A8);
+  static const Color appliedLight = Color(0xFF22D38A);
+  static const Color interviewLight = Color(0xFFF1C65A);
+  static const Color confirmLight = Color(0xFF8B5CF6);
 
   /// dark
   static const Color backgroundColorDark = Color(0xff121212);
@@ -51,4 +57,10 @@ abstract class AppColor {
   static const Color leftMessageColorDark = Color(0xff443463);
   static const Color rightMessageTextColorDark = Color(0xffeeeeee);
   static const Color leftMessageTextColorDark = Color(0xffeeeeee);
+  static const Color cardDark = Color(0xFF161E34);
+  static const Color cardBorderDark = Color(0xFF253054);
+  static const Color textMutedDark = Color(0xFF8A94A8);
+  static const Color appliedDark = Color(0xFF22D38A);
+  static const Color interviewDark = Color(0xFFF1C65A);
+  static const Color confirmDark = Color(0xFF8B5CF6);
 }

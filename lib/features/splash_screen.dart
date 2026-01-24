@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:job_finder/features/wellcome_screen.dart';
+import 'package:job_finder/features/auth/presentation/screen/send_otp.dart';
 import 'package:lottie/lottie.dart';
 import 'package:job_finder/core/constants/assets.dart';
 import 'package:job_finder/shared/widget/svg_icon.dart';
@@ -89,7 +89,7 @@ class _SplashScreenState extends State<SplashScreen>
       if (!mounted) return;
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(builder: (_) => const WellcomeScreen()),
+        MaterialPageRoute(builder: (_) => const SendOtpScreen()),
       );
     });
   }

@@ -20,4 +20,12 @@ class AppIcon {
   static const String documentBold = "assets/icon/Document_border.svg";
   static const String homeStyleTwo = "assets/icon/Home-style-2.svg";
   static const String homeStyleTwoBold = "assets/icon/Home-style-2-bold.svg";
+  static const String more = "assets/icon/more2.svg";
+  static const String techCompany1 = "assets/icon/tech-company.svg";
+  static const String arrowLefe = "assets/icon/arrow-left.svg";
+  static const String flagKh = "assets/icon/flag_kh.svg";
+  static const String flagCh = "assets/icon/flag_cn.svg";
+  static const String flagEn = "assets/icon/flag_eng.svg";
+  static const String linkenin = "assets/icon/linkedin.svg";
+  static const String google = "assets/icon/google.svg";
 }

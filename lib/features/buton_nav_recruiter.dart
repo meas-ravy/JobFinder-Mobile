@@ -8,6 +8,7 @@ import 'package:job_finder/features/job_seeker/screen/job_seeker_home_page.dart'
 import 'package:job_finder/features/recruiter/presentation/screen/recruiter_applied.dart';
 import 'package:job_finder/features/recruiter/presentation/screen/recruiter_home.dart';
 import 'package:job_finder/features/recruiter/presentation/screen/recruiter_message.dart';
+import 'package:job_finder/features/recruiter/presentation/screen/recruiter_profile.dart';
 import 'package:job_finder/features/recruiter/presentation/screen/recruiter_stats.dart';
 
 class ButonNavRecruiter extends HookWidget {
@@ -36,7 +37,7 @@ class ButonNavRecruiter extends HookWidget {
         case 3:
           return RecruiterMessagePage();
         case 4:
-          return RecruiterMessagePage();
+          return RecruiterProfilePage();
         default:
           return JobSeekerHomePage();
       }
