@@ -14,22 +14,22 @@ enum TokensStorageKeys {
   const TokensStorageKeys(this.keyName);
 }
 
-class TokenStorageImpl implements TokenStorage<AuthTokenPair> {
+class TokenStorageImpl implements TokenStorage<AuthToken> {
   const TokenStorageImpl(this._secureStorage);
 
   final FlutterSecureStorage _secureStorage;
 
   @override
-  Future<AuthTokenPair?> read() async {
+  Future<AuthToken?> read() async {
     final tokenJson = await _secureStorage.read(
       key: TokensStorageKeys.authToken.keyName,
     );
     if (tokenJson == null) return null;
-    return AuthTokenPair.fromJson(jsonDecode(tokenJson) as DataMap);
+    return AuthToken.fromJson(jsonDecode(tokenJson) as DataMap);
   }
 
   @override
-  Future<void> write(AuthTokenPair token) {
+  Future<void> write(AuthToken token) {
     return _secureStorage.write(
       key: TokensStorageKeys.authToken.keyName,
       value: jsonEncode(token.toJson()),

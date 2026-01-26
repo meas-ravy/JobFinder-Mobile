@@ -1,9 +1,9 @@
 import 'package:dio/dio.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
-import 'package:fresh_dio/fresh_dio.dart';
 import 'package:job_finder/core/helper/secure_storage.dart';
+import 'package:job_finder/core/networks/auth_header_interceptor.dart';
 import 'package:job_finder/core/networks/logger_interceptor.dart';
-import 'package:job_finder/core/networks/refresh_token_interceptor.dart';
+import 'package:job_finder/core/networks/unauthorized_interceptor.dart';
 
 Dio setupAuthenticatedDio(String baseUrl) {
   final dio = Dio(
@@ -19,23 +19,14 @@ Dio setupAuthenticatedDio(String baseUrl) {
   final secureStorage = const FlutterSecureStorage();
   final tokenStorage = TokenStorageImpl(secureStorage);
 
-  // Set up token refresh interceptor
-  final tokenRefreshInterceptor = RefreshTokenInterceptor(tokenStorage);
-  final fresh = tokenRefreshInterceptor.refresh;
-
   // Add the logger interceptor to Dio
   dio.interceptors.add(LoggerInterceptor());
 
-  // Add the Fresh interceptor to Dio
-  dio.interceptors.add(fresh);
+  // Redirect to login when token expires (401).
+  dio.interceptors.add(UnauthorizedInterceptor(tokenStorage));
 
-  // Log out listener to handle authentication failures
-  fresh.authenticationStatus.listen((status) {
-    if (status == AuthenticationStatus.unauthenticated) {
-      // Navigate to login screen or show login dialog
-      print('User needs to login again');
-    }
-  });
+  // Add auth header interceptor (no automatic refresh; access token is long-lived)
+  dio.interceptors.add(AuthHeaderInterceptor(tokenStorage));
 
   return dio;
 }

@@ -1,20 +1,23 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
+import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:job_finder/core/theme/app_color.dart';
 import 'package:job_finder/features/buton_nav_recruiter.dart';
 import 'package:job_finder/shared/components/primary_button.dart';
 import 'package:job_finder/core/constants/assets.dart';
 import 'package:job_finder/core/enum/role.dart';
+import 'package:job_finder/features/auth/presentation/provider/auth_provider.dart';
 import 'package:job_finder/shared/widget/role_select_widget.dart';
 import 'package:job_finder/shared/widget/svg_icon.dart';
 import 'package:job_finder/features/main_wrapper.dart';
 
-class AppRoleScreen extends HookWidget {
+class AppRoleScreen extends HookConsumerWidget {
   const AppRoleScreen({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final selectRole = useState<UserRole?>(null);
+    final authState = ref.watch(authControllerProvider);
 
     return Scaffold(
       body: Column(
@@ -64,20 +67,47 @@ class AppRoleScreen extends HookWidget {
           height: 56,
           child: PrimaryButton(
             label: 'Continue',
+            isLoading: authState.isLoading,
             onPressed: selectRole.value == null
                 ? null
                 : () {
-                    if (selectRole.value == UserRole.jobSeeker) {
-                      Navigator.pushReplacement(
-                        context,
-                        MaterialPageRoute(builder: (_) => MainWrapper()),
-                      );
-                    } else {
-                      Navigator.pushReplacement(
-                        context,
-                        MaterialPageRoute(builder: (_) => ButonNavRecruiter()),
-                      );
-                    }
+                    () async {
+                      final roleString = selectRole.value == UserRole.jobSeeker
+                          ? 'Job_finder'
+                          : 'Recruiter';
+
+                      final ok = await ref
+                          .read(authControllerProvider.notifier)
+                          .selectRole(roleString);
+                      if (!context.mounted) return;
+
+                      if (!ok) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text(
+                              authState.errorMessage ?? 'Failed to select role',
+                            ),
+                          ),
+                        );
+                        return;
+                      }
+
+                      if (selectRole.value == UserRole.jobSeeker) {
+                        Navigator.pushReplacement(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => const MainWrapper(),
+                          ),
+                        );
+                      } else {
+                        Navigator.pushReplacement(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => const ButonNavRecruiter(),
+                          ),
+                        );
+                      }
+                    }();
                   },
           ),
         ),
@@ -90,23 +120,14 @@ class AppRoleScreen extends HookWidget {
       padding: const EdgeInsets.symmetric(horizontal: 24),
       child: Column(
         children: [
-          AppSvgIcon(assetName: AppIcon.appLogoTwo, size: 95),
-          Text(
-            'Jober',
-            style: Theme.of(context).textTheme.titleLarge?.copyWith(
-              fontWeight: FontWeight.w600,
-              fontSize: 44,
-              // ignore: deprecated_member_use
-              color: Theme.of(context).colorScheme.onBackground,
-            ),
-          ),
+          AppSvgIcon(assetName: AppIcon.appLogoTwo, size: 82),
           const SizedBox(height: 60),
 
           const Align(
             alignment: Alignment.centerLeft,
             child: Text(
               'Choose Your Job Type',
-              style: TextStyle(fontSize: 22, fontWeight: FontWeight.w600),
+              style: TextStyle(fontSize: 20, fontWeight: FontWeight.w600),
             ),
           ),
           const SizedBox(height: 4),

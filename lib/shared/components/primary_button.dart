@@ -9,12 +9,14 @@ class PrimaryButton extends StatelessWidget {
     required this.onPressed,
     this.isFullWidth = true,
     this.height = 56,
+    this.isLoading = false,
   });
 
   final String label;
   final void Function()? onPressed;
   final bool isFullWidth;
   final double height;
+  final bool isLoading;
 
   @override
   Widget build(BuildContext context) {
@@ -23,11 +25,13 @@ class PrimaryButton extends StatelessWidget {
       height: height,
 
       child: ScaleTap(
-        onTap: onPressed,
+        onTap: isLoading ? null : onPressed,
         child: ElevatedButton(
-          onPressed: onPressed,
+          onPressed: isLoading ? null : onPressed,
           style: ElevatedButton.styleFrom(
             backgroundColor: AppColor.primaryLight,
+            disabledBackgroundColor: AppColor.primaryLight,
+            disabledForegroundColor: Colors.white,
             elevation: 4,
             shadowColor: Colors.black.withValues(alpha: 0.2),
             shape: const StadiumBorder(),
@@ -36,7 +40,16 @@ class PrimaryButton extends StatelessWidget {
               fontWeight: FontWeight.w600,
             ),
           ),
-          child: Text(label, style: const TextStyle(color: Colors.white)),
+          child: isLoading
+              ? const SizedBox(
+                  height: 22,
+                  width: 22,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2.5,
+                    color: Colors.white,
+                  ),
+                )
+              : Text(label, style: const TextStyle(color: Colors.white)),
         ),
       ),
     );

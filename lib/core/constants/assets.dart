@@ -23,9 +23,23 @@ class AppIcon {
   static const String more = "assets/icon/more2.svg";
   static const String techCompany1 = "assets/icon/tech-company.svg";
   static const String arrowLefe = "assets/icon/arrow-left.svg";
+
   static const String flagKh = "assets/icon/flag_kh.svg";
   static const String flagCh = "assets/icon/flag_cn.svg";
   static const String flagEn = "assets/icon/flag_eng.svg";
   static const String linkenin = "assets/icon/linkedin.svg";
   static const String google = "assets/icon/google.svg";
+  static const String infoSqua = "assets/icon/Info Square.svg";
+  static const String password = "assets/icon/password.svg";
+  static const String shieldDone = "assets/icon/Shield Done.svg";
+  static const String show = "assets/icon/Show.svg";
+  static const String star = "assets/icon/Star.svg";
+  static const String timeSquare = "assets/icon/Time Square.svg";
+  static const String moreSquare = "assets/icon/More Square.svg";
+  static const String notification = "assets/icon/Notification_border.svg";
+  static const String userGroup = "assets/icon/ic_group.svg";
+  static const String switchRole = "assets/icon/ic_switch.svg";
+  static const String settings = "assets/icon/setting.svg";
+  static const String eye = "assets/icon/Show.svg";
+  static const String logout = "assets/icon/Logout.svg";
 }
