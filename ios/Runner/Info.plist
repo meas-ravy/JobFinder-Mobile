@@ -6,6 +6,9 @@
 		<string>$(DEVELOPMENT_LANGUAGE)</string>
 	<key>CFBundleDisplayName</key>
 	<string>Jober</string>
+	<key>NSFaceIDUsageDescription</key>
+	<string>We need access to Face ID to use biometric login</string>
+	<string>Jober</string>
 		<key>CFBundleExecutable</key>
 		<string>$(EXECUTABLE_NAME)</string>
 		<key>CFBundleIdentifier</key>

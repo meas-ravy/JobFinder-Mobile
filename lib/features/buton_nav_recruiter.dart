@@ -4,7 +4,7 @@ import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:job_finder/core/constants/assets.dart';
 import 'package:job_finder/core/theme/app_color.dart';
-import 'package:job_finder/features/job_seeker/screen/job_seeker_home_page.dart';
+import 'package:job_finder/features/job_seeker/presentation/screen/job_seeker_home_page.dart';
 import 'package:job_finder/features/recruiter/presentation/screen/recruiter_applied.dart';
 import 'package:job_finder/features/recruiter/presentation/screen/recruiter_home.dart';
 import 'package:job_finder/features/recruiter/presentation/screen/recruiter_message.dart';
