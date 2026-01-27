@@ -104,3 +104,13 @@ class SelectRoleUseCase extends UseCaseWithParams<DataMap, SelectRoleParams> {
     return _repository.selectRole(role: params.role);
   }
 }
+
+class LogoutUseCase extends UseCaseWithOutParams<DataMap> {
+  const LogoutUseCase(this._repository);
+  final AuthRepository _repository;
+
+  @override
+  ResultFuture<DataMap> call() {
+    return _repository.logout();
+  }
+}

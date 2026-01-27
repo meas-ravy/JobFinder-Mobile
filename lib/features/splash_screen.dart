@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:job_finder/features/auth/presentation/screen/send_otp.dart';
 import 'package:lottie/lottie.dart';
 import 'package:job_finder/core/constants/assets.dart';
+import 'package:job_finder/core/helper/secure_storage.dart';
+import 'package:job_finder/core/routes/app_path.dart';
 import 'package:job_finder/shared/widget/svg_icon.dart';
 
 class SplashScreen extends StatefulWidget {
@@ -85,13 +88,41 @@ class _SplashScreenState extends State<SplashScreen>
       }
     });
 
-    Future.delayed(const Duration(seconds: 2), () {
-      if (!mounted) return;
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (_) => const SendOtpScreen()),
-      );
-    });
+    // After animations complete, check auth state and navigate
+    _checkAuthAndNavigate();
+  }
+
+  Future<void> _checkAuthAndNavigate() async {
+    // Wait for splash animations to show (minimum 2 seconds)
+    await Future.delayed(const Duration(seconds: 2));
+
+    if (!mounted) return;
+
+    // Check stored token and role
+    final storage = TokenStorageImpl(const FlutterSecureStorage());
+    final token = await storage.read();
+    final role = await storage.readRole();
+
+    if (!mounted) return;
+
+    // Route based on auth state
+    if (token == null || token.isEmpty) {
+      // No token → go to login
+      context.go(AppPath.sendOtp);
+    } else if (role == null || role.isEmpty) {
+      // Has token but no role → go to role selection
+      context.go(AppPath.selectRole);
+    } else {
+      // Has token + role → go to appropriate home
+      if (role == 'Job_finder') {
+        context.go(AppPath.jobSeekerHome);
+      } else if (role == 'Recruiter') {
+        context.go(AppPath.recruiterHome);
+      } else {
+        // Unknown role → go to role selection
+        context.go(AppPath.selectRole);
+      }
+    }
   }
 
   @override

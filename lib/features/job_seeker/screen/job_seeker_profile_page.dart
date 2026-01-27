@@ -1,17 +1,26 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:go_router/go_router.dart';
+import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:job_finder/core/constants/assets.dart';
+import 'package:job_finder/core/helper/secure_storage.dart';
+import 'package:job_finder/core/routes/app_path.dart';
 import 'package:job_finder/core/theme/app_color.dart';
 import 'package:job_finder/core/helper/theme_mode_controller.dart';
-import 'package:job_finder/shared/widget/svg_icon.dart';
+import 'package:job_finder/features/auth/presentation/provider/auth_provider.dart';
+import 'package:job_finder/shared/widget/danger_tile.dart';
+import 'package:job_finder/shared/widget/section_title.dart';
+import 'package:job_finder/shared/widget/setting_switch_tile.dart';
 
-class JobSeekerProfilePage extends StatefulWidget {
+class JobSeekerProfilePage extends ConsumerStatefulWidget {
   const JobSeekerProfilePage({super.key});
 
   @override
-  State<JobSeekerProfilePage> createState() => _JobSeekerProfilePageState();
+  ConsumerState<JobSeekerProfilePage> createState() =>
+      _JobSeekerProfilePageState();
 }
 
-class _JobSeekerProfilePageState extends State<JobSeekerProfilePage> {
+class _JobSeekerProfilePageState extends ConsumerState<JobSeekerProfilePage> {
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
@@ -26,10 +35,11 @@ class _JobSeekerProfilePageState extends State<JobSeekerProfilePage> {
       ),
       body: SafeArea(
         child: ListView(
+          physics: const ClampingScrollPhysics(),
           padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
           children: [
-            _ProfileProgressCard(
-              percent: 0.95,
+            ProfileProgressCard(
+              percent: 0.16,
               title: 'Profile Completed!',
               subtitle:
                   'A complete profile increases the chances\nof a recruiter being more interested in\nrecruiting you',
@@ -38,41 +48,85 @@ class _JobSeekerProfilePageState extends State<JobSeekerProfilePage> {
             ),
             const SizedBox(height: 18),
 
-            _SectionTitle(title: 'Account', textTheme: textTheme),
-            _SettingsTile(
+            SectionTitle(title: 'Account', textTheme: textTheme),
+            SettingsTile(
               icon: AppIcon.profile,
               title: 'Personal Information',
               onTap: () {},
             ),
-            _SettingsTile(
+            SettingsTile(
               icon: AppIcon.switchRole,
-              title: 'Linked Accounts',
-              onTap: () {},
+              title: 'Switch to Recruiter',
+              onTap: () async {
+                // Show confirmation dialog
+                final confirmed = await showDialog<bool>(
+                  context: context,
+                  builder: (context) => AlertDialog(
+                    title: const Text('Switch Role'),
+                    content: const Text(
+                      'Switch to Recruiter mode? You can switch back anytime.',
+                    ),
+                    actions: [
+                      TextButton(
+                        onPressed: () => Navigator.pop(context, false),
+                        child: const Text('Cancel'),
+                      ),
+                      FilledButton(
+                        onPressed: () => Navigator.pop(context, true),
+                        child: const Text(
+                          'Switch',
+                          style: TextStyle(color: Colors.white),
+                        ),
+                      ),
+                    ],
+                  ),
+                );
+
+                if (confirmed != true || !context.mounted) return;
+
+                // Call select-role API
+                final success = await ref
+                    .read(authControllerProvider.notifier)
+                    .selectRole('Recruiter');
+
+                if (!context.mounted) return;
+
+                if (success) {
+                  // Navigate to Recruiter home
+                  context.go(AppPath.recruiterHome);
+                } else {
+                  // Show error
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text(
+                        ref.read(authControllerProvider).errorMessage ??
+                            'Failed to switch role',
+                      ),
+                      backgroundColor: Theme.of(context).colorScheme.error,
+                    ),
+                  );
+                }
+              },
             ),
 
             const SizedBox(height: 18),
-            _SectionTitle(title: 'General', textTheme: textTheme),
-            _SettingsTile(
+            SectionTitle(title: 'General', textTheme: textTheme),
+            SettingsTile(
               icon: AppIcon.notification,
               title: 'Notification',
               onTap: () {},
             ),
-            _SettingsTile(
+            SettingsTile(
               icon: AppIcon.application,
               title: 'Application Issues',
               onTap: () {},
             ),
-            _SettingsTile(
-              icon: AppIcon.timeSquare,
-              title: 'Timezone',
-              onTap: () {},
-            ),
-            _SettingsTile(
+            SettingsTile(
               icon: AppIcon.shieldDone,
               title: 'Security',
               onTap: () {},
             ),
-            _SettingsTile(
+            SettingsTile(
               icon: AppIcon.show,
               title: 'Language',
               trailingText: 'English (US)',
@@ -84,7 +138,7 @@ class _JobSeekerProfilePageState extends State<JobSeekerProfilePage> {
                 final isSystem = mode == ThemeMode.system;
                 return Column(
                   children: [
-                    _SettingsSwitchTile(
+                    SettingsSwitchTile(
                       icon: AppIcon.settings,
                       title: 'Use device settings',
                       value: isSystem,
@@ -96,7 +150,7 @@ class _JobSeekerProfilePageState extends State<JobSeekerProfilePage> {
                         }
                       },
                     ),
-                    _SettingsSwitchTile(
+                    SettingsSwitchTile(
                       icon: AppIcon.eye,
                       title: 'Dark Mode',
                       value: mode == ThemeMode.dark,
@@ -110,29 +164,61 @@ class _JobSeekerProfilePageState extends State<JobSeekerProfilePage> {
             ),
 
             const SizedBox(height: 18),
-            _SectionTitle(title: 'About', textTheme: textTheme),
-            _SettingsTile(
+            SectionTitle(title: 'About', textTheme: textTheme),
+            SettingsTile(
               icon: AppIcon.infoSqua,
               title: 'Privacy & Policy',
               onTap: () {},
             ),
-            _SettingsTile(
-              icon: AppIcon.document,
+            SettingsTile(
+              icon: AppIcon.documentBold,
               title: 'Terms of Services',
               onTap: () {},
             ),
-            _SettingsTile(icon: AppIcon.star, title: 'About us', onTap: () {}),
+            SettingsTile(icon: AppIcon.star, title: 'About us', onTap: () {}),
 
-            const SizedBox(height: 10),
-            const Divider(),
-            const SizedBox(height: 8),
+            const SizedBox(height: 18),
 
-            _DangerTile(
-              icon: Icons.no_accounts_outlined,
-              title: 'Deactivate My Account',
-              onTap: () {},
+            DangerTile(
+              icon: AppIcon.logout,
+              title: 'Logout',
+              onTap: () async {
+                // Show confirmation dialog
+                final confirmed = await showDialog<bool>(
+                  context: context,
+                  builder: (context) => AlertDialog(
+                    title: const Text('Logout'),
+                    content: const Text('Are you sure you want to logout?'),
+                    actions: [
+                      TextButton(
+                        onPressed: () => Navigator.pop(context, false),
+                        child: const Text('Cancel'),
+                      ),
+                      FilledButton(
+                        onPressed: () => Navigator.pop(context, true),
+                        style: FilledButton.styleFrom(
+                          backgroundColor: Theme.of(context).colorScheme.error,
+                        ),
+                        child: const Text(
+                          'Logout',
+                          style: TextStyle(color: Colors.white),
+                        ),
+                      ),
+                    ],
+                  ),
+                );
+
+                if (confirmed != true || !context.mounted) return;
+
+                // Clear token and role, then navigate to login
+                final storage = TokenStorageImpl(const FlutterSecureStorage());
+                await storage.delete();
+                await storage.deleteRole();
+
+                if (!context.mounted) return;
+                context.go(AppPath.sendOtp);
+              },
             ),
-            _DangerTile(icon: Icons.logout, title: 'Logout', onTap: () {}),
           ],
         ),
       ),
@@ -140,8 +226,9 @@ class _JobSeekerProfilePageState extends State<JobSeekerProfilePage> {
   }
 }
 
-class _ProfileProgressCard extends StatelessWidget {
-  const _ProfileProgressCard({
+class ProfileProgressCard extends StatelessWidget {
+  const ProfileProgressCard({
+    super.key,
     required this.percent,
     required this.title,
     required this.subtitle,
@@ -198,6 +285,7 @@ class _ProfileProgressCard extends StatelessWidget {
                   '${(percent * 100).round()}%',
                   style: textTheme.labelLarge?.copyWith(
                     color: Colors.white,
+                    fontSize: 12,
                     fontWeight: FontWeight.w700,
                   ),
                 ),
@@ -229,149 +317,6 @@ class _ProfileProgressCard extends StatelessWidget {
           ),
         ],
       ),
-    );
-  }
-}
-
-class _SectionTitle extends StatelessWidget {
-  const _SectionTitle({required this.title, required this.textTheme});
-  final String title;
-  final TextTheme textTheme;
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 8),
-      child: Text(
-        title,
-        style: textTheme.labelLarge?.copyWith(
-          color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6),
-          fontWeight: FontWeight.w700,
-        ),
-      ),
-    );
-  }
-}
-
-class _SettingsTile extends StatelessWidget {
-  const _SettingsTile({
-    required this.icon,
-    required this.title,
-    required this.onTap,
-    this.trailingText,
-  });
-
-  final String icon;
-  final String title;
-  final VoidCallback onTap;
-  final String? trailingText;
-
-  @override
-  Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
-    final textTheme = Theme.of(context).textTheme;
-    return ListTile(
-      contentPadding: const EdgeInsets.symmetric(horizontal: 8),
-      leading: AppSvgIcon(
-        assetName: icon,
-        size: 24,
-        color: colorScheme.onSurface.withValues(alpha: 0.75),
-      ),
-      title: Text(
-        title,
-        style: textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600),
-      ),
-      trailing: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          if (trailingText != null)
-            Padding(
-              padding: const EdgeInsets.only(right: 6),
-              child: Text(
-                trailingText!,
-                style: textTheme.bodySmall?.copyWith(
-                  color: colorScheme.onSurface.withValues(alpha: 0.55),
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-            ),
-          Icon(
-            Icons.chevron_right,
-            color: colorScheme.onSurface.withValues(alpha: 0.35),
-          ),
-        ],
-      ),
-      onTap: onTap,
-    );
-  }
-}
-
-class _SettingsSwitchTile extends StatelessWidget {
-  const _SettingsSwitchTile({
-    required this.icon,
-    required this.title,
-    required this.value,
-    required this.onChanged,
-  });
-
-  final String icon;
-  final String title;
-  final bool value;
-  final ValueChanged<bool>? onChanged;
-
-  @override
-  Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
-    final textTheme = Theme.of(context).textTheme;
-
-    return ListTile(
-      contentPadding: const EdgeInsets.symmetric(horizontal: 8),
-      leading: AppSvgIcon(
-        assetName: icon,
-        size: 24,
-        color: colorScheme.onSurface.withValues(alpha: 0.75),
-      ),
-      title: Text(
-        title,
-        style: textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600),
-      ),
-      trailing: Switch.adaptive(
-        value: value,
-        onChanged: onChanged,
-        activeColor: AppColor.primaryLight,
-      ),
-    );
-  }
-}
-
-class _DangerTile extends StatelessWidget {
-  const _DangerTile({
-    required this.icon,
-    required this.title,
-    required this.onTap,
-  });
-
-  final IconData icon;
-  final String title;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    final textTheme = Theme.of(context).textTheme;
-    final colorScheme = Theme.of(context).colorScheme;
-    final danger = colorScheme.error;
-    return ListTile(
-      contentPadding: const EdgeInsets.symmetric(horizontal: 8),
-      leading: Icon(icon, color: danger),
-      title: Text(
-        title,
-        style: textTheme.bodyMedium?.copyWith(
-          fontWeight: FontWeight.w700,
-          color: danger,
-        ),
-      ),
-      trailing: Icon(Icons.chevron_right, color: danger.withValues(alpha: 0.7)),
-      onTap: onTap,
     );
   }
 }

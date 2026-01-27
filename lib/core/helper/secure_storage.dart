@@ -1,38 +1,35 @@
-import 'dart:convert';
-
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:fresh_dio/fresh_dio.dart';
-import 'package:job_finder/core/helper/jwt_token.dart';
-import 'package:job_finder/core/helper/typedef.dart';
 
 enum TokensStorageKeys {
   // Key for storing authentication tokens
-  authToken('app_auth_token');
+  accessToken('app_access_token'),
+  role('app_user_role');
 
   /// Key name
   final String keyName;
   const TokensStorageKeys(this.keyName);
 }
 
-class TokenStorageImpl implements TokenStorage<AuthToken> {
+class TokenStorageImpl implements TokenStorage<String> {
   const TokenStorageImpl(this._secureStorage);
 
   final FlutterSecureStorage _secureStorage;
 
   @override
-  Future<AuthToken?> read() async {
-    final tokenJson = await _secureStorage.read(
-      key: TokensStorageKeys.authToken.keyName,
+  Future<String?> read() async {
+    final token = await _secureStorage.read(
+      key: TokensStorageKeys.accessToken.keyName,
     );
-    if (tokenJson == null) return null;
-    return AuthToken.fromJson(jsonDecode(tokenJson) as DataMap);
+    if (token == null || token.isEmpty) return null;
+    return token;
   }
 
   @override
-  Future<void> write(AuthToken token) {
+  Future<void> write(String token) {
     return _secureStorage.write(
-      key: TokensStorageKeys.authToken.keyName,
-      value: jsonEncode(token.toJson()),
+      key: TokensStorageKeys.accessToken.keyName,
+      value: token,
     );
   }
 
@@ -41,5 +38,22 @@ class TokenStorageImpl implements TokenStorage<AuthToken> {
     for (final key in TokensStorageKeys.values) {
       await _secureStorage.delete(key: key.keyName);
     }
+  }
+
+  Future<String?> readRole() async {
+    final role = await _secureStorage.read(key: TokensStorageKeys.role.keyName);
+    if (role == null || role.isEmpty) return null;
+    return role;
+  }
+
+  Future<void> writeRole(String role) {
+    return _secureStorage.write(
+      key: TokensStorageKeys.role.keyName,
+      value: role,
+    );
+  }
+
+  Future<void> deleteRole() {
+    return _secureStorage.delete(key: TokensStorageKeys.role.keyName);
   }
 }

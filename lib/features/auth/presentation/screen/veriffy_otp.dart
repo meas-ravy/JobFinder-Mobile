@@ -2,9 +2,12 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:go_router/go_router.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:job_finder/core/constants/assets.dart';
-import 'package:job_finder/features/auth/presentation/screen/app_role_screen.dart';
+import 'package:job_finder/core/helper/secure_storage.dart';
+import 'package:job_finder/core/routes/app_path.dart';
 import 'package:job_finder/features/auth/presentation/provider/auth_provider.dart';
 import 'package:job_finder/features/auth/presentation/provider/auth_state.dart';
 import 'package:job_finder/features/auth/presentation/widget/otp_box.dart';
@@ -41,7 +44,7 @@ class _VeriffyOtpScreenState extends ConsumerState<VeriffyOtpScreen> {
       }
     });
 
-    _authSub = ref.listenManual(authControllerProvider, (previous, next) {
+    _authSub = ref.listenManual(authControllerProvider, (previous, next) async {
       if (previous?.isLoading == true && next.isLoading == false) {
         if (!mounted) return;
         if (next.lastAction != AuthAction.verifyOtp) return;
@@ -56,10 +59,29 @@ class _VeriffyOtpScreenState extends ConsumerState<VeriffyOtpScreen> {
         final data = next.data;
         final success = data is Map ? data['success'] : null;
         if (data != null && (success == null || success == true)) {
-          Navigator.pushReplacement(
-            context,
-            MaterialPageRoute(builder: (_) => const AppRoleScreen()),
-          );
+          final user = data is Map ? data['user'] : null;
+          final roles = user is Map ? user['roles'] : null;
+          final roleList = roles is List ? roles : const [];
+
+          final hasJobFinder = roleList.contains('Job_finder');
+          final hasRecruiter = roleList.contains('Recruiter');
+
+          final storage = TokenStorageImpl(const FlutterSecureStorage());
+
+          if (hasJobFinder) {
+            await storage.writeRole('Job_finder');
+            if (!mounted) return;
+            context.go(AppPath.jobSeekerHome);
+            return;
+          }
+          if (hasRecruiter) {
+            await storage.writeRole('Recruiter');
+            if (!mounted) return;
+            context.go(AppPath.recruiterHome);
+            return;
+          }
+
+          context.go(AppPath.selectRole);
         }
       }
     });

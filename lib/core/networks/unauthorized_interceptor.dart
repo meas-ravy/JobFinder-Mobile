@@ -1,47 +1,28 @@
 import 'package:dio/dio.dart';
-import 'package:fresh_dio/fresh_dio.dart';
-import 'package:job_finder/core/constants/api_enpoint.dart';
-import 'package:job_finder/core/helper/jwt_token.dart';
-import 'package:job_finder/core/routes/app_navigator.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:go_router/go_router.dart';
+import 'package:job_finder/core/helper/secure_storage.dart';
+import 'package:job_finder/core/routes/app_path.dart';
+import 'package:job_finder/core/routes/app_route.dart';
 
-/// Handles "token expired / invalid" by clearing saved auth and sending the user
-/// back to login (Send OTP screen). Backend does not support refresh tokens.
+/// Intercepts 401 responses, clears stored auth data, and redirects to login
 class UnauthorizedInterceptor extends Interceptor {
-  UnauthorizedInterceptor(this._tokenStorage);
-
-  final TokenStorage<AuthToken> _tokenStorage;
-
-  static bool _isRedirecting = false;
-
-  bool _isAuthEndpoint(RequestOptions options) {
-    final path = options.path;
-    return path.contains(ApiEnpoint.sentOtp) ||
-        path.contains(ApiEnpoint.verifyOtp) ||
-        path.contains(ApiEnpoint.resendOtp) ||
-        path.contains(ApiEnpoint.oauth) ||
-        path.contains(ApiEnpoint.logout) ||
-        path.contains(ApiEnpoint.roleSelect);
-  }
-
   @override
-  Future<void> onError(
-    DioException err,
-    ErrorInterceptorHandler handler,
-  ) async {
-    final statusCode = err.response?.statusCode;
-    if (statusCode == 401 &&
-        !_isRedirecting &&
-        !_isAuthEndpoint(err.requestOptions)) {
-      _isRedirecting = true;
-      try {
-        await _tokenStorage.delete();
-      } catch (_) {
-        // Ignore storage errors; we still redirect to login.
-      } finally {
-        AppNavigator.goToSendOtpAndClearStack();
-        _isRedirecting = false;
+  void onError(DioException err, ErrorInterceptorHandler handler) async {
+    if (err.response?.statusCode == 401) {
+      // Clear stored token and role
+      final storage = TokenStorageImpl(const FlutterSecureStorage());
+      await storage.delete();
+      await storage.deleteRole();
+
+      // Navigate to login using the global navigator key
+      final context = rootNavigatorKey.currentContext;
+      if (context != null && context.mounted) {
+        GoRouter.of(context).go(AppPath.sendOtp);
       }
     }
+
+    // Pass the error along
     handler.next(err);
   }
 }

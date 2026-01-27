@@ -13,4 +13,5 @@ abstract class AuthRepository {
     required String redirectUrl,
   });
   ResultFuture<DataMap> selectRole({required String role});
+  ResultFuture<DataMap> logout();
 }

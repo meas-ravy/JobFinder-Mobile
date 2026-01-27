@@ -13,6 +13,7 @@ class LoggerInterceptor extends Interceptor {
     final requestPath = '${options.baseUrl}${options.path}';
     logger.e('${options.method} request ==> $requestPath');
     logger.d(
+      'StatusCode: ${err.response?.statusCode} \n '
       'Error type: ${err.type} \n '
       'Error message: ${err.message} \n '
       'Response: ${err.response?.data}',

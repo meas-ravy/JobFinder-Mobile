@@ -1,17 +1,25 @@
+import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:job_finder/core/routes/app_path.dart';
 import 'package:job_finder/features/auth/presentation/screen/app_role_screen.dart';
 import 'package:job_finder/features/auth/presentation/screen/send_otp.dart';
 import 'package:job_finder/features/auth/presentation/screen/veriffy_otp.dart';
+import 'package:job_finder/features/buton_nav_recruiter.dart';
+import 'package:job_finder/features/main_wrapper.dart';
 import 'package:job_finder/features/splash_screen.dart';
 import 'package:job_finder/features/wellcome_screen.dart';
 
+// Global navigator key for accessing navigation from outside widget tree (e.g., 401 interceptor)
+final GlobalKey<NavigatorState> rootNavigatorKey = GlobalKey<NavigatorState>();
+
 class AppRouter {
-  AppRouter();
+  static final AppRouter _instance = AppRouter._internal();
+  factory AppRouter() => _instance;
+  AppRouter._internal();
 
-  final GoRouter router = GoRouter(
-    initialLocation: '/splash',
-
+  late final GoRouter router = GoRouter(
+    navigatorKey: rootNavigatorKey,
+    initialLocation: AppPath.splash,
     routes: [
       GoRoute(
         path: AppPath.splash,
@@ -25,13 +33,28 @@ class AppRouter {
         path: AppPath.sendOtp,
         builder: (context, state) => const SendOtpScreen(),
       ),
-      // GoRoute(
-      //   path: AppPath.verifyOtp,
-      //   builder: (context, state) => const VeriffyOtpScreen(phoneNumber: ,),
-      // ),
       GoRoute(
-        path: AppPath.seleteRole,
+        path: AppPath.verifyOtp,
+        builder: (context, state) {
+          final phone = state.extra;
+          if (phone is String && phone.isNotEmpty) {
+            return VeriffyOtpScreen(phoneNumber: phone);
+          }
+          // If opened directly, fall back to login.
+          return const SendOtpScreen();
+        },
+      ),
+      GoRoute(
+        path: AppPath.selectRole,
         builder: (context, state) => const AppRoleScreen(),
+      ),
+      GoRoute(
+        path: AppPath.jobSeekerHome,
+        builder: (context, state) => const MainWrapper(),
+      ),
+      GoRoute(
+        path: AppPath.recruiterHome,
+        builder: (context, state) => const ButonNavRecruiter(),
       ),
     ],
   );

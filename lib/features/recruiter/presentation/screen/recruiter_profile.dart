@@ -1,292 +1,334 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:go_router/go_router.dart';
+import 'package:hooks_riverpod/hooks_riverpod.dart';
+import 'package:job_finder/core/constants/assets.dart';
+import 'package:job_finder/core/helper/secure_storage.dart';
+import 'package:job_finder/core/routes/app_path.dart';
+import 'package:job_finder/core/theme/app_color.dart';
+import 'package:job_finder/core/helper/theme_mode_controller.dart';
+import 'package:job_finder/features/auth/presentation/provider/auth_provider.dart';
+import 'package:job_finder/shared/widget/danger_tile.dart';
+import 'package:job_finder/shared/widget/svg_icon.dart';
 
-class RecruiterProfilePage extends StatelessWidget {
+class RecruiterProfilePage extends ConsumerStatefulWidget {
   const RecruiterProfilePage({super.key});
 
-  static const List<_ProfileMenuItem> _menuItems = [
-    _ProfileMenuItem(
-      title: 'Notification',
-      icon: Icons.notifications_none_rounded,
-      isHighlight: true,
-    ),
-    // _ProfileMenuItem(title: 'Summary', icon: Icons.insert_drive_file_outlined),
-    _ProfileMenuItem(title: 'Swich Role', icon: Icons.settings_outlined),
-    _ProfileMenuItem(title: 'Privacy Policy', icon: Icons.privacy_tip_outlined),
-    _ProfileMenuItem(title: 'Support', icon: Icons.support_agent_rounded),
-    _ProfileMenuItem(title: 'Logout', icon: Icons.logout_rounded),
-  ];
+  @override
+  ConsumerState<RecruiterProfilePage> createState() =>
+      _RecruiterProfilePageState();
+}
 
+class _RecruiterProfilePageState extends ConsumerState<RecruiterProfilePage> {
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final scheme = theme.colorScheme;
-    final isDark = theme.brightness == Brightness.dark;
-    final cardColor = scheme.surfaceContainerHighest;
-    final cardBorder = scheme.outlineVariant.withValues(
-      alpha: isDark ? 0.6 : 0.4,
-    );
-    final textPrimary = scheme.onSurface;
-    final textMuted = scheme.onSurface.withValues(alpha: isDark ? 0.6 : 0.7);
-    final highlight = scheme.primary;
-    final highlightText = scheme.onPrimary;
+    final colorScheme = Theme.of(context).colorScheme;
+    final textTheme = Theme.of(context).textTheme;
 
     return Scaffold(
+      backgroundColor: colorScheme.surface,
+      appBar: AppBar(
+        backgroundColor: colorScheme.surface,
+        elevation: 0,
+        title: const Text('Settings'),
+      ),
       body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.fromLTRB(20, 12, 20, 24),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                children: [
-                  InkWell(
-                    onTap: () => Navigator.maybePop(context),
-                    borderRadius: BorderRadius.circular(14),
-                    child: Container(
-                      width: 40,
-                      height: 40,
-                      decoration: BoxDecoration(
-                        color: cardColor,
-                        borderRadius: BorderRadius.circular(14),
-                      ),
-                      child: Icon(
-                        Icons.arrow_back_ios_new_rounded,
-                        size: 18,
-                        color: textPrimary,
-                      ),
+        child: ListView(
+          padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
+          children: [
+            // _ProfileProgressCard(
+            //   percent: 0.95,
+            //   title: 'Profile Completed!',
+            //   subtitle:
+            //       'A complete profile increases the chances\nof a recruiter being more interested in\nrecruiting you',
+            //   colorScheme: colorScheme,
+            //   textTheme: textTheme,
+            // ),
+            const SizedBox(height: 18),
+
+            _SectionTitle(title: 'Account', textTheme: textTheme),
+            _SettingsTile(
+              icon: AppIcon.profile,
+              title: 'Personal Information',
+              onTap: () {},
+            ),
+            _SettingsTile(
+              icon: AppIcon.switchRole,
+              title: 'Switch to Job Finder',
+              onTap: () async {
+                // Show confirmation dialog
+                final confirmed = await showDialog<bool>(
+                  context: context,
+                  builder: (context) => AlertDialog(
+                    title: const Text('Switch Role'),
+                    content: const Text(
+                      'Switch to Job Finder mode? You can switch back anytime.',
                     ),
+                    actions: [
+                      TextButton(
+                        onPressed: () => Navigator.pop(context, false),
+                        child: const Text('Cancel'),
+                      ),
+                      FilledButton(
+                        onPressed: () => Navigator.pop(context, true),
+                        child: const Text('Switch'),
+                      ),
+                    ],
                   ),
-                  const SizedBox(width: 12),
-                  Text(
-                    'Profile',
-                    style: GoogleFonts.spaceGrotesk(
-                      fontSize: 20,
-                      fontWeight: FontWeight.w700,
-                      color: textPrimary,
+                );
+
+                if (confirmed != true || !context.mounted) return;
+
+                // Call select-role API
+                final success = await ref
+                    .read(authControllerProvider.notifier)
+                    .selectRole('Job_finder');
+
+                if (!context.mounted) return;
+
+                if (success) {
+                  // Navigate to Job Seeker home
+                  context.go(AppPath.jobSeekerHome);
+                } else {
+                  // Show error
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text(
+                        ref.read(authControllerProvider).errorMessage ??
+                            'Failed to switch role',
+                      ),
+                      backgroundColor: Theme.of(context).colorScheme.error,
                     ),
+                  );
+                }
+              },
+            ),
+
+            const SizedBox(height: 18),
+            _SectionTitle(title: 'General', textTheme: textTheme),
+            _SettingsTile(
+              icon: AppIcon.notification,
+              title: 'Notification',
+              onTap: () {},
+            ),
+            _SettingsTile(
+              icon: AppIcon.application,
+              title: 'Application Issues',
+              onTap: () {},
+            ),
+            _SettingsTile(
+              icon: AppIcon.timeSquare,
+              title: 'Timezone',
+              onTap: () {},
+            ),
+            _SettingsTile(
+              icon: AppIcon.shieldDone,
+              title: 'Security',
+              onTap: () {},
+            ),
+            _SettingsTile(
+              icon: AppIcon.show,
+              title: 'Language',
+              trailingText: 'English (US)',
+              onTap: () {},
+            ),
+            ValueListenableBuilder<ThemeMode>(
+              valueListenable: themeModeController,
+              builder: (context, mode, _) {
+                final isSystem = mode == ThemeMode.system;
+                return Column(
+                  children: [
+                    _SettingsSwitchTile(
+                      icon: AppIcon.settings,
+                      title: 'Use device settings',
+                      value: isSystem,
+                      onChanged: (value) {
+                        if (value) {
+                          themeModeController.setThemeMode(ThemeMode.system);
+                        } else {
+                          themeModeController.setThemeMode(ThemeMode.light);
+                        }
+                      },
+                    ),
+                    _SettingsSwitchTile(
+                      icon: AppIcon.eye,
+                      title: 'Dark Mode',
+                      value: mode == ThemeMode.dark,
+                      onChanged: isSystem
+                          ? null
+                          : (value) => themeModeController.setDark(value),
+                    ),
+                  ],
+                );
+              },
+            ),
+
+            const SizedBox(height: 18),
+            _SectionTitle(title: 'About', textTheme: textTheme),
+            _SettingsTile(
+              icon: AppIcon.infoSqua,
+              title: 'Privacy & Policy',
+              onTap: () {},
+            ),
+            _SettingsTile(
+              icon: AppIcon.document,
+              title: 'Terms of Services',
+              onTap: () {},
+            ),
+            _SettingsTile(icon: AppIcon.star, title: 'About us', onTap: () {}),
+
+            const SizedBox(height: 18),
+            DangerTile(
+              icon: AppIcon.logout,
+              title: 'Logout',
+              onTap: () async {
+                // Show confirmation dialog
+                final confirmed = await showDialog<bool>(
+                  context: context,
+                  builder: (context) => AlertDialog(
+                    title: const Text('Logout'),
+                    content: const Text('Are you sure you want to logout?'),
+                    actions: [
+                      TextButton(
+                        onPressed: () => Navigator.pop(context, false),
+                        child: const Text('Cancel'),
+                      ),
+                      FilledButton(
+                        onPressed: () => Navigator.pop(context, true),
+                        style: FilledButton.styleFrom(
+                          backgroundColor: Theme.of(context).colorScheme.error,
+                        ),
+                        child: const Text('Logout'),
+                      ),
+                    ],
                   ),
-                ],
-              ),
-              const SizedBox(height: 18),
-              _ProfileCard(
-                cardColor: cardColor,
-                cardBorder: cardBorder,
-                textPrimary: textPrimary,
-                textMuted: textMuted,
-                accent: highlight,
-                accentText: highlightText,
-                showShadow: !isDark,
-              ),
-              const SizedBox(height: 18),
-              ..._menuItems.map(
-                (item) => Padding(
-                  padding: const EdgeInsets.only(bottom: 12),
-                  child: _MenuTile(
-                    item: item,
-                    cardColor: cardColor,
-                    cardBorder: cardBorder,
-                    textPrimary: textPrimary,
-                    textMuted: textMuted,
-                    highlight: highlight,
-                    highlightText: highlightText,
-                  ),
-                ),
-              ),
-            ],
-          ),
+                );
+
+                if (confirmed != true || !context.mounted) return;
+
+                // Clear token and role, then navigate to login
+                final storage = TokenStorageImpl(const FlutterSecureStorage());
+                await storage.delete();
+                await storage.deleteRole();
+
+                if (!context.mounted) return;
+                context.go(AppPath.sendOtp);
+              },
+            ),
+          ],
         ),
       ),
     );
   }
 }
 
-class _ProfileCard extends StatelessWidget {
-  const _ProfileCard({
-    required this.cardColor,
-    required this.cardBorder,
-    required this.textPrimary,
-    required this.textMuted,
-    required this.accent,
-    required this.accentText,
-    required this.showShadow,
-  });
-
-  final Color cardColor;
-  final Color cardBorder;
-  final Color textPrimary;
-  final Color textMuted;
-  final Color accent;
-  final Color accentText;
-  final bool showShadow;
+class _SectionTitle extends StatelessWidget {
+  const _SectionTitle({required this.title, required this.textTheme});
+  final String title;
+  final TextTheme textTheme;
 
   @override
   Widget build(BuildContext context) {
-    return Stack(
-      clipBehavior: Clip.none,
-      children: [
-        Container(
-          padding: const EdgeInsets.fromLTRB(16, 30, 16, 16),
-          decoration: BoxDecoration(
-            color: cardColor,
-            borderRadius: BorderRadius.circular(20),
-            border: Border.all(color: cardBorder),
-            boxShadow: showShadow
-                ? [
-                    BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.06),
-                      blurRadius: 18,
-                      offset: const Offset(0, 10),
-                    ),
-                  ]
-                : [],
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Align(
-                alignment: Alignment.topRight,
-                child: TextButton.icon(
-                  onPressed: () {},
-                  style: TextButton.styleFrom(foregroundColor: accent),
-                  icon: const Icon(Icons.edit_outlined, size: 18),
-                  label: Text(
-                    'Edit',
-                    style: GoogleFonts.manrope(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w700,
-                    ),
-                  ),
-                ),
-              ),
-              const SizedBox(height: 4),
-              Text(
-                'Akibur Rahman',
-                style: GoogleFonts.spaceGrotesk(
-                  fontSize: 18,
-                  fontWeight: FontWeight.w700,
-                  color: textPrimary,
-                ),
-              ),
-              const SizedBox(height: 6),
-              Text(
-                'Product Designer',
-                style: GoogleFonts.manrope(
-                  fontSize: 13,
-                  fontWeight: FontWeight.w600,
-                  color: textMuted,
-                ),
-              ),
-              const SizedBox(height: 4),
-              Text(
-                'akiburrrahman@example.com',
-                style: GoogleFonts.manrope(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w500,
-                  color: textMuted,
-                ),
-              ),
-            ],
-          ),
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8),
+      child: Text(
+        title,
+        style: textTheme.labelLarge?.copyWith(
+          color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6),
+          fontWeight: FontWeight.w700,
         ),
-        Positioned(
-          top: -20,
-          left: 16,
-          child: Container(
-            width: 64,
-            height: 64,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              color: accent.withValues(alpha: 0.15),
-              border: Border.all(color: accent.withValues(alpha: 0.4)),
-            ),
-            child: Center(
-              child: Text(
-                'A',
-                style: GoogleFonts.spaceGrotesk(
-                  fontSize: 20,
-                  fontWeight: FontWeight.w700,
-                  color: textPrimary,
-                ),
-              ),
-            ),
-          ),
-        ),
-      ],
+      ),
     );
   }
 }
 
-class _MenuTile extends StatelessWidget {
-  const _MenuTile({
-    required this.item,
-    required this.cardColor,
-    required this.cardBorder,
-    required this.textPrimary,
-    required this.textMuted,
-    required this.highlight,
-    required this.highlightText,
+class _SettingsTile extends StatelessWidget {
+  const _SettingsTile({
+    required this.icon,
+    required this.title,
+    required this.onTap,
+    this.trailingText,
   });
 
-  final _ProfileMenuItem item;
-  final Color cardColor;
-  final Color cardBorder;
-  final Color textPrimary;
-  final Color textMuted;
-  final Color highlight;
-  final Color highlightText;
+  final String icon;
+  final String title;
+  final VoidCallback onTap;
+  final String? trailingText;
 
   @override
   Widget build(BuildContext context) {
-    final isHighlight = item.isHighlight;
-    final background = isHighlight ? highlight : cardColor;
-    final iconColor = isHighlight ? highlightText : highlight;
-    final arrowColor = isHighlight ? highlightText : textMuted;
-
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-      decoration: BoxDecoration(
-        color: background,
-        borderRadius: BorderRadius.circular(16),
+    final colorScheme = Theme.of(context).colorScheme;
+    final textTheme = Theme.of(context).textTheme;
+    return ListTile(
+      contentPadding: const EdgeInsets.symmetric(horizontal: 8),
+      leading: AppSvgIcon(
+        assetName: icon,
+        size: 24,
+        color: colorScheme.onSurface.withValues(alpha: 0.75),
       ),
-      child: Row(
+      title: Text(
+        title,
+        style: textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600),
+      ),
+      trailing: Row(
+        mainAxisSize: MainAxisSize.min,
         children: [
-          Container(
-            width: 36,
-            height: 36,
-            decoration: BoxDecoration(
-              color: isHighlight
-                  ? highlightText.withValues(alpha: 0.2)
-                  : highlight.withValues(alpha: 0.12),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Icon(item.icon, size: 18, color: iconColor),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Text(
-              item.title,
-              style: GoogleFonts.poppins(
-                fontSize: 13,
-                fontWeight: FontWeight.w700,
+          if (trailingText != null)
+            Padding(
+              padding: const EdgeInsets.only(right: 6),
+              child: Text(
+                trailingText!,
+                style: textTheme.bodySmall?.copyWith(
+                  color: colorScheme.onSurface.withValues(alpha: 0.55),
+                  fontWeight: FontWeight.w600,
+                ),
               ),
             ),
+          Icon(
+            Icons.chevron_right,
+            color: colorScheme.onSurface.withValues(alpha: 0.35),
           ),
-          Icon(Icons.chevron_right_rounded, color: arrowColor),
         ],
       ),
+      onTap: onTap,
     );
   }
 }
 
-class _ProfileMenuItem {
-  const _ProfileMenuItem({
-    required this.title,
+class _SettingsSwitchTile extends StatelessWidget {
+  const _SettingsSwitchTile({
     required this.icon,
-    this.isHighlight = false,
+    required this.title,
+    required this.value,
+    required this.onChanged,
   });
 
+  final String icon;
   final String title;
-  final IconData icon;
-  final bool isHighlight;
+  final bool value;
+  final ValueChanged<bool>? onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    final textTheme = Theme.of(context).textTheme;
+
+    return ListTile(
+      contentPadding: const EdgeInsets.symmetric(horizontal: 8),
+      leading: AppSvgIcon(
+        assetName: icon,
+        size: 24,
+        color: colorScheme.onSurface.withValues(alpha: 0.75),
+      ),
+      title: Text(
+        title,
+        style: textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600),
+      ),
+      trailing: Switch.adaptive(
+        value: value,
+        onChanged: onChanged,
+        activeColor: AppColor.primaryLight,
+      ),
+    );
+  }
 }

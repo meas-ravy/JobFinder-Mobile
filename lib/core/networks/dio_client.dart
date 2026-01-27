@@ -22,11 +22,11 @@ Dio setupAuthenticatedDio(String baseUrl) {
   // Add the logger interceptor to Dio
   dio.interceptors.add(LoggerInterceptor());
 
-  // Redirect to login when token expires (401).
-  dio.interceptors.add(UnauthorizedInterceptor(tokenStorage));
-
   // Add auth header interceptor (no automatic refresh; access token is long-lived)
   dio.interceptors.add(AuthHeaderInterceptor(tokenStorage));
+
+  // Add 401 handler: clear token + role, redirect to login
+  dio.interceptors.add(UnauthorizedInterceptor());
 
   return dio;
 }

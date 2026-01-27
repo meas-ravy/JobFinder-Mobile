@@ -3,8 +3,7 @@ import 'package:google_sign_in/google_sign_in.dart';
 import 'package:job_finder/core/constants/oauth_config.dart';
 import 'package:job_finder/core/helper/locale_controller.dart';
 import 'package:job_finder/core/helper/theme_mode_controller.dart';
-import 'package:job_finder/core/routes/app_navigator.dart';
-import 'package:job_finder/features/main_wrapper.dart';
+import 'package:job_finder/core/routes/app_route.dart';
 import 'package:job_finder/l10n/app_localizations.dart';
 import 'package:job_finder/core/theme/app_theme.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
@@ -19,6 +18,7 @@ Future<void> main() async {
 
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
+
   @override
   Widget build(BuildContext context) {
     return ValueListenableBuilder<ThemeMode>(
@@ -27,9 +27,8 @@ class MyApp extends StatelessWidget {
         return ValueListenableBuilder<Locale?>(
           valueListenable: localeController,
           builder: (context, locale, _) {
-            return MaterialApp(
+            return MaterialApp.router(
               debugShowCheckedModeBanner: false,
-              navigatorKey: AppNavigator.key,
               locale: locale,
               onGenerateTitle: (context) =>
                   AppLocalizations.of(context).appName,
@@ -38,9 +37,7 @@ class MyApp extends StatelessWidget {
               themeMode: themeMode,
               localizationsDelegates: AppLocalizations.localizationsDelegates,
               supportedLocales: AppLocalizations.supportedLocales,
-              // home: const SendOtpScreen(),
-              // home: const VeriffyOtpScreen(phoneNumber: '+85512345678'),
-              home: const MainWrapper(),
+              routerConfig: AppRouter().router,
             );
           },
         );

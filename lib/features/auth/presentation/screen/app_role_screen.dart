@@ -1,15 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
+import 'package:go_router/go_router.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:job_finder/core/theme/app_color.dart';
-import 'package:job_finder/features/buton_nav_recruiter.dart';
 import 'package:job_finder/shared/components/primary_button.dart';
 import 'package:job_finder/core/constants/assets.dart';
 import 'package:job_finder/core/enum/role.dart';
+import 'package:job_finder/core/routes/app_path.dart';
 import 'package:job_finder/features/auth/presentation/provider/auth_provider.dart';
 import 'package:job_finder/shared/widget/role_select_widget.dart';
 import 'package:job_finder/shared/widget/svg_icon.dart';
-import 'package:job_finder/features/main_wrapper.dart';
 
 class AppRoleScreen extends HookConsumerWidget {
   const AppRoleScreen({super.key});
@@ -93,19 +93,9 @@ class AppRoleScreen extends HookConsumerWidget {
                       }
 
                       if (selectRole.value == UserRole.jobSeeker) {
-                        Navigator.pushReplacement(
-                          context,
-                          MaterialPageRoute(
-                            builder: (_) => const MainWrapper(),
-                          ),
-                        );
+                        context.go(AppPath.jobSeekerHome);
                       } else {
-                        Navigator.pushReplacement(
-                          context,
-                          MaterialPageRoute(
-                            builder: (_) => const ButonNavRecruiter(),
-                          ),
-                        );
+                        context.go(AppPath.recruiterHome);
                       }
                     }();
                   },

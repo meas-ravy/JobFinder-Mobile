@@ -45,4 +45,9 @@ class AuthRepositoryImpl implements AuthRepository {
   ResultFuture<DataMap> selectRole({required String role}) {
     return _authServer.selectRole(role: role);
   }
+
+  @override
+  ResultFuture<DataMap> logout() {
+    return _authServer.logout();
+  }
 }

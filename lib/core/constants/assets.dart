@@ -41,5 +41,5 @@ class AppIcon {
   static const String switchRole = "assets/icon/ic_switch.svg";
   static const String settings = "assets/icon/setting.svg";
   static const String eye = "assets/icon/Show.svg";
-  static const String logout = "assets/icon/Logout.svg";
+  static const String logout = "assets/icon/logout.svg";
 }

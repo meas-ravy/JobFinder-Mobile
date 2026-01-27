@@ -323,7 +323,7 @@ class _RadarChartPainter extends CustomPainter {
 
     final axisPaint = Paint()
       ..style = PaintingStyle.stroke
-      ..color = gridColor.withOpacity(0.7)
+      ..color = gridColor.withValues(alpha: 0.7)
       ..strokeWidth = 1;
 
     const tickCount = 4;
@@ -530,7 +530,7 @@ class _ProgressRing extends StatelessWidget {
           CircularProgressIndicator(
             value: percent / 100,
             strokeWidth: 4,
-            backgroundColor: color.withOpacity(0.2),
+            backgroundColor: color.withValues(alpha: 0.2),
             color: color,
             strokeCap: StrokeCap.round,
           ),
