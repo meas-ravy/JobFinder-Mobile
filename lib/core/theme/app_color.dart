@@ -9,7 +9,8 @@ abstract class AppColor {
   static const Color snackBarSuccess = Color(0xff01E47A);
   static const Color snackBarFailed = Color(0xffFE5151);
   static const Color transparent = Colors.transparent;
-
+  static const Color mangoOrange = Color(0xffFF9066);
+  static const Color purple = Color(0xff7B61FF);
   /// light
   static const Color backgroundColorLight = Color(0xffffffff);
   static const Color onBackgroundColorLight = Color(0xff121212);

@@ -8,6 +8,7 @@ import 'package:job_finder/core/routes/app_path.dart';
 import 'package:job_finder/core/theme/app_color.dart';
 import 'package:job_finder/core/helper/theme_mode_controller.dart';
 import 'package:job_finder/features/auth/presentation/provider/auth_provider.dart';
+import 'package:job_finder/features/job_seeker/presentation/screen/jobb_seeker_document.dart';
 import 'package:job_finder/features/job_seeker/presentation/screen/security_settings_screen.dart';
 import 'package:job_finder/shared/widget/danger_tile.dart';
 import 'package:job_finder/shared/widget/section_title.dart';
@@ -47,6 +48,16 @@ class JobSeekerProfilePage extends HookConsumerWidget {
               icon: AppIcon.profile,
               title: 'Personal Information',
               onTap: () {},
+            ),
+            SettingsTile(
+              icon: AppIcon.documentBold,
+              title: 'My Documents',
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => MyDocumentPage()),
+                );
+              },
             ),
             SettingsTile(
               icon: AppIcon.switchRole,

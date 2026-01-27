@@ -5,6 +5,7 @@ import 'package:job_finder/features/auth/presentation/screen/app_role_screen.dar
 import 'package:job_finder/features/auth/presentation/screen/send_otp.dart';
 import 'package:job_finder/features/auth/presentation/screen/veriffy_otp.dart';
 import 'package:job_finder/features/buton_nav_recruiter.dart';
+import 'package:job_finder/features/job_seeker/presentation/screen/create_resume.dart';
 import 'package:job_finder/features/main_wrapper.dart';
 import 'package:job_finder/features/splash_screen.dart';
 import 'package:job_finder/features/wellcome_screen.dart';
@@ -55,6 +56,10 @@ class AppRouter {
       GoRoute(
         path: AppPath.recruiterHome,
         builder: (context, state) => const ButonNavRecruiter(),
+      ),
+      GoRoute(
+        path: AppPath.buildTemplate,
+        builder: (context, state) => const BuildTemplate(),
       ),
     ],
   );
