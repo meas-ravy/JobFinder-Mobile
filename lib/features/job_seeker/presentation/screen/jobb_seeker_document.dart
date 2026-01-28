@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
-import 'package:job_finder/core/routes/app_path.dart';
+import 'package:job_finder/features/job_seeker/presentation/templates/widget/normal_templates.dart';
+import 'package:job_finder/features/job_seeker/presentation/screens/cv_preview_screen.dart';
 import 'package:job_finder/features/job_seeker/presentation/widget/action_button.dart';
 import 'package:job_finder/features/job_seeker/presentation/widget/resume_card.dart';
 
@@ -36,7 +36,13 @@ class MyDocumentPage extends StatelessWidget {
                       icon: 'assets/image/cv.png',
                       label: 'New resume',
                       onTap: () {
-                        context.push(AppPath.buildTemplate);
+                        // context.push(AppPath.buildTemplate);
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => NormalTemplates(),
+                          ),
+                        );
                       },
                     ),
                   ),
@@ -92,7 +98,12 @@ class MyDocumentPage extends StatelessWidget {
                     progress: 0.85,
                     date: '12 May 2023',
                     onTap: () {
-                      // Navigate to edit resume
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const CvPreviewScreen(),
+                        ),
+                      );
                     },
                   ),
                   const SizedBox(height: 12),
