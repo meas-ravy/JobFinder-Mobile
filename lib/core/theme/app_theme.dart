@@ -48,7 +48,8 @@ class AppTheme {
       splashColor: Colors.transparent,
       appBarTheme: AppBarTheme(
         backgroundColor: scaffoldBackgroundColor,
-        foregroundColor: colorScheme.onSurface,
+        //foregroundColor: colorScheme.onSurface,
+        surfaceTintColor: Colors.transparent,
         elevation: 0,
       ),
       bottomNavigationBarTheme: _bottomNavigationBarTheme(

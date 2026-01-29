@@ -1,4 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:job_finder/core/constants/assets.dart';
+import 'package:job_finder/features/job_seeker/data/model/template_model.dart';
+import 'package:job_finder/features/job_seeker/presentation/screens/cv_form_screen.dart';
+import 'package:job_finder/shared/widget/svg_icon.dart';
 
 class BuildTemplate extends StatefulWidget {
   const BuildTemplate({super.key});
@@ -12,101 +16,123 @@ class _BuildTemplateState extends State<BuildTemplate> {
 
   final List<String> _tabs = [
     "All",
-    "Modern",
+    "Simple",
     "Professional",
-    "Creative",
-    "Minimal",
+    "Minimalist",
+    "Modern",
   ];
 
   @override
+  void initState() {
+    super.initState();
+    filteredTemp = allTemp;
+    _searchController.addListener(_filterTemp);
+  }
+
+  @override
   void dispose() {
+    _searchController.removeListener(_filterTemp);
     _searchController.dispose();
     super.dispose();
   }
 
+  void _filterTemp() {
+    setState(() {
+      final query = _searchController.text.toLowerCase();
+      final selectedCategory = _tabs[_selectedTabIndex];
+
+      filteredTemp = allTemp.where((template) {
+        final matchesSearch =
+            template.displayName.toLowerCase().contains(query) ||
+            template.category.toLowerCase().contains(query);
+        final matchesCategory =
+            selectedCategory == 'All' || template.category == selectedCategory;
+        return matchesSearch && matchesCategory;
+      }).toList();
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
     final textTheme = Theme.of(context).textTheme;
+    final colorScheme = Theme.of(context).colorScheme;
 
     return Scaffold(
       backgroundColor: colorScheme.surface,
       appBar: AppBar(
-        backgroundColor: colorScheme.surface,
-        elevation: 0,
+        //backgroundColor: colorScheme.surface,
         title: Text(
-          "Select Template",
-          style: textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w700),
+          "Choose Template",
+          style: textTheme.titleLarge?.copyWith(
+            fontWeight: FontWeight.w700,
+            color: colorScheme.onSurface,
+          ),
         ),
       ),
       body: SafeArea(
         child: Column(
           children: [
-            // Custom Search Bar
+            // Search Bar
             Padding(
-              padding: const EdgeInsets.symmetric(
-                horizontal: 16.0,
-                vertical: 10,
-              ),
+              padding: const EdgeInsets.fromLTRB(20, 10, 20, 16),
+
               child: TextField(
                 controller: _searchController,
                 decoration: InputDecoration(
-                  hintText: 'Search for a template...',
+                  hintText: 'Search your template',
+                  hintStyle: TextStyle(
+                    color: colorScheme.onSurface.withValues(alpha: 0.5),
+                    fontSize: 15,
+                  ),
                   border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(20),
-                    borderSide: BorderSide.none,
+                    borderRadius: BorderRadius.circular(30),
+                    borderSide: BorderSide(color: colorScheme.onSecondary),
                   ),
-                  filled: true,
-                  fillColor: colorScheme.surfaceContainerHighest.withValues(
-                    alpha: 0.5,
-                  ),
+                  focusColor: colorScheme.onSurface,
                   focusedBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(20),
-                    borderSide: BorderSide(
-                      color: colorScheme.primary,
-                      width: 1.5,
+                    borderRadius: BorderRadius.circular(30),
+                    borderSide: BorderSide(color: colorScheme.onSurface),
+                  ),
+                  prefixIcon: Padding(
+                    padding: const EdgeInsets.all(16.0),
+                    child: AppSvgIcon(
+                      assetName: AppIcon.search,
+                      color: colorScheme.onSurface,
                     ),
                   ),
-                  prefixIcon: Icon(
-                    Icons.search,
-                    color: colorScheme.onSurface.withValues(alpha: 0.6),
-                    size: 20,
-                  ),
-                  contentPadding: const EdgeInsets.symmetric(
-                    horizontal: 16,
-                    vertical: 12,
-                  ),
-                  enabledBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(20),
-                    borderSide: BorderSide.none,
+                  contentPadding: EdgeInsets.symmetric(
+                    horizontal: 20,
+                    vertical: 15,
                   ),
                 ),
               ),
             ),
 
-            //with Inline Tabs
+            // Category Tabs
             Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 12),
-              child: SingleChildScrollView(
-                scrollDirection: Axis.horizontal,
-                child: Row(
-                  children: _tabs.asMap().entries.map((entry) {
-                    int index = entry.key;
-                    String tab = entry.value;
-                    bool isSelected = _selectedTabIndex == index;
+              padding: const EdgeInsets.only(left: 20, bottom: 20),
+              child: SizedBox(
+                height: 40,
+                child: ListView.builder(
+                  scrollDirection: Axis.horizontal,
+                  itemCount: _tabs.length,
+                  itemBuilder: (context, index) {
+                    final tab = _tabs[index];
+                    final isSelected = _selectedTabIndex == index;
 
                     return Padding(
-                      padding: const EdgeInsets.only(right: 8.0),
+                      padding: const EdgeInsets.only(right: 12),
                       child: GestureDetector(
                         onTap: () {
                           setState(() {
                             _selectedTabIndex = index;
+                            _filterTemp();
                           });
                         },
                         child: Container(
                           padding: const EdgeInsets.symmetric(
-                            horizontal: 16,
-                            vertical: 8,
+                            horizontal: 20,
+                            vertical: 10,
                           ),
                           decoration: BoxDecoration(
                             color: isSelected
@@ -119,53 +145,73 @@ class _BuildTemplateState extends State<BuildTemplate> {
                             style: textTheme.bodyMedium?.copyWith(
                               color: isSelected
                                   ? Colors.white
-                                  : colorScheme.onSurface.withValues(
-                                      alpha: 0.7,
-                                    ),
+                                  : Colors.grey.shade600,
                               fontSize: 14,
                               fontWeight: isSelected
                                   ? FontWeight.w600
-                                  : FontWeight.normal,
+                                  : FontWeight.w500,
                             ),
                           ),
                         ),
                       ),
                     );
-                  }).toList(),
+                  },
                 ),
               ),
             ),
 
             // Template Grid
             Expanded(
-              child: GridView.builder(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 16,
-                  vertical: 10,
-                ),
-                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                  crossAxisCount: 2,
-                  crossAxisSpacing: 12,
-                  mainAxisSpacing: 12,
-                  childAspectRatio: 0.7,
-                ),
-                itemCount: 10,
-                itemBuilder: (context, index) {
-                  return _TemplateCard(
-                    title: "Template ${_selectedTabIndex * 10 + index + 1}",
-                    onTap: () {
-                      // Navigate to CV builder with this template
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          content: Text(
-                            'Selected Template ${_selectedTabIndex * 10 + index + 1}',
+              child: filteredTemp.isEmpty
+                  ? Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(
+                            Icons.search_off,
+                            size: 64,
+                            color: colorScheme.onSurface.withValues(alpha: 0.5),
                           ),
-                        ),
-                      );
-                    },
-                  );
-                },
-              ),
+                          const SizedBox(height: 16),
+                          Text(
+                            'No templates found',
+                            style: textTheme.titleMedium?.copyWith(
+                              color: colorScheme.onSurface.withValues(
+                                alpha: 0.5,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    )
+                  : GridView.builder(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 20,
+                        vertical: 10,
+                      ),
+                      gridDelegate:
+                          const SliverGridDelegateWithFixedCrossAxisCount(
+                            crossAxisCount: 2,
+                            crossAxisSpacing: 16,
+                            mainAxisSpacing: 20,
+                            childAspectRatio: 0.65,
+                          ),
+                      itemCount: filteredTemp.length,
+                      itemBuilder: (context, index) {
+                        final template = filteredTemp[index];
+                        return _TemplateCard(
+                          template: template,
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => const CvFormScreen(),
+                              ),
+                            );
+                          },
+                        );
+                      },
+                    ),
             ),
           ],
         ),
@@ -175,64 +221,74 @@ class _BuildTemplateState extends State<BuildTemplate> {
 }
 
 class _TemplateCard extends StatelessWidget {
-  const _TemplateCard({required this.title, required this.onTap});
+  const _TemplateCard({required this.template, required this.onTap});
 
-  final String title;
+  final TempModel template;
   final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
     final textTheme = Theme.of(context).textTheme;
+    final colorScheme = Theme.of(context).colorScheme;
 
-    return Material(
-      color: colorScheme.surface,
-      borderRadius: BorderRadius.circular(12),
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(12),
-        child: Container(
-          decoration: BoxDecoration(
-            border: Border.all(
-              color: colorScheme.outline.withValues(alpha: 0.2),
-            ),
-            borderRadius: BorderRadius.circular(12),
-          ),
-          child: Column(
-            children: [
-              // Template Preview
-              Expanded(
-                child: Container(
-                  margin: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    color: colorScheme.surfaceContainerHighest.withValues(
-                      alpha: 0.3,
-                    ),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Center(
-                    child: Icon(
-                      Icons.description_outlined,
-                      size: 48,
-                      color: colorScheme.primary.withValues(alpha: 0.5),
-                    ),
-                  ),
+    return GestureDetector(
+      onTap: onTap,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          // Preview Card Container
+          Expanded(
+            child: Container(
+              decoration: BoxDecoration(
+                color: colorScheme.surfaceContainerHighest,
+                border: Border.all(
+                  color: colorScheme.surface.withValues(alpha: 0.08),
                 ),
+                borderRadius: BorderRadius.circular(8),
+                boxShadow: [
+                  BoxShadow(
+                    color: colorScheme.surface.withValues(alpha: 0.08),
+                    blurRadius: 10,
+                    offset: Offset(0, 4),
+                  ),
+                ],
               ),
-              // Template Name
-              Padding(
-                padding: const EdgeInsets.all(12),
-                child: Text(
-                  title,
-                  style: textTheme.bodyMedium?.copyWith(
-                    fontWeight: FontWeight.w600,
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(8),
+                child: Image.asset(template.icon, fit: BoxFit.cover),
+              ),
+            ),
+          ),
+
+          // Template Info - Outside Container
+          Padding(
+            padding: const EdgeInsets.only(top: 12),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                Text(
+                  template.displayName,
+                  style: textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.w700,
+                    color: template.color,
+                    fontSize: 17,
+                    letterSpacing: -0.3,
                   ),
                   textAlign: TextAlign.center,
                 ),
-              ),
-            ],
+                const SizedBox(height: 4),
+                Text(
+                  template.category,
+                  style: textTheme.bodySmall?.copyWith(
+                    color: colorScheme.onSurface.withValues(alpha: 0.5),
+                    fontSize: 14,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+              ],
+            ),
           ),
-        ),
+        ],
       ),
     );
   }

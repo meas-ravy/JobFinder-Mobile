@@ -1,16 +1,20 @@
 import 'package:flutter/material.dart';
-import 'package:job_finder/features/job_seeker/presentation/templates/widget/resume_pdf_builder.dart';
+import 'package:job_finder/features/job_seeker/presentation/cv/widget/resume_pdf_builder.dart';
 import 'package:printing/printing.dart';
 
+import 'package:job_finder/features/job_seeker/domain/entities/cv_entity.dart';
+
 class NormalTemplates extends StatelessWidget {
-  const NormalTemplates({super.key});
+  final CvEntity cv;
+
+  const NormalTemplates({super.key, required this.cv});
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       floatingActionButton: FloatingActionButton(
         onPressed: () async {
-          final pdfBytes = await generateResumePdf();
+          final pdfBytes = await generateResumePdf(cv);
           await Printing.layoutPdf(onLayout: (_) async => pdfBytes);
         },
         child: const Icon(Icons.picture_as_pdf),
@@ -24,19 +28,22 @@ class NormalTemplates extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 // Header Section
-                _buildHeader(),
+                _buildHeader(cv),
 
                 const SizedBox(height: 40),
 
                 // Profile Section
-                _buildSection(title: 'PROFILE', content: _buildProfile()),
+                _buildSection(
+                  title: 'PROFILE',
+                  content: _buildProfile(cv.summary ?? ''),
+                ),
 
                 const SizedBox(height: 40),
 
                 // Work Experience Section
                 _buildSection(
                   title: 'WORK EXPERIENCE',
-                  content: _buildWorkExperience(),
+                  content: _buildWorkExperience(cv.exp),
                 ),
 
                 const SizedBox(height: 40),
@@ -49,7 +56,7 @@ class NormalTemplates extends StatelessWidget {
                       flex: 1,
                       child: _buildSection(
                         title: 'EDUCATION',
-                        content: _buildEducation(),
+                        content: _buildEducation(cv.edu),
                       ),
                     ),
                     const SizedBox(width: 40),
@@ -57,7 +64,7 @@ class NormalTemplates extends StatelessWidget {
                       flex: 1,
                       child: _buildSection(
                         title: 'SKILLS',
-                        content: _buildSkills(),
+                        content: _buildSkills(cv.skills),
                       ),
                     ),
                   ],
@@ -78,13 +85,13 @@ class NormalTemplates extends StatelessWidget {
     );
   }
 
-  Widget _buildHeader() {
+  Widget _buildHeader(CvEntity cv) {
     return Column(
       children: [
         // Name
-        const Text(
-          'CONNOR HAMILTON',
-          style: TextStyle(
+        Text(
+          cv.fullName.toUpperCase(),
+          style: const TextStyle(
             fontSize: 32,
             fontWeight: FontWeight.bold,
             letterSpacing: 8,
@@ -94,9 +101,9 @@ class NormalTemplates extends StatelessWidget {
         const SizedBox(height: 8),
 
         // Title
-        const Text(
-          'Real Estate Agent',
-          style: TextStyle(
+        Text(
+          cv.title,
+          style: const TextStyle(
             fontSize: 14,
             letterSpacing: 2,
             color: Colors.black87,
@@ -108,11 +115,13 @@ class NormalTemplates extends StatelessWidget {
         Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            _buildContactItem('123-456-7890'),
+            _buildContactItem(cv.phone),
             _buildSeparator(),
-            _buildContactItem('hello@reallygreatsite.com'),
-            _buildSeparator(),
-            _buildContactItem('reallygreatsite.com'),
+            _buildContactItem(cv.email),
+            if (cv.website != null) ...[
+              _buildSeparator(),
+              _buildContactItem(cv.website!),
+            ],
           ],
         ),
         const SizedBox(height: 20),
@@ -156,56 +165,63 @@ class NormalTemplates extends StatelessWidget {
     );
   }
 
-  Widget _buildProfile() {
-    return const Text(
-      'I am an experienced Real Estate Agent with a passion for helping clients find their dream homes. I have extensive experience in the industry, including more than 5 years working as a real estate agent. I am knowledgeable about the latest market trends and understand the nuances of the real estate market. I pride myself on my ability to negotiate the best deals for my clients and to navigate complex real estate agreements. I am highly organized, detail-oriented, and have strong communication skills.',
-      style: TextStyle(fontSize: 12, height: 1.6, color: Colors.black87),
+  Widget _buildProfile(String summary) {
+    return Text(
+      summary,
+      style: const TextStyle(fontSize: 12, height: 1.6, color: Colors.black87),
     );
   }
 
-  Widget _buildWorkExperience() {
+  Widget _buildWorkExperience(List<ExpEntity> experiences) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const Text(
-          'REAL ESTATE AGENT',
-          style: TextStyle(
-            fontSize: 12,
-            fontWeight: FontWeight.bold,
-            color: Colors.black,
-          ),
-        ),
-        const SizedBox(height: 4),
-        const Text(
-          'Really Great Company',
-          style: TextStyle(
-            fontSize: 12,
-            fontWeight: FontWeight.w600,
-            color: Colors.black87,
-          ),
-        ),
-        const SizedBox(height: 4),
-        const Text(
-          'June 2015 - Present',
-          style: TextStyle(
-            fontSize: 11,
-            fontStyle: FontStyle.italic,
-            color: Colors.black54,
-          ),
-        ),
-        const SizedBox(height: 12),
-        _buildBulletPoint(
-          'Negotiate contracts and complex real estate transactions',
-        ),
-        _buildBulletPoint('Provide excellent customer service to clients'),
-        _buildBulletPoint('Update and maintain client files'),
-        _buildBulletPoint('Research and monitor the local real estate market'),
-        _buildBulletPoint('Develop marketing campaigns for properties'),
-        _buildBulletPoint(
-          'Utilize social media platforms to market properties',
-        ),
-        _buildBulletPoint('Participate in open houses and home tours'),
-      ],
+      children: experiences
+          .map(
+            (exp) => Padding(
+              padding: const EdgeInsets.only(bottom: 16.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    exp.jobTitle.toUpperCase(),
+                    style: const TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.black,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    exp.companyName,
+                    style: const TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                      color: Colors.black87,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    '${exp.startDate.year} - ${exp.endDate.year}',
+                    style: const TextStyle(
+                      fontSize: 11,
+                      fontStyle: FontStyle.italic,
+                      color: Colors.black54,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    exp.description,
+                    style: const TextStyle(
+                      fontSize: 11,
+                      height: 1.5,
+                      color: Colors.black87,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          )
+          .toList(),
     );
   }
 
@@ -234,42 +250,46 @@ class NormalTemplates extends StatelessWidget {
     );
   }
 
-  Widget _buildEducation() {
+  Widget _buildEducation(List<EduEntity> educations) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const Text(
-          'University',
-          style: TextStyle(
-            fontSize: 12,
-            fontWeight: FontWeight.w600,
-            color: Colors.black87,
-          ),
-        ),
-        const SizedBox(height: 4),
-        const Text(
-          '2010 - 2014',
-          style: TextStyle(fontSize: 11, color: Colors.black54),
-        ),
-        const SizedBox(height: 4),
-        const Text(
-          'B.A. in Business Administration',
-          style: TextStyle(fontSize: 11, color: Colors.black87),
-        ),
-      ],
+      children: educations
+          .map(
+            (edu) => Padding(
+              padding: const EdgeInsets.only(bottom: 12.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    edu.degree,
+                    style: const TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                      color: Colors.black87,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    edu.institution,
+                    style: const TextStyle(fontSize: 11, color: Colors.black87),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    '${edu.startDate.year} - ${edu.endDate.year}',
+                    style: const TextStyle(fontSize: 11, color: Colors.black54),
+                  ),
+                ],
+              ),
+            ),
+          )
+          .toList(),
     );
   }
 
-  Widget _buildSkills() {
+  Widget _buildSkills(List<String> skills) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        _buildBulletPoint('Knowledge of the local real estate market'),
-        _buildBulletPoint('Communication skills'),
-        _buildBulletPoint('Negotiation skills'),
-        _buildBulletPoint('Problem-solving skills'),
-        _buildBulletPoint('Organizational and time management skills'),
-      ],
+      children: skills.map((skill) => _buildBulletPoint(skill)).toList(),
     );
   }
 

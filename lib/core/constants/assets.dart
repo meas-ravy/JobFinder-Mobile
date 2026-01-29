@@ -42,4 +42,9 @@ class AppIcon {
   static const String settings = "assets/icon/setting.svg";
   static const String eye = "assets/icon/Show.svg";
   static const String logout = "assets/icon/logout.svg";
+  static const String search = "assets/icon/Search.svg";
+  static const String camera = "assets/icon/camera.svg";
+  static const String image = "assets/icon/Image.svg";
+  static const String edit = "assets/icon/Edit.svg";
+  static const String delete = "assets/icon/Delete_border.svg";
 }

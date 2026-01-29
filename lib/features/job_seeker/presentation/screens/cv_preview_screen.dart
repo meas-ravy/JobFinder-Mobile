@@ -1,78 +1,38 @@
 import 'package:flutter/material.dart';
-import 'package:job_finder/features/job_seeker/domain/entities/cv_data.dart';
+import 'package:job_finder/features/job_seeker/domain/entities/cv_entity.dart';
 
 class CvPreviewScreen extends StatelessWidget {
-  const CvPreviewScreen({super.key});
+  final CvEntity? cv;
+
+  const CvPreviewScreen({super.key, this.cv});
 
   @override
   Widget build(BuildContext context) {
-    // Dummy data for preview
-    final cvData = CvData(
-      personalDetails: PersonalDetails(
-        name: 'John Doe',
-        email: 'john.doe@example.com',
-        phoneNumber: '+1234567890',
-        address: '123 Main Street, Anytown, USA',
-      ),
-      summary:
-          'A highly motivated and experienced software developer with a passion for creating innovative solutions. Proficient in various programming languages and technologies.',
-      experiences: [
-        Experience(
-          jobTitle: 'Senior Software Engineer',
-          companyName: 'Tech Solutions Inc.',
-          startDate: 'Jan 2020',
-          endDate: 'Present',
-          description:
-              '- Led the development of a new mobile application.\n- Mentored junior developers.',
-        ),
-        Experience(
-          jobTitle: 'Software Engineer',
-          companyName: 'Web Services LLC',
-          startDate: 'Jun 2017',
-          endDate: 'Dec 2019',
-          description:
-              '- Developed and maintained web applications.\n- Collaborated with cross-functional teams.',
-        ),
-      ],
-      educations: [
-        Education(
-          degree: 'Master of Science in Computer Science',
-          institution: 'University of Technology',
-          startDate: '2015',
-          endDate: '2017',
-        ),
-        Education(
-          degree: 'Bachelor of Science in Computer Science',
-          institution: 'State University',
-          startDate: '2011',
-          endDate: '2015',
-        ),
-      ],
-      skills: ['Flutter', 'Dart', 'Firebase', 'Python', 'JavaScript'],
-    );
+    final cvData = cv;
+    if (cvData == null) {
+      return const Scaffold(body: Center(child: Text('No CV Data')));
+    }
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('CV Preview'),
-      ),
+      appBar: AppBar(title: const Text('CV Preview')),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            _buildPersonalDetails(cvData.personalDetails),
+            _buildPersonalDetails(cvData),
             const SizedBox(height: 24),
             _buildSectionTitle('Summary'),
             const SizedBox(height: 8),
-            Text(cvData.summary),
+            Text(cvData.summary ?? ''),
             const SizedBox(height: 24),
             _buildSectionTitle('Experience'),
             const SizedBox(height: 8),
-            _buildExperienceList(cvData.experiences),
+            _buildExperienceList(cvData.exp),
             const SizedBox(height: 24),
             _buildSectionTitle('Education'),
             const SizedBox(height: 8),
-            _buildEducationList(cvData.educations),
+            _buildEducationList(cvData.edu),
             const SizedBox(height: 24),
             _buildSectionTitle('Skills'),
             const SizedBox(height: 8),
@@ -83,17 +43,17 @@ class CvPreviewScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildPersonalDetails(PersonalDetails details) {
+  Widget _buildPersonalDetails(CvEntity details) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          details.name,
+          details.fullName,
           style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
         ),
         const SizedBox(height: 8),
         Text(details.email),
-        Text(details.phoneNumber),
+        Text(details.phone),
         Text(details.address),
       ],
     );
@@ -106,7 +66,7 @@ class CvPreviewScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildExperienceList(List<Experience> experiences) {
+  Widget _buildExperienceList(List<ExpEntity> experiences) {
     return ListView.builder(
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
@@ -132,7 +92,7 @@ class CvPreviewScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildEducationList(List<Education> educations) {
+  Widget _buildEducationList(List<EduEntity> educations) {
     return ListView.builder(
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
@@ -161,11 +121,7 @@ class CvPreviewScreen extends StatelessWidget {
     return Wrap(
       spacing: 8.0,
       runSpacing: 4.0,
-      children: skills
-          .map((skill) => Chip(
-                label: Text(skill),
-              ))
-          .toList(),
+      children: skills.map((skill) => Chip(label: Text(skill))).toList(),
     );
   }
 }

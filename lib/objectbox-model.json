@@ -1,0 +1,274 @@
+{
+  "_note1": "KEEP THIS FILE! Check it into a version control system (VCS) like git.",
+  "_note2": "ObjectBox manages crucial IDs for your object model. See docs for details.",
+  "_note3": "If you have VCS merge conflicts, you must resolve them according to ObjectBox docs.",
+  "entities": [
+    {
+      "id": "1:6259938536795343860",
+      "lastPropertyId": "14:4964113921733993889",
+      "name": "CvEntity",
+      "properties": [
+        {
+          "id": "1:1207538836956124687",
+          "name": "id",
+          "type": 6,
+          "flags": 1
+        },
+        {
+          "id": "2:2299839541791602808",
+          "name": "title",
+          "type": 9
+        },
+        {
+          "id": "3:3698093630955224325",
+          "name": "imgurl",
+          "type": 9
+        },
+        {
+          "id": "4:66880533241897104",
+          "name": "fullName",
+          "type": 9
+        },
+        {
+          "id": "5:7234613487388891880",
+          "name": "email",
+          "type": 9
+        },
+        {
+          "id": "6:2075470539580584518",
+          "name": "phone",
+          "type": 9
+        },
+        {
+          "id": "7:6315398655184753703",
+          "name": "address",
+          "type": 9
+        },
+        {
+          "id": "8:431246358272069527",
+          "name": "linkedinUrl",
+          "type": 9
+        },
+        {
+          "id": "9:7344147094435549801",
+          "name": "github",
+          "type": 9
+        },
+        {
+          "id": "10:4361891269131078223",
+          "name": "website",
+          "type": 9
+        },
+        {
+          "id": "11:7106759127352620949",
+          "name": "summary",
+          "type": 9
+        },
+        {
+          "id": "12:646687982132890183",
+          "name": "skills",
+          "type": 30
+        },
+        {
+          "id": "13:762210432985548233",
+          "name": "language",
+          "type": 30
+        },
+        {
+          "id": "14:4964113921733993889",
+          "name": "updatedAt",
+          "type": 10
+        }
+      ],
+      "relations": [
+        {
+          "id": "1:1752011921216643955",
+          "name": "exp",
+          "targetId": "3:2958712216714489942"
+        },
+        {
+          "id": "2:3219546812901039932",
+          "name": "edu",
+          "targetId": "2:6725802805268310742"
+        },
+        {
+          "id": "3:4202022277699914132",
+          "name": "project",
+          "targetId": "4:8696494230158416435"
+        },
+        {
+          "id": "4:8632244002158821523",
+          "name": "ref",
+          "targetId": "5:6826272781873900862"
+        }
+      ]
+    },
+    {
+      "id": "2:6725802805268310742",
+      "lastPropertyId": "5:6193712538401163689",
+      "name": "EduEntity",
+      "properties": [
+        {
+          "id": "1:7610203196796067102",
+          "name": "id",
+          "type": 6,
+          "flags": 1
+        },
+        {
+          "id": "2:7673085603904195136",
+          "name": "institution",
+          "type": 9
+        },
+        {
+          "id": "3:4327489590638442160",
+          "name": "degree",
+          "type": 9
+        },
+        {
+          "id": "4:5726580029894799797",
+          "name": "startDate",
+          "type": 10
+        },
+        {
+          "id": "5:6193712538401163689",
+          "name": "endDate",
+          "type": 10
+        }
+      ],
+      "relations": []
+    },
+    {
+      "id": "3:2958712216714489942",
+      "lastPropertyId": "6:5989605703013055280",
+      "name": "ExpEntity",
+      "properties": [
+        {
+          "id": "1:5732695719265754262",
+          "name": "id",
+          "type": 6,
+          "flags": 1
+        },
+        {
+          "id": "2:6496641232408011462",
+          "name": "jobTitle",
+          "type": 9
+        },
+        {
+          "id": "3:3963647796509960709",
+          "name": "companyName",
+          "type": 9
+        },
+        {
+          "id": "4:8176246160748826008",
+          "name": "description",
+          "type": 9
+        },
+        {
+          "id": "5:5427658708501222132",
+          "name": "startDate",
+          "type": 10
+        },
+        {
+          "id": "6:5989605703013055280",
+          "name": "endDate",
+          "type": 10
+        }
+      ],
+      "relations": []
+    },
+    {
+      "id": "4:8696494230158416435",
+      "lastPropertyId": "7:875565002049157813",
+      "name": "Project",
+      "properties": [
+        {
+          "id": "1:3509999741918515282",
+          "name": "id",
+          "type": 6,
+          "flags": 1
+        },
+        {
+          "id": "2:5355044864817869981",
+          "name": "projectName",
+          "type": 9
+        },
+        {
+          "id": "3:2354140905141688890",
+          "name": "projectdec",
+          "type": 9
+        },
+        {
+          "id": "4:3563334765174661690",
+          "name": "projectUrl",
+          "type": 9
+        },
+        {
+          "id": "5:6582776413910408908",
+          "name": "techStack",
+          "type": 9
+        },
+        {
+          "id": "6:5597840201896334553",
+          "name": "startDate",
+          "type": 10
+        },
+        {
+          "id": "7:875565002049157813",
+          "name": "endDate",
+          "type": 10
+        }
+      ],
+      "relations": []
+    },
+    {
+      "id": "5:6826272781873900862",
+      "lastPropertyId": "6:383925896396124302",
+      "name": "Reference",
+      "properties": [
+        {
+          "id": "1:632721498583644986",
+          "name": "id",
+          "type": 6,
+          "flags": 1
+        },
+        {
+          "id": "2:1450176017639566866",
+          "name": "name",
+          "type": 9
+        },
+        {
+          "id": "3:1257570480234000239",
+          "name": "position",
+          "type": 9
+        },
+        {
+          "id": "4:6477733939262109502",
+          "name": "company",
+          "type": 9
+        },
+        {
+          "id": "5:950646318161896680",
+          "name": "phone",
+          "type": 9
+        },
+        {
+          "id": "6:383925896396124302",
+          "name": "email",
+          "type": 9
+        }
+      ],
+      "relations": []
+    }
+  ],
+  "lastEntityId": "5:6826272781873900862",
+  "lastIndexId": "0:0",
+  "lastRelationId": "4:8632244002158821523",
+  "lastSequenceId": "0:0",
+  "modelVersion": 5,
+  "modelVersionParserMinimum": 5,
+  "retiredEntityUids": [],
+  "retiredIndexUids": [],
+  "retiredPropertyUids": [],
+  "retiredRelationUids": [],
+  "version": 1
+}

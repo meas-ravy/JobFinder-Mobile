@@ -1,11 +1,38 @@
 import 'package:flutter/material.dart';
-import 'package:job_finder/features/job_seeker/presentation/templates/widget/normal_templates.dart';
-import 'package:job_finder/features/job_seeker/presentation/screens/cv_preview_screen.dart';
+import 'package:hooks_riverpod/hooks_riverpod.dart';
+import 'package:job_finder/features/job_seeker/presentation/screen/create_resume.dart';
+import 'package:job_finder/features/job_seeker/presentation/screens/template_selection_screen.dart';
+import 'package:job_finder/features/job_seeker/domain/entities/cv_entity.dart';
 import 'package:job_finder/features/job_seeker/presentation/widget/action_button.dart';
 import 'package:job_finder/features/job_seeker/presentation/widget/resume_card.dart';
+import 'package:job_finder/features/job_seeker/presentation/providers/cv_provider.dart';
+import 'package:intl/intl.dart';
 
-class MyDocumentPage extends StatelessWidget {
+class MyDocumentPage extends ConsumerStatefulWidget {
   const MyDocumentPage({super.key});
+
+  @override
+  ConsumerState<MyDocumentPage> createState() => _MyDocumentPageState();
+}
+
+class _MyDocumentPageState extends ConsumerState<MyDocumentPage> {
+  List<CvEntity> _cvList = [];
+  bool _isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadCvs();
+  }
+
+  Future<void> _loadCvs() async {
+    setState(() => _isLoading = true);
+    final cvs = await ref.read(cvRepositoryProvider).getAllCvs();
+    setState(() {
+      _cvList = cvs;
+      _isLoading = false;
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -35,14 +62,14 @@ class MyDocumentPage extends StatelessWidget {
                     child: ActionButton(
                       icon: 'assets/image/cv.png',
                       label: 'New resume',
-                      onTap: () {
-                        // context.push(AppPath.buildTemplate);
-                        Navigator.push(
+                      onTap: () async {
+                        await Navigator.push(
                           context,
                           MaterialPageRoute(
-                            builder: (context) => NormalTemplates(),
+                            builder: (context) => BuildTemplate(),
                           ),
                         );
+                        _loadCvs(); // Reload after creating new CV
                       },
                     ),
                   ),
@@ -89,54 +116,70 @@ class MyDocumentPage extends StatelessWidget {
 
             // Resume List
             Expanded(
-              child: ListView(
-                padding: const EdgeInsets.symmetric(horizontal: 20),
-                children: [
-                  ResumeCard(
-                    title: 'UI / UX Designer',
-                    template: 'Prague',
-                    progress: 0.85,
-                    date: '12 May 2023',
-                    onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => const CvPreviewScreen(),
-                        ),
-                      );
-                    },
-                  ),
-                  const SizedBox(height: 12),
-                  ResumeCard(
-                    title: 'Graphic Designer',
-                    template: 'Simple',
-                    progress: 0.55,
-                    date: '14 May 2023',
-                    onTap: () {
-                      // Navigate to edit resume
-                    },
-                  ),
-                  const SizedBox(height: 12),
-                  ResumeCard(
-                    title: 'Product Designer',
-                    template: 'Simple',
-                    progress: 0.25,
-                    date: '11 May 2023',
-                    onTap: () {
-                      // Navigate to edit resume
-                    },
-                  ),
-                  const SizedBox(height: 12),
-                  ResumeCard(
-                    title: 'Designer',
-                    template: 'Modern',
-                    progress: 0.15,
-                    date: '10 May 2023',
-                    onTap: () {},
-                  ),
-                  const SizedBox(height: 20),
-                ],
-              ),
+              child: _isLoading
+                  ? const Center(child: CircularProgressIndicator())
+                  : _cvList.isEmpty
+                  ? Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(
+                            Icons.description_outlined,
+                            size: 64,
+                            color: colorScheme.onSurface.withValues(alpha: 0.3),
+                          ),
+                          const SizedBox(height: 16),
+                          Text(
+                            'No resumes yet',
+                            style: textTheme.titleMedium?.copyWith(
+                              color: colorScheme.onSurface.withValues(
+                                alpha: 0.6,
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          Text(
+                            'Create your first resume to get started',
+                            style: textTheme.bodyMedium?.copyWith(
+                              color: colorScheme.onSurface.withValues(
+                                alpha: 0.4,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    )
+                  : ListView.separated(
+                      padding: const EdgeInsets.symmetric(horizontal: 20),
+                      itemCount: _cvList.length,
+                      separatorBuilder: (_, __) => const SizedBox(height: 12),
+                      itemBuilder: (context, index) {
+                        final cv = _cvList[index];
+                        final dateFormat = DateFormat('dd MMM yyyy');
+
+                        // Calculate progress based on filled fields
+                        double progress = 0.3; // Base progress
+                        if (cv.summary?.isNotEmpty ?? false) progress += 0.2;
+                        if (cv.exp.isNotEmpty) progress += 0.25;
+                        if (cv.edu.isNotEmpty) progress += 0.25;
+
+                        return ResumeCard(
+                          title: cv.title,
+                          template: 'Normal', // Default template for now
+                          progress: progress,
+                          date: dateFormat.format(cv.updatedAt),
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) =>
+                                    TemplateSelectionScreen(cv: cv),
+                              ),
+                            );
+                          },
+                        );
+                      },
+                    ),
             ),
           ],
         ),

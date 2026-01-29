@@ -1,105 +1,29 @@
-import 'package:objectbox/objectbox.dart';
+  @override
+  void initState() {
+    super.initState();
+    filteredTemplates = allTemplates;
+    _searchController.addListener(_filterTemplates);
+  }
 
-/// The main entity representing a single CV document.
-@Entity()
-class CvEntity {
-  @Id()
-  int id = 0; // ObjectBox requires an integer ID. 0 means it's a new object.
+  @override
+  void dispose() {
+    _searchController.removeListener(_filterTemplates);
+    _searchController.dispose();
+    super.dispose();
+  }
 
-  /// To identify this CV in a list (e.g., "Software Engineer CV", "Manager Resume")
-  String title;
+  void _filterTemplates() {
+    setState(() {
+      final query = _searchController.text.toLowerCase();
+      final selectedCategory = _tabs[_selectedTabIndex];
 
-  // --- Personal Details ---
-  String fullName;
-  String email;
-  String phone;
-  String? address;
-  String? linkedinUrl;
-  String? portfolioUrl;
-
-  // --- Professional Summary ---
-  String summary;
-
-  // --- Skills ---
-  // ObjectBox supports List<String> natively.
-  List<String> skills;
-
-  // --- Relationships ---
-  // We use ToMany for lists of complex objects.
-  final experience = ToMany<ExperienceEntity>();
-  final education = ToMany<EducationEntity>();
-
-  // --- Metadata ---
-  @Property(type: PropertyType.date)
-  DateTime updatedAt;
-
-  CvEntity({
-    this.id = 0,
-    required this.title,
-    required this.fullName,
-    required this.email,
-    required this.phone,
-    this.address,
-    this.linkedinUrl,
-    this.portfolioUrl,
-    required this.summary,
-    this.skills = const [],
-    required this.updatedAt,
-  });
-}
-
-/// Represents a single job entry.
-@Entity()
-class ExperienceEntity {
-  @Id()
-  int id = 0;
-
-  String jobTitle;
-  String company;
-  String? location;
-
-  // Storing dates as DateTime allows for sorting and custom formatting later
-  @Property(type: PropertyType.date)
-  DateTime? startDate;
-
-  @Property(type: PropertyType.date)
-  DateTime? endDate;
-
-  bool isCurrentRole;
-  String description;
-
-  ExperienceEntity({
-    this.id = 0,
-    required this.jobTitle,
-    required this.company,
-    this.location,
-    this.startDate,
-    this.endDate,
-    this.isCurrentRole = false,
-    this.description = '',
-  });
-}
-
-/// Represents a single education entry.
-@Entity()
-class EducationEntity {
-  @Id()
-  int id = 0;
-
-  String institution;
-  String degree;
-
-  @Property(type: PropertyType.date)
-  DateTime? startDate;
-
-  @Property(type: PropertyType.date)
-  DateTime? endDate;
-
-  EducationEntity({
-    this.id = 0,
-    required this.institution,
-    required this.degree,
-    this.startDate,
-    this.endDate,
-  });
-}
+      filteredTemplates = allTemplates.where((template) {
+        final matchesSearch =
+            template.displayName.toLowerCase().contains(query) ||
+            template.category.toLowerCase().contains(query);
+        final matchesCategory =
+            selectedCategory == 'All' || template.category == selectedCategory;
+        return matchesSearch && matchesCategory;
+      }).toList();
+    });
+  }
