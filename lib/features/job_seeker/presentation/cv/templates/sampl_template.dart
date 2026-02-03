@@ -1,353 +1,333 @@
-import 'package:flutter/material.dart';
+import 'dart:io';
 import 'package:job_finder/features/job_seeker/domain/entities/cv_entity.dart';
-import 'package:job_finder/features/job_seeker/presentation/cv/widget/resume_pdf_builder.dart';
-import 'package:printing/printing.dart';
+import 'package:pdf/pdf.dart';
+import 'package:pdf/widgets.dart' as pw;
+import '../../../domain/repos/cv_template_strategy.dart';
 
-class SampleTemplate extends StatelessWidget {
-  final CvEntity cv;
-
-  const SampleTemplate({super.key, required this.cv});
-
+class SampleTemplatePdf implements CvTemplateStrategy {
   @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Sample Template'),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.picture_as_pdf),
-            onPressed: () async {
-              final pdfBytes = await generateResumePdf(cv);
-              await Printing.layoutPdf(onLayout: (_) async => pdfBytes);
-            },
-          ),
-        ],
-      ),
-      backgroundColor: Colors.grey.shade100,
-      body: SafeArea(
-        child: SingleChildScrollView(
-          child: Column(
+  Future<void> build(pw.Document pdf, CvEntity cv) async {
+    // Load profile image if available
+    pw.MemoryImage? profileImage;
+    if (cv.imgurl.isNotEmpty) {
+      try {
+        final file = File(cv.imgurl);
+        if (await file.exists()) {
+          profileImage = pw.MemoryImage(await file.readAsBytes());
+        }
+      } catch (e) {
+        print('Error loading profile image: $e');
+      }
+    }
+
+    pdf.addPage(
+      pw.Page(
+        pageFormat: PdfPageFormat.a4,
+        margin: const pw.EdgeInsets.all(32),
+        build: (pw.Context context) {
+          return pw.Row(
+            crossAxisAlignment: pw.CrossAxisAlignment.start,
             children: [
-              // Side stripe accent
-              Container(
-                height: 8,
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: [Colors.teal.shade600, Colors.cyan.shade600],
-                  ),
-                ),
-              ),
-
-              Padding(
-                padding: const EdgeInsets.all(32.0),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+              // --- LEFT COLUMN ---
+              pw.Container(
+                width: 185,
+                child: pw.Column(
+                  crossAxisAlignment: pw.CrossAxisAlignment.start,
                   children: [
-                    // Simple Clean Header
-                    _buildHeader(),
+                    // Profile Image
+                    if (profileImage != null)
+                      pw.Container(
+                        width: 170,
+                        height: 170,
+                        decoration: pw.BoxDecoration(
+                          image: pw.DecorationImage(
+                            image: profileImage,
+                            fit: pw.BoxFit.cover,
+                          ),
+                        ),
+                      )
+                    else
+                      pw.Container(
+                        width: 170,
+                        height: 170,
+                        color: PdfColors.grey300,
+                      ),
 
-                    const Divider(height: 48, thickness: 1),
+                    pw.SizedBox(height: 32),
 
-                    // Profile Summary
-                    if (cv.summary?.isNotEmpty ?? false) ...[
-                      _buildSectionTitle('Professional Summary'),
-                      const SizedBox(height: 12),
-                      _buildProfile(),
-                      const SizedBox(height: 32),
+                    // CONTACT
+                    _buildLeftSectionTitle('CONTACT'),
+                    pw.SizedBox(height: 14),
+                    pw.Text(cv.phone, style: const pw.TextStyle(fontSize: 13)),
+                    pw.SizedBox(height: 4),
+                    pw.Text(cv.email, style: const pw.TextStyle(fontSize: 13)),
+                    if (cv.website?.isNotEmpty ?? false) ...[
+                      pw.SizedBox(height: 4),
+                      pw.Text(
+                        cv.website!,
+                        style: const pw.TextStyle(fontSize: 13),
+                      ),
                     ],
 
-                    // Work Experience
-                    if (cv.exp.isNotEmpty) ...[
-                      _buildSectionTitle('Work Experience'),
-                      const SizedBox(height: 16),
-                      _buildWorkExperience(),
-                      const SizedBox(height: 32),
-                    ],
+                    pw.SizedBox(height: 32),
 
-                    // Education
+                    // EDUCATION
                     if (cv.edu.isNotEmpty) ...[
-                      _buildSectionTitle('Education'),
-                      const SizedBox(height: 16),
-                      _buildEducation(),
-                      const SizedBox(height: 32),
+                      _buildLeftSectionTitle('EDUCATION'),
+                      pw.SizedBox(height: 12),
+                      ...cv.edu.map(
+                        (edu) => pw.Container(
+                          margin: const pw.EdgeInsets.only(bottom: 20),
+                          child: pw.Column(
+                            crossAxisAlignment: pw.CrossAxisAlignment.start,
+                            children: [
+                              pw.Text(
+                                edu.degree,
+                                style: pw.TextStyle(
+                                  fontSize: 13,
+                                  fontWeight: pw.FontWeight.bold,
+                                ),
+                              ),
+                              pw.SizedBox(height: 8),
+                              pw.Text(
+                                edu.institution,
+                                style: const pw.TextStyle(fontSize: 13),
+                              ),
+                              pw.SizedBox(height: 7),
+                              pw.Text(
+                                '${edu.startDate.year} - ${edu.endDate.year}',
+                                style: pw.TextStyle(
+                                  fontSize: 12,
+                                  fontWeight: pw.FontWeight.bold,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
                     ],
 
-                    // Skills
+                    pw.SizedBox(height: 24),
+
+                    // SKILLS
                     if (cv.skills.isNotEmpty) ...[
-                      _buildSectionTitle('Skills'),
-                      const SizedBox(height: 16),
-                      _buildSkills(),
+                      _buildLeftSectionTitle('SKILLS'),
+                      pw.SizedBox(height: 12),
+                      ...cv.skills.map(
+                        (skill) => pw.Padding(
+                          padding: const pw.EdgeInsets.only(bottom: 4),
+                          child: pw.Text(
+                            skill,
+                            style: const pw.TextStyle(fontSize: 13),
+                          ),
+                        ),
+                      ),
+                    ],
+
+                    pw.SizedBox(height: 32),
+
+                    // REFERENCES
+                    _buildLeftSectionTitle('REFERENCES'),
+                    pw.SizedBox(height: 12),
+                    if (cv.ref.isNotEmpty)
+                      ...cv.ref.map(
+                        (ref) => pw.Container(
+                          margin: const pw.EdgeInsets.only(bottom: 8),
+                          child: pw.Column(
+                            crossAxisAlignment: pw.CrossAxisAlignment.start,
+                            children: [
+                              pw.Text(
+                                ref.name,
+                                style: pw.TextStyle(
+                                  fontSize: 13,
+                                  fontWeight: pw.FontWeight.bold,
+                                ),
+                              ),
+                              pw.SizedBox(height: 8),
+                              pw.Text(
+                                ref.position,
+                                style: const pw.TextStyle(fontSize: 13),
+                              ),
+                              pw.SizedBox(height: 8),
+                              pw.Text(
+                                ref.phone,
+                                style: const pw.TextStyle(fontSize: 13),
+                              ),
+                            ],
+                          ),
+                        ),
+                      )
+                    else
+                      pw.Text(
+                        'Provided upon request.',
+                        style: const pw.TextStyle(fontSize: 10),
+                      ),
+                  ],
+                ),
+              ),
+
+              pw.SizedBox(width: 40),
+
+              // --- RIGHT COLUMN ---
+              pw.Expanded(
+                child: pw.Column(
+                  crossAxisAlignment: pw.CrossAxisAlignment.start,
+                  children: [
+                    // Name & Title
+                    pw.SizedBox(height: 10),
+                    pw.Text(
+                      cv.fullName.toUpperCase(),
+                      style: pw.TextStyle(
+                        fontSize: 36,
+                        fontWeight: pw.FontWeight.bold,
+                        letterSpacing: 2.0,
+                      ),
+                    ),
+                    pw.SizedBox(height: 4),
+                    pw.Text(
+                      (cv.exp.isNotEmpty
+                          ? cv.exp.first.jobTitle
+                          : 'UX Designer'),
+                      style: pw.TextStyle(
+                        fontSize: 18,
+                        fontWeight: pw.FontWeight.normal,
+                      ),
+                    ),
+
+                    pw.SizedBox(height: 40),
+
+                    // SUMMARY
+                    _buildRightSectionTitle('SUMMARY'),
+                    pw.SizedBox(height: 12),
+                    pw.Text(
+                      cv.summary ?? '',
+                      style: const pw.TextStyle(fontSize: 12, height: 1.5),
+                    ),
+
+                    pw.SizedBox(height: 40),
+
+                    // WORK EXPERIENCE
+                    if (cv.exp.isNotEmpty) ...[
+                      _buildRightSectionTitle('WORK EXPERIENCE'),
+                      pw.SizedBox(height: 18),
+                      ...cv.exp.map(
+                        (exp) => pw.Container(
+                          margin: const pw.EdgeInsets.only(bottom: 24),
+                          child: pw.Column(
+                            crossAxisAlignment: pw.CrossAxisAlignment.start,
+                            children: [
+                              pw.Text(
+                                exp.jobTitle.toUpperCase(),
+                                style: pw.TextStyle(
+                                  fontSize: 12,
+                                  fontWeight: pw.FontWeight.bold,
+                                ),
+                              ),
+                              pw.SizedBox(height: 8),
+                              pw.Text(
+                                exp.companyName,
+                                style: const pw.TextStyle(fontSize: 12),
+                              ),
+                              pw.SizedBox(height: 8),
+                              pw.Text(
+                                '${exp.startDate.year} - ${exp.endDate.year == DateTime.now().year ? "Present" : exp.endDate.year}',
+                                style: const pw.TextStyle(fontSize: 12),
+                              ),
+                              pw.SizedBox(height: 8),
+                              ...exp.description
+                                  .split('\n')
+                                  .where((s) => s.trim().isNotEmpty)
+                                  .map((line) {
+                                    // Clean user input: remove manually typed bullets/dashes
+                                    String cleanLine = line.trim();
+                                    if (cleanLine.startsWith('•') ||
+                                        cleanLine.startsWith('-') ||
+                                        cleanLine.startsWith('*')) {
+                                      cleanLine = cleanLine.substring(1).trim();
+                                    }
+
+                                    return pw.Padding(
+                                      padding: const pw.EdgeInsets.only(
+                                        bottom: 5,
+                                      ),
+                                      child: pw.Row(
+                                        crossAxisAlignment:
+                                            pw.CrossAxisAlignment.start,
+                                        children: [
+                                          pw.Padding(
+                                            padding: const pw.EdgeInsets.only(
+                                              top: 5,
+                                              right: 8,
+                                            ),
+                                            child: pw.Container(
+                                              width: 3.5,
+                                              height: 3.5,
+                                              decoration:
+                                                  const pw.BoxDecoration(
+                                                    color: PdfColors.black,
+                                                    shape: pw.BoxShape.circle,
+                                                  ),
+                                            ),
+                                          ),
+                                          pw.Expanded(
+                                            child: pw.Text(
+                                              cleanLine,
+                                              style: const pw.TextStyle(
+                                                fontSize: 12,
+                                                height: 1.3,
+                                              ),
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    );
+                                  }),
+                            ],
+                          ),
+                        ),
+                      ),
                     ],
                   ],
                 ),
               ),
             ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildHeader() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          cv.fullName,
-          style: TextStyle(
-            fontSize: 38,
-            fontWeight: FontWeight.w900,
-            color: Colors.teal.shade800,
-            letterSpacing: -1,
-          ),
-        ),
-        const SizedBox(height: 8),
-        Text(
-          cv.exp.isNotEmpty ? cv.exp.first.jobTitle : 'Professional',
-          style: TextStyle(
-            fontSize: 18,
-            fontWeight: FontWeight.w600,
-            color: Colors.teal.shade600,
-          ),
-        ),
-        const SizedBox(height: 16),
-        Row(
-          children: [
-            _buildContactItem(Icons.email_outlined, cv.email),
-            const SizedBox(width: 24),
-            _buildContactItem(Icons.phone_outlined, cv.phone),
-          ],
-        ),
-        if (cv.website?.isNotEmpty ?? false)
-          Padding(
-            padding: const EdgeInsets.only(top: 8),
-            child: _buildContactItem(Icons.language_outlined, cv.website!),
-          ),
-      ],
-    );
-  }
-
-  Widget _buildContactItem(IconData icon, String text) {
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Icon(icon, size: 18, color: Colors.teal.shade700),
-        const SizedBox(width: 6),
-        Text(text, style: const TextStyle(fontSize: 13, color: Colors.black87)),
-      ],
-    );
-  }
-
-  Widget _buildSectionTitle(String title) {
-    return Container(
-      padding: const EdgeInsets.only(left: 12, bottom: 8),
-      decoration: BoxDecoration(
-        border: Border(left: BorderSide(color: Colors.teal.shade600, width: 4)),
-      ),
-      child: Text(
-        title,
-        style: TextStyle(
-          fontSize: 20,
-          fontWeight: FontWeight.w700,
-          color: Colors.teal.shade800,
-          letterSpacing: -0.3,
-        ),
-      ),
-    );
-  }
-
-  Widget _buildProfile() {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: Colors.teal.shade200, width: 1),
-      ),
-      child: Text(
-        cv.summary ?? '',
-        style: const TextStyle(
-          fontSize: 14,
-          height: 1.6,
-          color: Colors.black87,
-        ),
-        textAlign: TextAlign.justify,
-      ),
-    );
-  }
-
-  Widget _buildWorkExperience() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: cv.exp.map((exp) {
-        return Container(
-          margin: const EdgeInsets.only(bottom: 20),
-          padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(8),
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          exp.jobTitle,
-                          style: const TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w700,
-                            color: Colors.black87,
-                          ),
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          exp.companyName,
-                          style: TextStyle(
-                            fontSize: 14,
-                            fontWeight: FontWeight.w600,
-                            color: Colors.teal.shade700,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 12,
-                      vertical: 6,
-                    ),
-                    decoration: BoxDecoration(
-                      color: Colors.teal.shade50,
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: Text(
-                      '${exp.startDate.year} - ${exp.endDate.year}',
-                      style: TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w600,
-                        color: Colors.teal.shade800,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 12),
-              Text(
-                exp.description,
-                style: const TextStyle(
-                  fontSize: 13,
-                  height: 1.6,
-                  color: Colors.black87,
-                ),
-              ),
-            ],
-          ),
-        );
-      }).toList(),
-    );
-  }
-
-  Widget _buildEducation() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: cv.edu.map((edu) {
-        return Container(
-          margin: const EdgeInsets.only(bottom: 16),
-          padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(8),
-          ),
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Container(
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: Colors.teal.shade50,
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Icon(
-                  Icons.school,
-                  color: Colors.teal.shade700,
-                  size: 24,
-                ),
-              ),
-              const SizedBox(width: 16),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      edu.degree,
-                      style: const TextStyle(
-                        fontSize: 15,
-                        fontWeight: FontWeight.w600,
-                        color: Colors.black87,
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      edu.institution,
-                      style: const TextStyle(
-                        fontSize: 14,
-                        color: Colors.black87,
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      '${edu.startDate.year} - ${edu.endDate.year}',
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: Colors.teal.shade600,
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-        );
-      }).toList(),
-    );
-  }
-
-  Widget _buildSkills() {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(8),
-      ),
-      child: Wrap(
-        spacing: 8,
-        runSpacing: 8,
-        children: cv.skills.map((skill) {
-          return Container(
-            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-            decoration: BoxDecoration(
-              color: Colors.teal.shade50,
-              borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: Colors.teal.shade200, width: 1),
-            ),
-            child: Text(
-              skill,
-              style: TextStyle(
-                fontSize: 13,
-                fontWeight: FontWeight.w500,
-                color: Colors.teal.shade900,
-              ),
-            ),
           );
-        }).toList(),
+        },
       ),
+    );
+  }
+
+  pw.Widget _buildLeftSectionTitle(String title) {
+    return pw.Column(
+      crossAxisAlignment: pw.CrossAxisAlignment.start,
+      children: [
+        pw.Text(
+          title,
+          style: pw.TextStyle(
+            fontSize: 16,
+            fontWeight: pw.FontWeight.bold,
+            letterSpacing: 2.5,
+          ),
+        ),
+        pw.SizedBox(height: 4),
+      ],
+    );
+  }
+
+  pw.Widget _buildRightSectionTitle(String title) {
+    return pw.Column(
+      crossAxisAlignment: pw.CrossAxisAlignment.start,
+      children: [
+        pw.Text(
+          title,
+          style: pw.TextStyle(
+            fontSize: 14,
+            fontWeight: pw.FontWeight.bold,
+            letterSpacing: 2.5,
+          ),
+        ),
+        pw.SizedBox(height: 4),
+      ],
     );
   }
 }

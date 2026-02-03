@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:job_finder/features/job_seeker/presentation/screen/create_resume.dart';
-import 'package:job_finder/features/job_seeker/presentation/screens/template_selection_screen.dart';
 import 'package:job_finder/features/job_seeker/domain/entities/cv_entity.dart';
 import 'package:job_finder/features/job_seeker/presentation/widget/action_button.dart';
 import 'package:job_finder/features/job_seeker/presentation/widget/resume_card.dart';
@@ -152,7 +151,7 @@ class _MyDocumentPageState extends ConsumerState<MyDocumentPage> {
                   : ListView.separated(
                       padding: const EdgeInsets.symmetric(horizontal: 20),
                       itemCount: _cvList.length,
-                      separatorBuilder: (_, __) => const SizedBox(height: 12),
+                      separatorBuilder: (_, _) => const SizedBox(height: 12),
                       itemBuilder: (context, index) {
                         final cv = _cvList[index];
                         final dateFormat = DateFormat('dd MMM yyyy');
@@ -168,15 +167,7 @@ class _MyDocumentPageState extends ConsumerState<MyDocumentPage> {
                           template: 'Normal', // Default template for now
                           progress: progress,
                           date: dateFormat.format(cv.updatedAt),
-                          onTap: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) =>
-                                    TemplateSelectionScreen(cv: cv),
-                              ),
-                            );
-                          },
+                          onTap: () {},
                         );
                       },
                     ),

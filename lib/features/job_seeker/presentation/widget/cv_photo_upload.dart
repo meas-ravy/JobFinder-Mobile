@@ -6,7 +6,8 @@ import 'package:job_finder/core/constants/assets.dart';
 import 'package:job_finder/shared/widget/svg_icon.dart';
 
 class CvPhotoUpload extends StatefulWidget {
-  const CvPhotoUpload({super.key});
+  final Function(String path)? onImagePicked;
+  const CvPhotoUpload({super.key, this.onImagePicked});
 
   @override
   State<CvPhotoUpload> createState() => _CvPhotoUploadState();
@@ -75,6 +76,7 @@ class _CvPhotoUploadState extends State<CvPhotoUpload> {
       setState(() {
         _profileImage = image;
       });
+      widget.onImagePicked?.call(image.path);
     }
   }
 

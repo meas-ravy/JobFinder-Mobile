@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:job_finder/core/constants/assets.dart';
 import 'package:job_finder/features/job_seeker/data/model/template_model.dart';
-import 'package:job_finder/features/job_seeker/presentation/screens/cv_form_screen.dart';
+import 'package:job_finder/features/job_seeker/presentation/screen/cv_form_screen.dart';
 import 'package:job_finder/shared/widget/svg_icon.dart';
 
 class BuildTemplate extends StatefulWidget {
@@ -205,7 +205,8 @@ class _BuildTemplateState extends State<BuildTemplate> {
                             Navigator.push(
                               context,
                               MaterialPageRoute(
-                                builder: (context) => const CvFormScreen(),
+                                builder: (context) =>
+                                    CvFormScreen(selectedTemplate: template),
                               ),
                             );
                           },
