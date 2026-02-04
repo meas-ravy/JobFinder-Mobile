@@ -86,7 +86,9 @@ class _BuildTemplateState extends State<BuildTemplate> {
                   ),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(30),
-                    borderSide: BorderSide(color: colorScheme.onSecondary),
+                    borderSide: BorderSide(
+                      color: colorScheme.surfaceContainerHighest,
+                    ),
                   ),
                   focusColor: colorScheme.onSurface,
                   focusedBorder: OutlineInputBorder(
@@ -229,7 +231,6 @@ class _TemplateCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final textTheme = Theme.of(context).textTheme;
     final colorScheme = Theme.of(context).colorScheme;
 
     return GestureDetector(
@@ -243,12 +244,16 @@ class _TemplateCard extends StatelessWidget {
               decoration: BoxDecoration(
                 color: colorScheme.surfaceContainerHighest,
                 border: Border.all(
-                  color: colorScheme.surface.withValues(alpha: 0.08),
+                  color: colorScheme.surfaceContainerHighest.withValues(
+                    alpha: 0.08,
+                  ),
                 ),
                 borderRadius: BorderRadius.circular(8),
                 boxShadow: [
                   BoxShadow(
-                    color: colorScheme.surface.withValues(alpha: 0.08),
+                    color: colorScheme.surfaceContainerHighest.withValues(
+                      alpha: 0.08,
+                    ),
                     blurRadius: 10,
                     offset: Offset(0, 4),
                   ),
@@ -258,35 +263,6 @@ class _TemplateCard extends StatelessWidget {
                 borderRadius: BorderRadius.circular(8),
                 child: Image.asset(template.icon, fit: BoxFit.cover),
               ),
-            ),
-          ),
-
-          // Template Info - Outside Container
-          Padding(
-            padding: const EdgeInsets.only(top: 12),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-                Text(
-                  template.displayName,
-                  style: textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.w700,
-                    color: template.color,
-                    fontSize: 17,
-                    letterSpacing: -0.3,
-                  ),
-                  textAlign: TextAlign.center,
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  template.category,
-                  style: textTheme.bodySmall?.copyWith(
-                    color: colorScheme.onSurface.withValues(alpha: 0.5),
-                    fontSize: 14,
-                  ),
-                  textAlign: TextAlign.center,
-                ),
-              ],
             ),
           ),
         ],

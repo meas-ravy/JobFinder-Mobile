@@ -5,14 +5,14 @@ final List<TempModel> allTemp = [
     name: 'Normal',
     displayName: 'Celeste',
     category: 'Simple',
-    icon: 'assets/image/sampleone.png',
+    icon: 'assets/image/sample_1.png',
     color: Color(0xFF6C63FF),
   ),
   TempModel(
     name: 'Professional',
     displayName: 'Aurora',
     category: 'Professional',
-    icon: 'assets/image/profesionalone.png',
+    icon: 'assets/image/pro_1.png',
     color: Color(0xFF6C63FF),
   ),
 ];

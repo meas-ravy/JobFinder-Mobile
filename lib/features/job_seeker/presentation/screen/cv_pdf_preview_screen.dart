@@ -95,8 +95,19 @@ class CvPdfPreviewScreen extends StatelessWidget {
     final pdf = pw.Document();
 
     // Use Strategy Pattern to build the PDF logic
-    final strategy = CvTemplateFactory.getStrategy(templateName);
-    await strategy.build(pdf, cv);
+    try {
+      final strategy = CvTemplateFactory.getStrategy(templateName);
+      await strategy.build(pdf, cv);
+    } catch (e) {
+      debugPrint('Error building PDF: $e');
+      // Add a fallback page so pdf.save() doesn't throw RangeError
+      pdf.addPage(
+        pw.Page(
+          build: (context) =>
+              pw.Center(child: pw.Text('Error generating PDF: $e')),
+        ),
+      );
+    }
 
     return pdf.save();
   }

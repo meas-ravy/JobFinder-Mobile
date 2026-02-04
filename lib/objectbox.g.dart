@@ -22,7 +22,7 @@ final _entities = <obx_int.ModelEntity>[
   obx_int.ModelEntity(
     id: const obx_int.IdUid(1, 6259938536795343860),
     name: 'CvEntity',
-    lastPropertyId: const obx_int.IdUid(14, 4964113921733993889),
+    lastPropertyId: const obx_int.IdUid(15, 6943956476219637064),
     flags: 0,
     properties: <obx_int.ModelProperty>[
       obx_int.ModelProperty(
@@ -107,6 +107,12 @@ final _entities = <obx_int.ModelEntity>[
         id: const obx_int.IdUid(14, 4964113921733993889),
         name: 'updatedAt',
         type: 10,
+        flags: 0,
+      ),
+      obx_int.ModelProperty(
+        id: const obx_int.IdUid(15, 6943956476219637064),
+        name: 'templateName',
+        type: 9,
         flags: 0,
       ),
     ],
@@ -415,7 +421,8 @@ obx_int.ModelDefinition getObjectBoxModel() {
         final languageOffset = fbb.writeList(
           object.language.map(fbb.writeString).toList(growable: false),
         );
-        fbb.startTable(15);
+        final templateNameOffset = fbb.writeString(object.templateName);
+        fbb.startTable(16);
         fbb.addInt64(0, object.id);
         fbb.addOffset(1, titleOffset);
         fbb.addOffset(2, imgurlOffset);
@@ -430,6 +437,7 @@ obx_int.ModelDefinition getObjectBoxModel() {
         fbb.addOffset(11, skillsOffset);
         fbb.addOffset(12, languageOffset);
         fbb.addInt64(13, object.updatedAt.millisecondsSinceEpoch);
+        fbb.addOffset(14, templateNameOffset);
         fbb.finish(fbb.endTable());
         return object.id;
       },
@@ -448,6 +456,9 @@ obx_int.ModelDefinition getObjectBoxModel() {
         final titleParam = const fb.StringReader(
           asciiOptimization: true,
         ).vTableGet(buffer, rootOffset, 6, '');
+        final templateNameParam = const fb.StringReader(
+          asciiOptimization: true,
+        ).vTableGet(buffer, rootOffset, 32, '');
         final fullNameParam = const fb.StringReader(
           asciiOptimization: true,
         ).vTableGet(buffer, rootOffset, 10, '');
@@ -487,6 +498,7 @@ obx_int.ModelDefinition getObjectBoxModel() {
           id: idParam,
           imgurl: imgurlParam,
           title: titleParam,
+          templateName: templateNameParam,
           fullName: fullNameParam,
           email: emailParam,
           phone: phoneParam,
@@ -842,6 +854,11 @@ class CvEntity_ {
   /// See [CvEntity.updatedAt].
   static final updatedAt = obx.QueryDateProperty<CvEntity>(
     _entities[0].properties[13],
+  );
+
+  /// See [CvEntity.templateName].
+  static final templateName = obx.QueryStringProperty<CvEntity>(
+    _entities[0].properties[14],
   );
 
   /// see [CvEntity.exp]

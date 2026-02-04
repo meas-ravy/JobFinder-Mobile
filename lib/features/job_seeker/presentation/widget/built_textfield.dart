@@ -25,36 +25,25 @@ class BuiltTextfield extends StatelessWidget {
       decoration: InputDecoration(
         labelText: label,
         hintText: hint,
-
         labelStyle: TextStyle(
-          color: colorScheme.onSurface.withValues(alpha: 0.6),
-          fontSize: 12,
+          fontSize: 14,
+          fontWeight: FontWeight.w500,
+          color: colorScheme.onSurface.withValues(alpha: 0.4),
         ),
         hintStyle: TextStyle(
           fontSize: 14,
+          fontWeight: FontWeight.w500,
           color: colorScheme.onSurface.withValues(alpha: 0.4),
         ),
         filled: true,
-        fillColor: colorScheme.surface,
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(8),
-          borderSide: BorderSide(
-            color: colorScheme.onSecondary.withValues(alpha: 0.3),
-          ),
-        ),
-        enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(8),
-          borderSide: BorderSide(
-            color: colorScheme.onSecondary.withValues(alpha: 0.3),
-          ),
-        ),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(8),
-          borderSide: BorderSide(color: colorScheme.primary, width: 1.5),
-        ),
+        fillColor: colorScheme.surfaceContainerHighest,
         contentPadding: const EdgeInsets.symmetric(
           horizontal: 16,
-          vertical: 14,
+          vertical: 16,
+        ),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide.none,
         ),
       ),
       maxLines: maxLine,

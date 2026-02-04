@@ -5,7 +5,7 @@
   "entities": [
     {
       "id": "1:6259938536795343860",
-      "lastPropertyId": "14:4964113921733993889",
+      "lastPropertyId": "15:6943956476219637064",
       "name": "CvEntity",
       "properties": [
         {
@@ -78,6 +78,11 @@
           "id": "14:4964113921733993889",
           "name": "updatedAt",
           "type": 10
+        },
+        {
+          "id": "15:6943956476219637064",
+          "name": "templateName",
+          "type": 9
         }
       ],
       "relations": [

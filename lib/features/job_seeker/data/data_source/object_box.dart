@@ -1,6 +1,7 @@
+// ignore: depend_on_referenced_packages
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
-import 'package:job_finder/objectbox.g.dart'; // This will be generated
+import 'package:job_finder/objectbox.g.dart';
 
 class ObjectBox {
   /// The Store of this app.

@@ -18,7 +18,7 @@ class ActionButton extends StatelessWidget {
     final textTheme = Theme.of(context).textTheme;
 
     return Material(
-      color: colorScheme.onSurface.withValues(alpha: 0.02),
+      color: colorScheme.surfaceContainerHighest,
       borderRadius: BorderRadius.circular(12),
       child: InkWell(
         onTap: onTap,

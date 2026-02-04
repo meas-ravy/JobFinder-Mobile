@@ -6,8 +6,9 @@ import 'package:job_finder/core/constants/assets.dart';
 import 'package:job_finder/shared/widget/svg_icon.dart';
 
 class CvPhotoUpload extends StatefulWidget {
+  final String? initialImage;
   final Function(String path)? onImagePicked;
-  const CvPhotoUpload({super.key, this.onImagePicked});
+  const CvPhotoUpload({super.key, this.onImagePicked, this.initialImage});
 
   @override
   State<CvPhotoUpload> createState() => _CvPhotoUploadState();
@@ -16,6 +17,14 @@ class CvPhotoUpload extends StatefulWidget {
 class _CvPhotoUploadState extends State<CvPhotoUpload> {
   final ImagePicker _picker = ImagePicker();
   XFile? _profileImage;
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.initialImage != null && widget.initialImage!.isNotEmpty) {
+      _profileImage = XFile(widget.initialImage!);
+    }
+  }
 
   void _showImageDialog(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
@@ -88,8 +97,8 @@ class _CvPhotoUploadState extends State<CvPhotoUpload> {
         GestureDetector(
           onTap: () => _showImageDialog(context),
           child: Container(
-            width: 120,
-            height: 120,
+            width: 130,
+            height: 130,
             decoration: BoxDecoration(
               shape: BoxShape.circle,
               color: colorScheme.surfaceContainerHighest,

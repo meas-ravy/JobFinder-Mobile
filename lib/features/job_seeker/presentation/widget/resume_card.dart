@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:job_finder/core/constants/assets.dart';
 import 'package:job_finder/core/theme/app_color.dart';
+import 'package:job_finder/shared/widget/svg_icon.dart';
 
 class ResumeCard extends StatelessWidget {
   const ResumeCard({
@@ -9,6 +11,7 @@ class ResumeCard extends StatelessWidget {
     required this.progress,
     required this.date,
     required this.onTap,
+    this.onEdit,
   });
 
   final String title;
@@ -16,6 +19,7 @@ class ResumeCard extends StatelessWidget {
   final double progress;
   final String date;
   final VoidCallback onTap;
+  final VoidCallback? onEdit;
 
   Color _getProgressColor(double progress) {
     if (progress >= 0.7) return AppColor.purple;
@@ -67,20 +71,48 @@ class ResumeCard extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      title,
-                      style: textTheme.bodyLarge?.copyWith(
-                        fontWeight: FontWeight.w600,
-                        fontSize: 16,
-                      ),
+                    Row(
+                      children: [
+                        Text(
+                          title,
+                          style: textTheme.bodyLarge?.copyWith(
+                            fontWeight: FontWeight.w600,
+                            fontSize: 16,
+                          ),
+                        ),
+                        const Spacer(),
+                        if (onEdit != null)
+                          IconButton(
+                            onPressed: onEdit,
+                            icon: AppSvgIcon(
+                              assetName: AppIcon.edit,
+                              color: AppColor.primaryDark,
+                              size: 26,
+                            ),
+                            padding: EdgeInsets.zero,
+                            constraints: const BoxConstraints(),
+                          ),
+                      ],
                     ),
                     const SizedBox(height: 4),
-                    Text(
-                      template,
-                      style: textTheme.bodySmall?.copyWith(
-                        color: colorScheme.onSurface.withValues(alpha: 0.5),
-                        fontSize: 13,
-                      ),
+                    Row(
+                      children: [
+                        Text(
+                          template,
+                          style: textTheme.bodySmall?.copyWith(
+                            color: colorScheme.onSurface.withValues(alpha: 0.5),
+                            fontSize: 13,
+                          ),
+                        ),
+                        const SizedBox(width: 4),
+                        Text(
+                          '| $date',
+                          style: textTheme.bodySmall?.copyWith(
+                            color: colorScheme.onSurface.withValues(alpha: 0.5),
+                            fontSize: 12,
+                          ),
+                        ),
+                      ],
                     ),
                     const SizedBox(height: 8),
                     Row(
@@ -111,17 +143,6 @@ class ResumeCard extends StatelessWidget {
                       ],
                     ),
                   ],
-                ),
-              ),
-
-              const SizedBox(width: 12),
-
-              // Date
-              Text(
-                date,
-                style: textTheme.bodySmall?.copyWith(
-                  color: colorScheme.onSurface.withValues(alpha: 0.5),
-                  fontSize: 12,
                 ),
               ),
             ],

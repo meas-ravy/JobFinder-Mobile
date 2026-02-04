@@ -33,6 +33,8 @@ class CvEntity {
   final project = ToMany<Project>();
   final ref = ToMany<Reference>();
 
+  String templateName;
+
   // --- Metadata ---
   @Property(type: PropertyType.date)
   DateTime updatedAt;
@@ -41,6 +43,7 @@ class CvEntity {
     this.id = 0,
     required this.imgurl,
     required this.title,
+    required this.templateName,
     required this.fullName,
     required this.email,
     required this.phone,
