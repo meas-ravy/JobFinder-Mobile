@@ -16,6 +16,7 @@ class SampleTemplatePdf implements CvTemplateStrategy {
           profileImage = pw.MemoryImage(await file.readAsBytes());
         }
       } catch (e) {
+        // ignore: avoid_print
         print('Error loading profile image: $e');
       }
     }

@@ -507,6 +507,7 @@ pw.Widget _buildProfessionalExperience(List<ExpEntity> experiences) {
                     ),
                   );
                 })
+                // ignore: unnecessary_to_list_in_spreads
                 .toList(),
           ],
         ),

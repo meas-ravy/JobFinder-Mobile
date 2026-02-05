@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:local_auth/local_auth.dart';
@@ -10,7 +11,83 @@ class BiometricService {
 
   final LocalAuthentication _localAuth = LocalAuthentication();
   final FlutterSecureStorage _storage = const FlutterSecureStorage();
+  final ValueNotifier<bool> lockNotifier = ValueNotifier<bool>(false);
+  final ValueNotifier<int> settingsNotifier = ValueNotifier<int>(0);
   static const String _biometricEnabledKey = 'biometric_enabled';
+  static const String _appPinKey = 'app_pin';
+  static const String _appLockEnabledKey = 'app_lock_enabled';
+  static const String _securityQuestionKey = 'security_question';
+  static const String _securityAnswerKey = 'security_answer';
+
+  /// Check if app lock is enabled
+  Future<bool> isAppLockEnabled() async {
+    try {
+      final value = await _storage.read(key: _appLockEnabledKey);
+      return value == 'true';
+    } catch (e) {
+      return false;
+    }
+  }
+
+  /// Enable or disable app lock
+  Future<void> setAppLockEnabled(bool enabled) async {
+    await _storage.write(key: _appLockEnabledKey, value: enabled.toString());
+    settingsNotifier.value++;
+  }
+
+  /// Set the 4-digit App PIN
+  Future<void> setAppPin(String pin) async {
+    await _storage.write(key: _appPinKey, value: pin);
+    settingsNotifier.value++;
+  }
+
+  /// Verify the App PIN
+  Future<bool> verifyAppPin(String pin) async {
+    final savedPin = await _storage.read(key: _appPinKey);
+    return savedPin == pin;
+  }
+
+  /// Check if an App PIN is already set
+  Future<bool> hasAppPin() async {
+    final savedPin = await _storage.read(key: _appPinKey);
+    return savedPin != null && savedPin.isNotEmpty;
+  }
+
+  /// Delete the App PIN
+  Future<void> deleteAppPin() async {
+    await _storage.delete(key: _appPinKey);
+    settingsNotifier.value++;
+  }
+
+  /// Save security question and answer
+  Future<void> saveSecurityData(String question, String answer) async {
+    await _storage.write(key: _securityQuestionKey, value: question);
+    await _storage.write(
+      key: _securityAnswerKey,
+      value: answer.toLowerCase().trim(),
+    );
+    settingsNotifier.value++;
+  }
+
+  /// Get the saved security question
+  Future<String?> getSecurityQuestion() async {
+    return await _storage.read(key: _securityQuestionKey);
+  }
+
+  /// Verify the security answer
+  Future<bool> verifySecurityAnswer(String answer) async {
+    final savedAnswer = await _storage.read(key: _securityAnswerKey);
+    return savedAnswer == answer.toLowerCase().trim();
+  }
+
+  /// Delete all security data
+  Future<void> deleteAllSecurityData() async {
+    await _storage.delete(key: _appPinKey);
+    await _storage.delete(key: _securityQuestionKey);
+    await _storage.delete(key: _securityAnswerKey);
+    await setAppLockEnabled(false);
+    settingsNotifier.value++;
+  }
 
   /// Check if device supports biometric authentication
   Future<bool> isDeviceSupported() async {
@@ -51,10 +128,8 @@ class BiometricService {
 
   /// Enable or disable biometric authentication in app settings
   Future<void> setBiometricEnabled(bool enabled) async {
-    await _storage.write(
-      key: _biometricEnabledKey,
-      value: enabled.toString(),
-    );
+    await _storage.write(key: _biometricEnabledKey, value: enabled.toString());
+    settingsNotifier.value++;
   }
 
   /// Authenticate user with biometric (fingerprint, face ID) or device credentials (PIN/password/pattern)
@@ -108,12 +183,6 @@ class BiometricService {
     final types = <String>[];
     if (biometrics.contains(BiometricType.fingerprint)) {
       types.add('Fingerprint');
-    }
-    if (biometrics.contains(BiometricType.face)) {
-      types.add('Face ID');
-    }
-    if (biometrics.contains(BiometricType.iris)) {
-      types.add('Iris');
     }
 
     return types.isEmpty

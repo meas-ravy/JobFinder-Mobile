@@ -4,6 +4,7 @@ import 'package:job_finder/core/constants/oauth_config.dart';
 import 'package:job_finder/core/helper/locale_controller.dart';
 import 'package:job_finder/core/helper/theme_mode_controller.dart';
 import 'package:job_finder/core/routes/app_route.dart';
+import 'package:job_finder/shared/widget/app_lock_wrapper.dart';
 import 'package:job_finder/l10n/app_localizations.dart';
 import 'package:job_finder/core/theme/app_theme.dart';
 import 'package:job_finder/features/job_seeker/data/data_source/object_box.dart';
@@ -51,6 +52,9 @@ class MyApp extends StatelessWidget {
               localizationsDelegates: AppLocalizations.localizationsDelegates,
               supportedLocales: AppLocalizations.supportedLocales,
               routerConfig: AppRouter().router,
+              builder: (context, child) {
+                return AppLockWrapper(child: child!);
+              },
             );
           },
         );

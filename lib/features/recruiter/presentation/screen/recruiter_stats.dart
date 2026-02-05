@@ -421,6 +421,7 @@ class _RadarDataSet {
     required this.values,
     required this.strokeColor,
     required this.fillColor,
+    // ignore: unused_element_parameter
     this.strokeWidth = 2,
   });
 

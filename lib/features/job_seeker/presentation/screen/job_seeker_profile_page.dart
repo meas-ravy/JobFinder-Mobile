@@ -8,8 +8,11 @@ import 'package:job_finder/core/routes/app_path.dart';
 import 'package:job_finder/core/theme/app_color.dart';
 import 'package:job_finder/core/helper/theme_mode_controller.dart';
 import 'package:job_finder/features/auth/presentation/provider/auth_provider.dart';
+import 'package:job_finder/features/job_seeker/data/model/policy_services.dart';
 import 'package:job_finder/features/job_seeker/presentation/screen/jobb_seeker_document.dart';
 import 'package:job_finder/features/job_seeker/presentation/screen/security_settings_screen.dart';
+import 'package:job_finder/features/job_seeker/presentation/widget/dialogs/show_doc.dart';
+import 'package:job_finder/shared/widget/loading_dialog.dart';
 import 'package:job_finder/shared/widget/danger_tile.dart';
 import 'package:job_finder/shared/widget/section_title.dart';
 import 'package:job_finder/shared/widget/setting_switch_tile.dart';
@@ -89,25 +92,27 @@ class JobSeekerProfilePage extends HookConsumerWidget {
 
                 if (confirmed != true || !context.mounted) return;
 
-                // Call select-role API
+                LoadingDialog.show(
+                  context,
+                  message: 'Switching to Recruiter...',
+                );
+
                 final success = await ref
                     .read(authControllerProvider.notifier)
                     .selectRole('Recruiter');
 
                 if (!context.mounted) return;
+                LoadingDialog.hide(context);
 
                 if (success) {
-                  // Navigate to Recruiter home
                   context.go(AppPath.recruiterHome);
                 } else {
-                  // Show error
+                  final error = ref.read(authControllerProvider).errorMessage;
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
-                      content: Text(
-                        ref.read(authControllerProvider).errorMessage ??
-                            'Failed to switch role',
-                      ),
+                      content: Text(error ?? 'Failed to switch role'),
                       backgroundColor: Theme.of(context).colorScheme.error,
+                      behavior: SnackBarBehavior.floating,
                     ),
                   );
                 }
@@ -121,11 +126,11 @@ class JobSeekerProfilePage extends HookConsumerWidget {
               title: 'Notification',
               onTap: () {},
             ),
-            SettingsTile(
-              icon: AppIcon.application,
-              title: 'Application Issues',
-              onTap: () {},
-            ),
+            // SettingsTile(
+            //   icon: AppIcon.application,
+            //   title: 'Application Issues',
+            //   onTap: () {},
+            // ),
             SettingsTile(
               icon: AppIcon.shieldDone,
               title: 'Security',
@@ -180,14 +185,30 @@ class JobSeekerProfilePage extends HookConsumerWidget {
             SettingsTile(
               icon: AppIcon.infoSqua,
               title: 'Privacy & Policy',
-              onTap: () {},
+              onTap: () => ShowDoc.showLegalDocument(
+                context,
+                'Privacy Policy',
+                PolicyServices.privacyPolicyContent,
+              ),
             ),
             SettingsTile(
               icon: AppIcon.documentBold,
               title: 'Terms of Services',
-              onTap: () {},
+              onTap: () => ShowDoc.showLegalDocument(
+                context,
+                'Terms of Services',
+                PolicyServices.termsOfServiceContent,
+              ),
             ),
-            SettingsTile(icon: AppIcon.star, title: 'About us', onTap: () {}),
+            SettingsTile(
+              icon: AppIcon.star,
+              title: 'About us',
+              onTap: () => ShowDoc.showLegalDocument(
+                context,
+                'About Us',
+                PolicyServices.aboutUsContent,
+              ),
+            ),
 
             const SizedBox(height: 18),
 

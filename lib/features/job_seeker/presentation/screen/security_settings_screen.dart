@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:job_finder/core/services/biometric_service.dart';
+import 'package:job_finder/features/job_seeker/presentation/screen/app_lock_screen.dart';
+import 'package:job_finder/features/job_seeker/presentation/screen/pin_setup_screen.dart';
+import 'package:job_finder/features/job_seeker/presentation/screen/security_question_screen.dart';
 import 'package:job_finder/shared/widget/section_title.dart';
 import 'package:job_finder/shared/widget/setting_switch_tile.dart';
 
@@ -13,33 +16,74 @@ class SecuritySettingsScreen extends StatefulWidget {
 class _SecuritySettingsScreenState extends State<SecuritySettingsScreen> {
   final BiometricService _biometricService = BiometricService();
   bool _isBiometricEnabled = false;
+  bool _isAppLockEnabled = false;
   bool _isDeviceSupported = false;
   bool _canCheckBiometrics = false;
-  String _availableBiometrics = '';
+  String? _securityQuestion;
   bool _isLoading = true;
 
   @override
   void initState() {
     super.initState();
+    _biometricService.settingsNotifier.addListener(_checkBiometricStatus);
     _checkBiometricStatus();
+  }
+
+  @override
+  void dispose() {
+    _biometricService.settingsNotifier.removeListener(_checkBiometricStatus);
+    super.dispose();
   }
 
   Future<void> _checkBiometricStatus() async {
     final isSupported = await _biometricService.isDeviceSupported();
     final canCheck = await _biometricService.canCheckBiometrics();
     final isEnabled = await _biometricService.isBiometricEnabled();
-    final availableBiometrics = await _biometricService
-        .getAvailableBiometricString();
+    final isAppLockEnabled = await _biometricService.isAppLockEnabled();
+    final question = await _biometricService.getSecurityQuestion();
 
     if (mounted) {
       setState(() {
         _isDeviceSupported = isSupported;
         _canCheckBiometrics = canCheck;
         _isBiometricEnabled = isEnabled;
-        _availableBiometrics = availableBiometrics;
+        _isAppLockEnabled = isAppLockEnabled;
+        _securityQuestion = question;
         _isLoading = false;
       });
     }
+  }
+
+  Future<void> _toggleAppLock(bool value) async {
+    if (value) {
+      final set = await Navigator.push<bool>(
+        context,
+        MaterialPageRoute(builder: (context) => const PinSetupScreen()),
+      );
+      if (set != true) return;
+      await _biometricService.setAppLockEnabled(true);
+      // Trigger the lock screen immediately to verify
+      _biometricService.lockNotifier.value = true;
+    } else {
+      // Require verification before disabling
+      final verified = await Navigator.push<bool>(
+        context,
+        MaterialPageRoute(
+          builder: (context) => const AppLockScreen(
+            title: 'Verify PIN',
+            subtitle: 'Enter your current PIN to disable App Lock',
+          ),
+        ),
+      );
+
+      if (verified == true) {
+        await _biometricService.setAppLockEnabled(false);
+        await _biometricService.deleteAppPin();
+      } else {
+        return; // Don't update UI if cancelled or failed
+      }
+    }
+    _checkBiometricStatus();
   }
 
   Future<void> _toggleBiometric(bool value) async {
@@ -62,9 +106,6 @@ class _SecuritySettingsScreenState extends State<SecuritySettingsScreen> {
       if (authenticated) {
         await _biometricService.setBiometricEnabled(true);
         setState(() => _isBiometricEnabled = true);
-        _showSuccessSnackBar('Biometric authentication enabled');
-      } else {
-        _showErrorSnackBar('Authentication failed');
       }
     } else {
       // User wants to disable - authenticate first
@@ -77,7 +118,6 @@ class _SecuritySettingsScreenState extends State<SecuritySettingsScreen> {
       if (authenticated) {
         await _biometricService.setBiometricEnabled(false);
         setState(() => _isBiometricEnabled = false);
-        _showSuccessSnackBar('Biometric authentication disabled');
       } else {
         _showErrorSnackBar('Authentication failed');
       }
@@ -100,16 +140,6 @@ class _SecuritySettingsScreenState extends State<SecuritySettingsScreen> {
     );
   }
 
-  void _showSuccessSnackBar(String message) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(message),
-        backgroundColor: Colors.green,
-        behavior: SnackBarBehavior.floating,
-      ),
-    );
-  }
-
   void _showErrorSnackBar(String message) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
@@ -118,20 +148,6 @@ class _SecuritySettingsScreenState extends State<SecuritySettingsScreen> {
         behavior: SnackBarBehavior.floating,
       ),
     );
-  }
-
-  Future<void> _testBiometric() async {
-    final authenticated = await _biometricService.authenticate(
-      reason: 'Test biometric authentication',
-    );
-
-    if (!mounted) return;
-
-    if (authenticated) {
-      _showSuccessSnackBar('Authentication successful!');
-    } else {
-      _showErrorSnackBar('Authentication failed or cancelled');
-    }
   }
 
   @override
@@ -152,126 +168,81 @@ class _SecuritySettingsScreenState extends State<SecuritySettingsScreen> {
               child: ListView(
                 padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
                 children: [
-                  SectionTitle(
-                    title: 'Biometric Authentication',
-                    textTheme: textTheme,
-                  ),
-                  Card(
-                    margin: const EdgeInsets.only(bottom: 12),
-                    child: Padding(
-                      padding: const EdgeInsets.all(16),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Row(
-                            children: [
-                              Icon(
-                                _isDeviceSupported && _canCheckBiometrics
-                                    ? Icons.fingerprint
-                                    : Icons.lock_outline,
-                                size: 32,
-                                color: colorScheme.primary,
-                              ),
-                              const SizedBox(width: 12),
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      'Device Status',
-                                      style: textTheme.titleSmall?.copyWith(
-                                        fontWeight: FontWeight.w700,
-                                      ),
-                                    ),
-                                    const SizedBox(height: 4),
-                                    Text(
-                                      _isDeviceSupported && _canCheckBiometrics
-                                          ? 'Available: $_availableBiometrics'
-                                          : 'Not available on this device',
-                                      style: textTheme.bodySmall?.copyWith(
-                                        color: colorScheme.onSurface.withValues(
-                                          alpha: 0.7,
-                                        ),
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ],
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
+                  SectionTitle(title: 'App Security', textTheme: textTheme),
                   SettingsSwitchTile(
-                    iconData: Icons.security,
-                    title: 'Enable Biometric Login',
-                    subtitle:
-                        'Use fingerprint or PIN to access protected features',
+                    iconData: Icons.lock_outline,
+                    title: 'Enable App Lock',
+                    subtitle: 'Require PIN to open the app',
+                    value: _isAppLockEnabled,
+                    onTap: () => _toggleAppLock(!_isAppLockEnabled),
+                    onChanged: _toggleAppLock,
+                  ),
+                  const SizedBox(height: 24),
+
+                  SettingsSwitchTile(
+                    iconData: Icons.fingerprint,
+                    title: 'Enable Biometrics',
+                    subtitle: 'Use fingerprint to unlock',
                     value: _isBiometricEnabled,
+                    onTap: _isDeviceSupported && _canCheckBiometrics
+                        ? () => _toggleBiometric(!_isBiometricEnabled)
+                        : null,
                     onChanged: _isDeviceSupported && _canCheckBiometrics
                         ? _toggleBiometric
                         : null,
                   ),
-                  if (_isBiometricEnabled) ...[
-                    const SizedBox(height: 12),
+                  if (_securityQuestion != null) ...[
+                    const SizedBox(height: 24),
+                    SectionTitle(
+                      title: 'Recovery Settings',
+                      textTheme: textTheme,
+                    ),
                     Card(
+                      elevation: 0,
+                      color: colorScheme.surfaceContainerHighest.withValues(
+                        alpha: 0.3,
+                      ),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(16),
+                        side: BorderSide(
+                          color: colorScheme.onSurface.withValues(alpha: 0.1),
+                        ),
+                      ),
                       child: ListTile(
-                        leading: Icon(
-                          Icons.verified_user,
-                          color: colorScheme.primary,
+                        leading: Container(
+                          padding: const EdgeInsets.all(8),
+                          decoration: BoxDecoration(
+                            color: colorScheme.primary.withValues(alpha: 0.1),
+                            shape: BoxShape.circle,
+                          ),
+                          child: Icon(
+                            Icons.help_outline,
+                            color: colorScheme.primary,
+                            size: 20,
+                          ),
                         ),
-                        title: const Text('Test Authentication'),
-                        subtitle: const Text(
-                          'Test your biometric authentication',
+                        title: const Text('Security Question'),
+                        subtitle: Text(
+                          _securityQuestion!,
+                          style: textTheme.bodyMedium?.copyWith(
+                            color: colorScheme.onSurface.withValues(alpha: 0.7),
+                          ),
                         ),
-                        trailing: const Icon(Icons.chevron_right),
-                        onTap: _testBiometric,
+                        onTap: () async {
+                          final result = await Navigator.push<bool>(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) =>
+                                  const SecurityQuestionScreen(),
+                            ),
+                          );
+                          if (result == true) {
+                            _checkBiometricStatus();
+                          }
+                        },
                       ),
                     ),
                   ],
-                  const SizedBox(height: 24),
-                  Card(
-                    color: colorScheme.primaryContainer.withValues(alpha: 0.3),
-                    child: Padding(
-                      padding: const EdgeInsets.all(16),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Row(
-                            children: [
-                              Icon(
-                                Icons.info_outline,
-                                size: 20,
-                                color: colorScheme.primary,
-                              ),
-                              const SizedBox(width: 8),
-                              Text(
-                                'How it works',
-                                style: textTheme.titleSmall?.copyWith(
-                                  fontWeight: FontWeight.w700,
-                                  color: colorScheme.primary,
-                                ),
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: 12),
-                          Text(
-                            '• Biometric authentication is stored locally on your device\n'
-                            '• No biometric data is sent to our servers\n'
-                            '• You can use fingerprint, face ID, or your device PIN\n'
-                            '• Protected features require authentication to access',
-                            style: textTheme.bodySmall?.copyWith(
-                              color: colorScheme.onSurface.withValues(
-                                alpha: 0.8,
-                              ),
-                              height: 1.6,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
                 ],
               ),
             ),

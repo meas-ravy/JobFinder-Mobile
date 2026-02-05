@@ -11,7 +11,11 @@ class SettingsSwitchTile extends StatelessWidget {
     this.subtitle,
     required this.value,
     required this.onChanged,
-  }) : assert(icon != null || iconData != null, 'Either icon or iconData must be provided');
+    this.onTap,
+  }) : assert(
+         icon != null || iconData != null,
+         'Either icon or iconData must be provided',
+       );
 
   final String? icon;
   final IconData? iconData;
@@ -19,6 +23,7 @@ class SettingsSwitchTile extends StatelessWidget {
   final String? subtitle;
   final bool value;
   final ValueChanged<bool>? onChanged;
+  final VoidCallback? onTap;
 
   @override
   Widget build(BuildContext context) {
@@ -26,7 +31,9 @@ class SettingsSwitchTile extends StatelessWidget {
     final textTheme = Theme.of(context).textTheme;
 
     return ListTile(
+      onTap: onTap,
       contentPadding: const EdgeInsets.symmetric(horizontal: 8),
+      splashColor: colorScheme.surfaceContainerHighest.withValues(alpha: 0.1),
       leading: icon != null
           ? AppSvgIcon(
               assetName: icon!,
@@ -35,7 +42,7 @@ class SettingsSwitchTile extends StatelessWidget {
             )
           : Icon(
               iconData,
-              size: 24,
+              size: 26,
               color: colorScheme.onSurface.withValues(alpha: 0.75),
             ),
       title: Text(
@@ -53,6 +60,7 @@ class SettingsSwitchTile extends StatelessWidget {
       trailing: Switch.adaptive(
         value: value,
         onChanged: onChanged,
+        // ignore: deprecated_member_use
         activeColor: AppColor.primaryLight,
       ),
     );

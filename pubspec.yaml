@@ -47,6 +47,8 @@ dependencies:
   objectbox_generator: any
   flutter_pdfview: ^1.4.4
   open_file: ^3.5.11
+  url_launcher: ^6.3.2
+  flutter_widget_from_html_core: ^0.17.0
 
 dev_dependencies:
   flutter_test:

@@ -3,6 +3,7 @@ import 'package:job_finder/core/constants/assets.dart';
 import 'package:job_finder/features/job_seeker/data/model/template_model.dart';
 import 'package:job_finder/features/job_seeker/presentation/screen/cv_form_screen.dart';
 import 'package:job_finder/shared/widget/svg_icon.dart';
+import 'package:job_finder/shared/widget/zomtap_animation.dart';
 
 class BuildTemplate extends StatefulWidget {
   const BuildTemplate({super.key});
@@ -233,7 +234,7 @@ class _TemplateCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
 
-    return GestureDetector(
+    return ZomtapAnimation(
       onTap: onTap,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
