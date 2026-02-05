@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:job_finder/core/services/biometric_service.dart';
 
 class SecurityQuestionScreen extends StatefulWidget {
@@ -95,9 +96,9 @@ class _SecurityQuestionScreenState extends State<SecurityQuestionScreen> {
                         },
                   child: Text(
                     'Confirm Answer',
-                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                      color: Theme.of(context).colorScheme.onSurface,
-                    ),
+                    style: Theme.of(
+                      context,
+                    ).textTheme.titleMedium?.copyWith(color: Colors.white),
                   ),
                 ),
               ),

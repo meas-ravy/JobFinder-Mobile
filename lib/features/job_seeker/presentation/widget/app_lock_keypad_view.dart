@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 class AppLockKeypadView extends StatelessWidget {
   final String? title;
@@ -139,7 +140,10 @@ class AppLockKeypadView extends StatelessWidget {
     TextTheme textTheme,
   ) {
     return InkWell(
-      onTap: () => onNumberPressed(number),
+      onTap: () {
+        HapticFeedback.lightImpact();
+        onNumberPressed(number);
+      },
       borderRadius: BorderRadius.circular(40),
       child: Container(
         width: 80,
@@ -164,7 +168,10 @@ class AppLockKeypadView extends StatelessWidget {
 
   Widget _buildBackspaceButton(ColorScheme colorScheme) {
     return InkWell(
-      onTap: onBackspace,
+      onTap: () {
+        HapticFeedback.lightImpact();
+        onBackspace();
+      },
       borderRadius: BorderRadius.circular(40),
       child: Container(
         width: 80,
@@ -178,7 +185,10 @@ class AppLockKeypadView extends StatelessWidget {
   Widget _buildBiometricButton(ColorScheme colorScheme) {
     if (!isBiometricAvailable) return const SizedBox(width: 80);
     return InkWell(
-      onTap: onBiometricPressed,
+      onTap: () {
+        HapticFeedback.lightImpact();
+        onBiometricPressed();
+      },
       borderRadius: BorderRadius.circular(40),
       child: Container(
         width: 80,

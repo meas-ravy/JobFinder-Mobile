@@ -54,6 +54,7 @@ class AppLockRecoveryOverlay extends StatelessWidget {
                   Text(
                     'Security Question',
                     style: textTheme.headlineSmall?.copyWith(
+                      fontSize: 20,
                       fontWeight: FontWeight.bold,
                     ),
                   ),
@@ -64,7 +65,7 @@ class AppLockRecoveryOverlay extends StatelessWidget {
                       fontWeight: FontWeight.w500,
                     ),
                   ),
-                  const SizedBox(height: 24),
+                  const SizedBox(height: 16),
                   TextField(
                     controller: controller,
                     autofocus: true,
@@ -80,7 +81,11 @@ class AppLockRecoveryOverlay extends StatelessWidget {
                       ),
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(16),
-                        borderSide: BorderSide.none,
+                        borderSide: BorderSide(
+                          color: colorScheme.surfaceContainerHigh.withValues(
+                            alpha: 0.3,
+                          ),
+                        ),
                       ),
                       contentPadding: const EdgeInsets.all(20),
                     ),
@@ -88,7 +93,7 @@ class AppLockRecoveryOverlay extends StatelessWidget {
                   const SizedBox(height: 32),
                   SizedBox(
                     width: double.infinity,
-                    height: 58,
+                    height: 50,
                     child: FilledButton(
                       onPressed: onVerify,
                       style: FilledButton.styleFrom(
@@ -97,10 +102,11 @@ class AppLockRecoveryOverlay extends StatelessWidget {
                         ),
                         elevation: 0,
                       ),
-                      child: const Text(
+                      child: Text(
                         'Verify Identity',
                         style: TextStyle(
                           fontSize: 16,
+                          color: Colors.white,
                           fontWeight: FontWeight.bold,
                           letterSpacing: 0.5,
                         ),

@@ -6,16 +6,15 @@ import 'package:job_finder/core/constants/assets.dart';
 import 'package:job_finder/core/helper/secure_storage.dart';
 import 'package:job_finder/core/routes/app_path.dart';
 import 'package:job_finder/core/theme/app_color.dart';
-import 'package:job_finder/core/helper/theme_mode_controller.dart';
 import 'package:job_finder/features/auth/presentation/provider/auth_provider.dart';
 import 'package:job_finder/features/job_seeker/data/model/policy_services.dart';
 import 'package:job_finder/features/job_seeker/presentation/screen/jobb_seeker_document.dart';
+import 'package:job_finder/features/job_seeker/presentation/screen/language_screen.dart';
 import 'package:job_finder/features/job_seeker/presentation/screen/security_settings_screen.dart';
 import 'package:job_finder/features/job_seeker/presentation/widget/dialogs/show_doc.dart';
 import 'package:job_finder/shared/widget/loading_dialog.dart';
 import 'package:job_finder/shared/widget/danger_tile.dart';
 import 'package:job_finder/shared/widget/section_title.dart';
-import 'package:job_finder/shared/widget/setting_switch_tile.dart';
 
 class JobSeekerProfilePage extends HookConsumerWidget {
   const JobSeekerProfilePage({super.key});
@@ -29,7 +28,7 @@ class JobSeekerProfilePage extends HookConsumerWidget {
       appBar: AppBar(
         backgroundColor: colorScheme.surface,
         elevation: 0,
-        title: const Text('Settings'),
+        title: const Text('Profile'),
       ),
       body: SafeArea(
         child: ListView(
@@ -46,12 +45,12 @@ class JobSeekerProfilePage extends HookConsumerWidget {
             ),
             const SizedBox(height: 18),
 
-            SectionTitle(title: 'Account', textTheme: textTheme),
-            SettingsTile(
-              icon: AppIcon.profile,
-              title: 'Personal Information',
-              onTap: () {},
-            ),
+            // SectionTitle(title: 'Account', textTheme: textTheme),
+            // SettingsTile(
+            //   icon: AppIcon.profile,
+            //   title: 'Personal Information',
+            //   onTap: () {},
+            // ),
             SettingsTile(
               icon: AppIcon.documentBold,
               title: 'My Documents',
@@ -147,39 +146,44 @@ class JobSeekerProfilePage extends HookConsumerWidget {
               icon: AppIcon.show,
               title: 'Language',
               trailingText: 'English (US)',
-              onTap: () {},
-            ),
-            ValueListenableBuilder<ThemeMode>(
-              valueListenable: themeModeController,
-              builder: (context, mode, _) {
-                final isSystem = mode == ThemeMode.system;
-                return Column(
-                  children: [
-                    SettingsSwitchTile(
-                      icon: AppIcon.settings,
-                      title: 'Use device settings',
-                      value: isSystem,
-                      onChanged: (value) {
-                        if (value) {
-                          themeModeController.setThemeMode(ThemeMode.system);
-                        } else {
-                          themeModeController.setThemeMode(ThemeMode.light);
-                        }
-                      },
-                    ),
-                    SettingsSwitchTile(
-                      icon: AppIcon.eye,
-                      title: 'Dark Mode',
-                      value: mode == ThemeMode.dark,
-                      onChanged: isSystem
-                          ? null
-                          : (value) => themeModeController.setDark(value),
-                    ),
-                  ],
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const LanguageScreen()),
                 );
               },
             ),
 
+            // ValueListenableBuilder<ThemeMode>(
+            //   valueListenable: themeModeController,
+            //   builder: (context, mode, _) {
+            //     final isSystem = mode == ThemeMode.system;
+            //     return Column(
+            //       children: [
+            //         SettingsSwitchTile(
+            //           icon: AppIcon.settings,
+            //           title: 'Use device settings',
+            //           value: isSystem,
+            //           onChanged: (value) {
+            //             if (value) {
+            //               themeModeController.setThemeMode(ThemeMode.system);
+            //             } else {
+            //               themeModeController.setThemeMode(ThemeMode.light);
+            //             }
+            //           },
+            //         ),
+            //         SettingsSwitchTile(
+            //           icon: AppIcon.eye,
+            //           title: 'Dark Mode',
+            //           value: mode == ThemeMode.dark,
+            //           onChanged: isSystem
+            //               ? null
+            //               : (value) => themeModeController.setDark(value),
+            //         ),
+            //       ],
+            //     );
+            //   },
+            // ),
             const SizedBox(height: 18),
             SectionTitle(title: 'About', textTheme: textTheme),
             SettingsTile(

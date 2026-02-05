@@ -72,6 +72,7 @@ class _SecuritySettingsScreenState extends State<SecuritySettingsScreen> {
           builder: (context) => const AppLockScreen(
             title: 'Verify PIN',
             subtitle: 'Enter your current PIN to disable App Lock',
+            initiallyShowKeypad: true,
           ),
         ),
       );

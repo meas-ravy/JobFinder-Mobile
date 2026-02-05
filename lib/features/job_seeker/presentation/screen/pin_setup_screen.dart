@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:job_finder/core/services/biometric_service.dart';
 import 'package:job_finder/features/job_seeker/presentation/screen/security_question_screen.dart';
 
@@ -184,9 +185,19 @@ class _PinSetupScreenState extends State<PinSetupScreen> {
     TextTheme textTheme,
   ) {
     return InkWell(
-      onTap: () => _onNumberPressed(number),
+      onTap: () {
+        HapticFeedback.lightImpact();
+        _onNumberPressed(number);
+      },
       borderRadius: BorderRadius.circular(40),
       child: Container(
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          color: colorScheme.surface,
+          border: Border.all(
+            color: colorScheme.onSurface.withValues(alpha: 0.1),
+          ),
+        ),
         width: 80,
         height: 80,
         alignment: Alignment.center,
@@ -202,7 +213,10 @@ class _PinSetupScreenState extends State<PinSetupScreen> {
 
   Widget _buildBackspaceButton(ColorScheme colorScheme) {
     return InkWell(
-      onTap: _onBackspace,
+      onTap: () {
+        HapticFeedback.lightImpact();
+        _onBackspace();
+      },
       borderRadius: BorderRadius.circular(40),
       child: Container(
         width: 80,

@@ -1,5 +1,6 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:job_finder/core/services/biometric_service.dart';
 import 'package:job_finder/features/job_seeker/presentation/widget/app_lock_recovery_overlay.dart';
 import 'package:job_finder/features/job_seeker/presentation/widget/app_lock_keypad_view.dart';
@@ -9,7 +10,14 @@ class AppLockScreen extends StatefulWidget {
   final VoidCallback? onUnlocked;
   final String? title;
   final String? subtitle;
-  const AppLockScreen({super.key, this.onUnlocked, this.title, this.subtitle});
+  final bool initiallyShowKeypad;
+  const AppLockScreen({
+    super.key,
+    this.onUnlocked,
+    this.title,
+    this.subtitle,
+    this.initiallyShowKeypad = false,
+  });
 
   @override
   State<AppLockScreen> createState() => _AppLockScreenState();
@@ -28,6 +36,7 @@ class _AppLockScreenState extends State<AppLockScreen> {
   @override
   void initState() {
     super.initState();
+    _showKeypad = widget.initiallyShowKeypad;
     _checkBiometrics();
   }
 
@@ -202,8 +211,14 @@ class _AppLockScreenState extends State<AppLockScreen> {
                     },
                   )
                 : AppLockCoverView(
-                    onUnlock: () => setState(() => _showKeypad = true),
-                    onForgotPin: _onForgotPin,
+                    onUnlock: () {
+                      HapticFeedback.lightImpact();
+                      setState(() => _showKeypad = true);
+                    },
+                    onForgotPin: () {
+                      HapticFeedback.lightImpact();
+                      _onForgotPin();
+                    },
                   ),
 
             // Internal Recovery Overlay
