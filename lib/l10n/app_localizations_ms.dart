@@ -393,4 +393,13 @@ class AppLocalizationsMs extends AppLocalizations {
 
   @override
   String get statsLabel => 'Statistik';
+
+  @override
+  String get editJob => 'Sunting Jawatan';
+
+  @override
+  String get viewApplications => 'Lihat Permohonan';
+
+  @override
+  String get deleteJob => 'Padam Jawatan';
 }

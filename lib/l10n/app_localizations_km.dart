@@ -390,4 +390,13 @@ class AppLocalizationsKm extends AppLocalizations {
 
   @override
   String get statsLabel => 'ស្ថិតិ';
+
+  @override
+  String get editJob => 'កែសម្រួលការងារ';
+
+  @override
+  String get viewApplications => 'មើលពាក្យសុំ';
+
+  @override
+  String get deleteJob => 'លុបការងារ';
 }

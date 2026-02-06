@@ -387,4 +387,13 @@ class AppLocalizationsLo extends AppLocalizations {
 
   @override
   String get statsLabel => 'ສະຖິຕິ';
+
+  @override
+  String get editJob => 'ແກ້ໄຂວຽກ';
+
+  @override
+  String get viewApplications => 'ເບິ່ງການສະໝັກ';
+
+  @override
+  String get deleteJob => 'ລຶບວຽກ';
 }

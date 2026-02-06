@@ -851,6 +851,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Stats'**
   String get statsLabel;
+
+  /// No description provided for @editJob.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit Job'**
+  String get editJob;
+
+  /// No description provided for @viewApplications.
+  ///
+  /// In en, this message translates to:
+  /// **'View Applications'**
+  String get viewApplications;
+
+  /// No description provided for @deleteJob.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete Job'**
+  String get deleteJob;
 }
 
 class _AppLocalizationsDelegate

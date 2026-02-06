@@ -1,62 +1,53 @@
+import 'package:dotted_line/dotted_line.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:job_finder/core/constants/assets.dart';
+import 'package:job_finder/core/helper/locale_controller.dart';
 import 'package:job_finder/core/helper/secure_storage.dart';
 import 'package:job_finder/core/routes/app_path.dart';
-import 'package:job_finder/core/theme/app_color.dart';
-import 'package:job_finder/core/helper/theme_mode_controller.dart';
 import 'package:job_finder/features/auth/presentation/provider/auth_provider.dart';
 import 'package:job_finder/features/job_seeker/data/model/policy_services.dart';
 import 'package:job_finder/features/job_seeker/presentation/screen/security_settings_screen.dart';
 import 'package:job_finder/features/job_seeker/presentation/widget/dialogs/show_doc.dart';
+import 'package:job_finder/l10n/app_localizations.dart';
 import 'package:job_finder/shared/widget/danger_tile.dart';
 import 'package:job_finder/shared/widget/loading_dialog.dart';
 import 'package:job_finder/shared/widget/section_title.dart';
 import 'package:job_finder/shared/widget/svg_icon.dart';
 
-class RecruiterProfilePage extends ConsumerStatefulWidget {
+class RecruiterProfilePage extends HookConsumerWidget {
   const RecruiterProfilePage({super.key});
 
   @override
-  ConsumerState<RecruiterProfilePage> createState() =>
-      _RecruiterProfilePageState();
-}
-
-class _RecruiterProfilePageState extends ConsumerState<RecruiterProfilePage> {
-  @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final colorScheme = Theme.of(context).colorScheme;
     final textTheme = Theme.of(context).textTheme;
+    final l10n = AppLocalizations.of(context);
 
     return Scaffold(
       backgroundColor: colorScheme.surface,
       appBar: AppBar(
-        backgroundColor: colorScheme.surface,
         elevation: 0,
-        title: const Text('Settings'),
+        scrolledUnderElevation: 0,
+        toolbarHeight: 80,
+        title: const _HeaderSection(),
       ),
       body: SafeArea(
         child: ListView(
           padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
           children: [
-            // _ProfileProgressCard(
-            //   percent: 0.95,
-            //   title: 'Profile Completed!',
-            //   subtitle:
-            //       'A complete profile increases the chances\nof a recruiter being more interested in\nrecruiting you',
-            //   colorScheme: colorScheme,
-            //   textTheme: textTheme,
-            // ),
+            _ProfileProgressCard(
+              percent: 0.95,
+              title: 'Profile Completed!',
+              subtitle:
+                  'A complete profile increases the chances\nof a recruiter being more interested in\nrecruiting you',
+              colorScheme: colorScheme,
+              textTheme: textTheme,
+            ),
             const SizedBox(height: 18),
 
-            _SectionTitle(title: 'Account', textTheme: textTheme),
-            _SettingsTile(
-              icon: AppIcon.profile,
-              title: 'Personal Information',
-              onTap: () {},
-            ),
             _SettingsTile(
               icon: AppIcon.switchRole,
               title: 'Switch to Job Finder',
@@ -141,43 +132,66 @@ class _RecruiterProfilePageState extends ConsumerState<RecruiterProfilePage> {
                 );
               },
             ),
-            _SettingsTile(
-              icon: AppIcon.show,
-              title: 'Language',
-              trailingText: 'English (US)',
-              onTap: () {},
-            ),
-            ValueListenableBuilder<ThemeMode>(
-              valueListenable: themeModeController,
-              builder: (context, mode, _) {
-                final isSystem = mode == ThemeMode.system;
-                return Column(
-                  children: [
-                    _SettingsSwitchTile(
-                      icon: AppIcon.settings,
-                      title: 'Use device settings',
-                      value: isSystem,
-                      onChanged: (value) {
-                        if (value) {
-                          themeModeController.setThemeMode(ThemeMode.system);
-                        } else {
-                          themeModeController.setThemeMode(ThemeMode.light);
-                        }
-                      },
-                    ),
-                    _SettingsSwitchTile(
-                      icon: AppIcon.eye,
-                      title: 'Dark Mode',
-                      value: mode == ThemeMode.dark,
-                      onChanged: isSystem
-                          ? null
-                          : (value) => themeModeController.setDark(value),
-                    ),
-                  ],
+            ValueListenableBuilder<Locale?>(
+              valueListenable: localeController,
+              builder: (context, locale, _) {
+                String langName;
+                switch (locale?.languageCode) {
+                  case 'km':
+                    langName = l10n.cambodia;
+                  case 'ja':
+                    langName = l10n.japan;
+                  case 'zh':
+                    langName = l10n.china;
+                  case 'ms':
+                    langName = l10n.malaysia;
+                  case 'lo':
+                    langName = l10n.laos;
+                  case 'ko':
+                    langName = l10n.korean;
+                  default:
+                    langName = l10n.englishUS;
+                }
+                return SettingsTile(
+                  icon: AppIcon.show,
+                  title: l10n.language,
+                  trailingText: langName,
+                  onTap: () {
+                    context.push(AppPath.language);
+                  },
                 );
               },
             ),
-
+            // ValueListenableBuilder<ThemeMode>(
+            //   valueListenable: themeModeController,
+            //   builder: (context, mode, _) {
+            //     final isSystem = mode == ThemeMode.system;
+            //     return Column(
+            //       children: [
+            //         _SettingsSwitchTile(
+            //           icon: AppIcon.settings,
+            //           title: 'Use device settings',
+            //           value: isSystem,
+            //           onChanged: (value) {
+            //             if (value) {
+            //               themeModeController.setThemeMode(ThemeMode.system);
+            //             } else {
+            //               themeModeController.setThemeMode(ThemeMode.light);
+            //             }
+            //           },
+            //         ),
+            //         _SettingsSwitchTile(
+            //           icon: AppIcon.eye,
+            //           title: 'Dark Mode',
+            //           value: mode == ThemeMode.dark,
+            //           onChanged: isSystem
+            //               ? null
+            //               : (value) => themeModeController.setDark(value),
+            //         ),
+            //       ],
+            //     );
+            //   },
+            // ),
             const SizedBox(height: 18),
             _SectionTitle(title: 'About', textTheme: textTheme),
             SettingsTile(
@@ -253,6 +267,269 @@ class _RecruiterProfilePageState extends ConsumerState<RecruiterProfilePage> {
   }
 }
 
+class _ProfileProgressCard extends StatelessWidget {
+  const _ProfileProgressCard({
+    required this.percent,
+    required this.title,
+    required this.subtitle,
+    required this.colorScheme,
+    required this.textTheme,
+  });
+
+  final double percent;
+  final String title;
+  final String subtitle;
+  final ColorScheme colorScheme;
+  final TextTheme textTheme;
+
+  @override
+  Widget build(BuildContext context) {
+    // Savannah Nguyen's info
+    const name = 'Savannah Nguyen';
+    const email = 'debra.holt@example.com';
+
+    return Column(
+      children: [
+        Container(
+          padding: const EdgeInsets.all(20),
+          decoration: BoxDecoration(
+            color: colorScheme.surface,
+            borderRadius: BorderRadius.circular(24),
+            border: Border.all(
+              color: colorScheme.outlineVariant.withValues(alpha: 0.2),
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.02),
+                blurRadius: 10,
+                offset: const Offset(0, 4),
+              ),
+            ],
+          ),
+          child: Column(
+            children: [
+              Row(
+                children: [
+                  const CircleAvatar(
+                    radius: 40,
+                    backgroundImage: NetworkImage(
+                      'https://api.uifaces.co/our-content/donated/x4_8P_NS.jpg',
+                    ),
+                  ),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          name,
+                          style: textTheme.titleLarge?.copyWith(
+                            fontWeight: FontWeight.w800,
+                            fontSize: 20,
+                            color: colorScheme.onSurface,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          email,
+                          style: textTheme.bodyMedium?.copyWith(
+                            color: colorScheme.onSurfaceVariant,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        Row(
+                          children: [
+                            Icon(
+                              Icons.verified,
+                              color: colorScheme.primary,
+                              size: 20,
+                            ),
+                            const SizedBox(width: 6),
+                            Text(
+                              'Verified',
+                              style: textTheme.bodyMedium?.copyWith(
+                                fontWeight: FontWeight.bold,
+                                color: colorScheme.onSurface,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 24),
+              Divider(
+                height: 1,
+                color: colorScheme.outlineVariant.withValues(alpha: 0.2),
+              ),
+              const SizedBox(height: 24),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceAround,
+                children: [
+                  _StatItem(
+                    value: 520,
+                    label: 'Jobs posted',
+                    textTheme: textTheme,
+                    colorScheme: colorScheme,
+                  ),
+                  _VerticalDottedLine(colorScheme: colorScheme),
+                  _StatItem(
+                    value: 50340,
+                    label: 'Applied',
+                    textTheme: textTheme,
+                    colorScheme: colorScheme,
+                  ),
+                  _VerticalDottedLine(colorScheme: colorScheme),
+                  _StatItem(
+                    value: 12500,
+                    label: 'Follower',
+                    textTheme: textTheme,
+                    colorScheme: colorScheme,
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 20),
+        Row(
+          children: [
+            Expanded(
+              child: Container(
+                padding: const EdgeInsets.symmetric(vertical: 14),
+                decoration: BoxDecoration(
+                  color: colorScheme.primary.withValues(alpha: 0.05),
+                  borderRadius: BorderRadius.circular(24),
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(
+                      'Job Hire rate',
+                      style: textTheme.bodyLarge?.copyWith(
+                        color: colorScheme.primary,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Container(
+                      width: 1,
+                      height: 16,
+                      color: colorScheme.primary.withValues(alpha: 0.3),
+                    ),
+                    const SizedBox(width: 8),
+                    TweenAnimationBuilder<double>(
+                      tween: Tween(begin: 0, end: 85),
+                      duration: const Duration(milliseconds: 1500),
+                      curve: Curves.easeOutCubic,
+                      builder: (context, val, child) {
+                        return Text(
+                          '${val.toInt()}%',
+                          style: textTheme.bodyLarge?.copyWith(
+                            color: colorScheme.primary,
+                            fontWeight: FontWeight.w800,
+                          ),
+                        );
+                      },
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            const SizedBox(width: 16),
+            FilledButton(
+              onPressed: () {},
+              style: FilledButton.styleFrom(
+                backgroundColor: colorScheme.primary,
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 24,
+                  vertical: 8,
+                ),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(24),
+                ),
+              ),
+              child: Text(
+                'Edit Bio',
+                style: textTheme.bodyLarge?.copyWith(
+                  color: Colors.white,
+                  fontSize: 14,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+}
+
+class _StatItem extends StatelessWidget {
+  const _StatItem({
+    required this.value,
+    required this.label,
+    required this.textTheme,
+    required this.colorScheme,
+  });
+
+  final int value;
+  final String label;
+  final TextTheme textTheme;
+  final ColorScheme colorScheme;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        TweenAnimationBuilder<double>(
+          tween: Tween(begin: 0, end: value.toDouble()),
+          duration: const Duration(milliseconds: 1500),
+          curve: Curves.easeOutCubic,
+          builder: (context, val, child) {
+            return Text(
+              val.toInt().toString(),
+              style: textTheme.titleLarge?.copyWith(
+                fontWeight: FontWeight.w800,
+                fontSize: 18,
+                color: colorScheme.onSurface,
+              ),
+            );
+          },
+        ),
+        const SizedBox(height: 4),
+        Text(
+          label,
+          style: textTheme.bodyMedium?.copyWith(
+            fontSize: 13,
+            color: colorScheme.onSurfaceVariant,
+            fontWeight: FontWeight.w500,
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _VerticalDottedLine extends StatelessWidget {
+  const _VerticalDottedLine({required this.colorScheme});
+  final ColorScheme colorScheme;
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      height: 40,
+      child: DottedLine(
+        direction: Axis.vertical,
+        dashColor: colorScheme.outlineVariant.withValues(alpha: 0.2),
+      ),
+    );
+  }
+}
+
 class _SectionTitle extends StatelessWidget {
   const _SectionTitle({required this.title, required this.textTheme});
   final String title;
@@ -278,6 +555,7 @@ class _SettingsTile extends StatelessWidget {
     required this.icon,
     required this.title,
     required this.onTap,
+    // ignore: unused_element_parameter
     this.trailingText,
   });
 
@@ -326,41 +604,39 @@ class _SettingsTile extends StatelessWidget {
   }
 }
 
-class _SettingsSwitchTile extends StatelessWidget {
-  const _SettingsSwitchTile({
-    required this.icon,
-    required this.title,
-    required this.value,
-    required this.onChanged,
-  });
-
-  final String icon;
-  final String title;
-  final bool value;
-  final ValueChanged<bool>? onChanged;
+class _HeaderSection extends StatelessWidget {
+  const _HeaderSection();
 
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
     final textTheme = Theme.of(context).textTheme;
 
-    return ListTile(
-      contentPadding: const EdgeInsets.symmetric(horizontal: 8),
-      leading: AppSvgIcon(
-        assetName: icon,
-        size: 24,
-        color: colorScheme.onSurface.withValues(alpha: 0.75),
-      ),
-      title: Text(
-        title,
-        style: textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600),
-      ),
-      trailing: Switch.adaptive(
-        value: value,
-        onChanged: onChanged,
-        // ignore: deprecated_member_use
-        activeColor: AppColor.primaryLight,
-      ),
+    return Row(
+      children: [
+        Text(
+          'Profile',
+          style: textTheme.bodyLarge?.copyWith(
+            fontWeight: FontWeight.w700,
+            fontSize: 24,
+            color: colorScheme.onSurface,
+          ),
+        ),
+        const Spacer(),
+        Container(
+          width: 48,
+          height: 48,
+          decoration: BoxDecoration(
+            color: colorScheme.onSurface.withValues(alpha: 0.05),
+            shape: BoxShape.circle,
+          ),
+          padding: const EdgeInsets.all(10),
+          child: AppSvgIcon(
+            assetName: AppIcon.notification,
+            color: colorScheme.onSurface,
+          ),
+        ),
+      ],
     );
   }
 }

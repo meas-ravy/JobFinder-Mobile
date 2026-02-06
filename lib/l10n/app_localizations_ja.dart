@@ -384,4 +384,13 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get statsLabel => '統計';
+
+  @override
+  String get editJob => '求人を編集';
+
+  @override
+  String get viewApplications => '応募を表示';
+
+  @override
+  String get deleteJob => '求人を削除';
 }

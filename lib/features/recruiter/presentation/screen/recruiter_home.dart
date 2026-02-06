@@ -1,199 +1,165 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
-import 'package:job_finder/core/constants/assets.dart';
-import 'package:job_finder/shared/widget/svg_icon.dart';
+import 'package:job_finder/features/recruiter/presentation/screen/post_job_screen.dart';
+import 'package:job_finder/l10n/app_localizations.dart';
 
 class RecruiterHomePage extends StatelessWidget {
   const RecruiterHomePage({super.key});
 
   static const List<JobCardData> _jobs = [
     JobCardData(
-      title: 'UI Designer',
-      company: 'Netflix',
-      date: '1 Jan 2023',
-      description:
-          'We are looking for a dynamic UI/UX designer who will be responsible...',
-    ),
-    JobCardData(
-      title: 'Content Writer',
-      company: 'VK',
-      date: '4 Jan 2023',
-      description:
-          'We are looking for a dynamic writer who will be responsible...',
-    ),
-    JobCardData(
-      title: 'UI Designer',
+      title: 'Product Designer',
       company: 'Slack',
-      date: '6 Jan 2023',
-      description:
-          'We are looking for a dynamic UI/UX designer who will be responsible...',
+      location: 'New York',
+      time: '5 hours ago',
+      logo: 'https://cdn-icons-png.flaticon.com/512/3800/3800024.png',
+      description: 'We are looking for a dynamic Product designer...',
     ),
     JobCardData(
-      title: 'Python Developer',
-      company: 'Python',
-      date: '4 Jan 2023',
-      description:
-          'We are looking for a dynamic developer who will be responsible...',
+      title: 'UI UX Designer',
+      company: 'Webmoney',
+      location: 'New York',
+      time: '5 hours ago',
+      logo: 'https://cdn-icons-png.flaticon.com/512/888/888871.png',
+      description: 'We are looking for a dynamic Product designer...',
     ),
     JobCardData(
-      title: 'UI Designer',
-      company: 'Pinterest',
-      date: '1 Jan 2023',
-      description:
-          'We are looking for a dynamic UI/UX designer who will be responsible...',
+      title: 'Marketing Manager',
+      company: 'Opera',
+      location: 'New York',
+      time: '5 hours ago',
+      logo: 'https://cdn-icons-png.flaticon.com/512/732/732233.png',
+      description: 'We are looking for a dynamic Product designer...',
+    ),
+    JobCardData(
+      title: 'Graphic Design',
+      company: 'Swift',
+      location: 'New York',
+      time: '5 hours ago',
+      logo: 'https://cdn-icons-png.flaticon.com/512/5968/5968363.png',
+      description: 'We are looking for a dynamic Product designer...',
     ),
   ];
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final scheme = theme.colorScheme;
-    final isDark = theme.brightness == Brightness.dark;
-    final cardColor = scheme.surfaceContainerHighest;
-    final cardBorder = scheme.outlineVariant.withValues(
-      alpha: isDark ? 0.5 : 0.7,
-    );
-    final textPrimary = scheme.onSurface;
-    final textMuted = scheme.onSurface.withValues(alpha: isDark ? 0.6 : 0.7);
-    final accentColors = [
-      scheme.primary,
-      scheme.secondary,
-      scheme.primary,
-      scheme.secondary,
-      scheme.primary,
-    ];
+    final colorScheme = Theme.of(context).colorScheme;
+    final textTheme = Theme.of(context).textTheme;
+    // final primaryGreen = const Color(0xff22D38A);
 
-    return Scaffold(
-      body: CustomScrollView(
-        slivers: [
-          SliverAppBar(
-            pinned: false,
-            backgroundColor: scheme.surface,
-            surfaceTintColor: scheme.surface,
-            elevation: 0,
-            toolbarHeight: 84,
-            titleSpacing: 0,
-            title: Padding(
-              padding: const EdgeInsets.fromLTRB(20, 8, 20, 8),
-              child: _HeaderSection(
-                textPrimary: textPrimary,
-                textMuted: textMuted,
-                accent: scheme.primary,
-                onAccent: scheme.onPrimary,
-                cardColor: cardColor,
-                cardBorder: cardBorder,
-              ),
+    return DefaultTabController(
+      length: 3,
+      child: Scaffold(
+        appBar: AppBar(
+          elevation: 0,
+          scrolledUnderElevation: 0,
+          toolbarHeight: 80,
+          title: const _HeaderSection(),
+          bottom: PreferredSize(
+            preferredSize: const Size.fromHeight(60),
+            child: Column(
+              children: [
+                TabBar(
+                  dividerColor: colorScheme.outlineVariant.withValues(
+                    alpha: 0.2,
+                  ),
+                  indicatorColor: colorScheme.primary,
+                  indicatorSize: TabBarIndicatorSize.tab,
+                  labelColor: colorScheme.primary,
+                  unselectedLabelColor: colorScheme.onSurfaceVariant,
+                  labelStyle: textTheme.bodyMedium?.copyWith(
+                    fontWeight: FontWeight.w700,
+                  ),
+                  unselectedLabelStyle: textTheme.bodyMedium?.copyWith(
+                    fontWeight: FontWeight.w600,
+                  ),
+                  tabs: const [
+                    Tab(text: 'Active Post'),
+                    Tab(text: 'Upcoming'),
+                    Tab(text: 'Previous'),
+                  ],
+                ),
+              ],
             ),
           ),
-          SliverPadding(
-            padding: const EdgeInsets.fromLTRB(20, 20, 20, 24),
-            sliver: SliverList(
-              delegate: SliverChildBuilderDelegate((context, index) {
-                if (index.isOdd) {
-                  return const SizedBox(height: 12);
-                }
-                final itemIndex = index ~/ 2;
-                final item = _jobs[itemIndex];
-                final accent = accentColors[itemIndex % accentColors.length];
-                return JobCard(
-                  data: item,
-                  accent: accent,
-                  cardColor: cardColor,
-                  cardBorder: cardBorder,
-                  textPrimary: textPrimary,
-                  textMuted: textMuted,
-                  showShadow: !isDark,
-                );
-              }, childCount: _jobs.isEmpty ? 0 : (_jobs.length * 2) - 1),
-            ),
-          ),
-        ],
+        ),
+
+        body: TabBarView(
+          children: [
+            _buildJobsList(),
+            const Center(child: Text('Upcoming Jobs')),
+            const Center(child: Text('Previous Jobs')),
+          ],
+        ),
       ),
+    );
+  }
+
+  Widget _buildJobsList() {
+    return ListView.separated(
+      padding: const EdgeInsets.all(20),
+      itemCount: _jobs.length,
+      separatorBuilder: (context, index) => const SizedBox(height: 16),
+      itemBuilder: (context, index) {
+        return JobCard(data: _jobs[index]);
+      },
     );
   }
 }
 
 class _HeaderSection extends StatelessWidget {
-  const _HeaderSection({
-    required this.textPrimary,
-    required this.textMuted,
-    required this.accent,
-    required this.onAccent,
-    required this.cardColor,
-    required this.cardBorder,
-  });
-
-  final Color textPrimary;
-  final Color textMuted;
-  final Color accent;
-  final Color onAccent;
-  final Color cardColor;
-  final Color cardBorder;
+  const _HeaderSection();
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    final textTheme = Theme.of(context).textTheme;
+
     return Row(
-      crossAxisAlignment: CrossAxisAlignment.center,
       children: [
-        Container(
-          width: 48,
-          height: 48,
-          decoration: BoxDecoration(
-            color: cardColor,
-            shape: BoxShape.circle,
-            border: Border.all(color: cardBorder),
-          ),
-          child: Center(
-            child: Text(
-              'G',
-              style: GoogleFonts.spaceGrotesk(
-                fontSize: 18,
-                fontWeight: FontWeight.w700,
-                color: textPrimary,
-              ),
-            ),
+        const CircleAvatar(
+          radius: 24,
+          backgroundImage: NetworkImage(
+            'https://api.uifaces.co/our-content/donated/x4_8P_NS.jpg',
           ),
         ),
         const SizedBox(width: 12),
         Expanded(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
             children: [
               Text(
                 'Hello',
-                style: GoogleFonts.manrope(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w600,
-                  color: textMuted,
+                style: textTheme.bodyMedium?.copyWith(
+                  color: colorScheme.onSurfaceVariant,
                 ),
               ),
-              const SizedBox(height: 4),
               Text(
-                'Guy Hawkins',
-                style: GoogleFonts.spaceGrotesk(
-                  fontSize: 18,
+                'Savannah Nguyen',
+                style: textTheme.bodyLarge?.copyWith(
                   fontWeight: FontWeight.w700,
-                  color: textPrimary,
+                  color: colorScheme.onSurface,
                 ),
               ),
             ],
           ),
         ),
         FilledButton(
-          onPressed: () {},
+          onPressed: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => const PostJobScreen()),
+            );
+          },
           style: FilledButton.styleFrom(
-            backgroundColor: accent,
-            foregroundColor: onAccent,
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(10),
-            ),
+            backgroundColor: colorScheme.primary,
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            shape: StadiumBorder(),
           ),
           child: Text(
             'Post a Job',
-            style: GoogleFonts.manrope(
-              fontSize: 12,
-              fontWeight: FontWeight.w700,
+            style: textTheme.bodyMedium?.copyWith(
+              fontWeight: FontWeight.w600,
               color: Colors.white,
             ),
           ),
@@ -204,32 +170,26 @@ class _HeaderSection extends StatelessWidget {
 }
 
 class JobCard extends StatelessWidget {
-  const JobCard({
-    super.key,
-    required this.data,
-    required this.accent,
-    required this.cardColor,
-    required this.cardBorder,
-    required this.textPrimary,
-    required this.textMuted,
-    required this.showShadow,
-  });
+  const JobCard({super.key, required this.data});
 
   final JobCardData data;
-  final Color accent;
-  final Color cardColor;
-  final Color cardBorder;
-  final Color textPrimary;
-  final Color textMuted;
-  final bool showShadow;
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    final textTheme = Theme.of(context).textTheme;
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: cardColor,
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: colorScheme.outline.withValues(alpha: 0.05)),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.02),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -237,16 +197,14 @@ class JobCard extends StatelessWidget {
           Row(
             children: [
               Container(
-                width: 50,
-                height: 50,
+                width: 48,
+                height: 48,
                 decoration: BoxDecoration(
-                  color: accent.withValues(alpha: 0.15),
-                  borderRadius: BorderRadius.circular(14),
+                  color: colorScheme.onSurface.withValues(alpha: 0.05),
+                  shape: BoxShape.circle,
                 ),
-                child: Padding(
-                  padding: const EdgeInsets.all(8.0),
-                  child: AppSvgIcon(assetName: AppIcon.techCompany1),
-                ),
+                padding: const EdgeInsets.all(8),
+                child: Image.network(data.logo),
               ),
               const SizedBox(width: 12),
               Expanded(
@@ -255,36 +213,86 @@ class JobCard extends StatelessWidget {
                   children: [
                     Text(
                       data.title,
-                      style: GoogleFonts.spaceGrotesk(
-                        fontSize: 15,
+                      style: textTheme.titleMedium?.copyWith(
                         fontWeight: FontWeight.w700,
-                        color: textPrimary,
+                        color: colorScheme.onSurface,
                       ),
                     ),
-                    const SizedBox(height: 4),
+                    const SizedBox(height: 2),
                     Text(
-                      '${data.company} | ${data.date}',
-                      style: GoogleFonts.manrope(
-                        fontSize: 12,
+                      '${data.company} . ${data.location} | ${data.time}',
+                      style: textTheme.bodySmall?.copyWith(
+                        color: colorScheme.onSurfaceVariant,
                         fontWeight: FontWeight.w600,
-                        color: textMuted,
                       ),
                     ),
                   ],
                 ),
               ),
-
-              AppSvgIcon(assetName: AppIcon.more, color: textPrimary, size: 20),
+              PopupMenuButton<String>(
+                icon: Icon(
+                  Icons.more_vert,
+                  color: colorScheme.onSurfaceVariant,
+                  size: 28,
+                ),
+                onSelected: (value) {
+                  // Handle menu selection
+                },
+                itemBuilder: (context) {
+                  final l10n = AppLocalizations.of(context);
+                  return [
+                    PopupMenuItem(
+                      value: 'view',
+                      child: Row(
+                        children: [
+                          const Icon(Icons.people_outline, size: 20),
+                          const SizedBox(width: 12),
+                          Text(l10n.viewApplications),
+                        ],
+                      ),
+                    ),
+                    PopupMenuItem(
+                      value: 'edit',
+                      child: Row(
+                        children: [
+                          const Icon(Icons.edit_outlined, size: 20),
+                          const SizedBox(width: 12),
+                          Text(l10n.editJob),
+                        ],
+                      ),
+                    ),
+                    PopupMenuItem(
+                      value: 'delete',
+                      child: Row(
+                        children: [
+                          const Icon(
+                            Icons.delete_outline,
+                            color: Colors.red,
+                            size: 20,
+                          ),
+                          const SizedBox(width: 12),
+                          Text(
+                            l10n.deleteJob,
+                            style: const TextStyle(color: Colors.red),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ];
+                },
+              ),
             ],
           ),
-          const SizedBox(height: 12),
-          Text(
-            data.description,
-            style: GoogleFonts.manrope(
-              fontSize: 12,
-              fontWeight: FontWeight.w500,
-              color: textMuted,
-              height: 1.4,
+          const SizedBox(height: 10),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 60),
+            child: Text(
+              data.description,
+              style: textTheme.bodyMedium?.copyWith(
+                color: colorScheme.onSurfaceVariant,
+                fontSize: 13,
+                fontWeight: FontWeight.w500,
+              ),
             ),
           ),
         ],
@@ -297,12 +305,16 @@ class JobCardData {
   const JobCardData({
     required this.title,
     required this.company,
-    required this.date,
+    required this.location,
+    required this.time,
+    required this.logo,
     required this.description,
   });
 
   final String title;
   final String company;
-  final String date;
+  final String location;
+  final String time;
+  final String logo;
   final String description;
 }

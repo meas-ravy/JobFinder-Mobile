@@ -123,5 +123,8 @@
   "messageLabel": "សារ",
   "profileLabel": "គណនី",
   "appliedLabel": "បានដាក់ពាក្យ",
-  "statsLabel": "ស្ថិតិ"
+  "statsLabel": "ស្ថិតិ",
+  "editJob": "កែសម្រួលការងារ",
+  "viewApplications": "មើលពាក្យសុំ",
+  "deleteJob": "លុបការងារ"
 }

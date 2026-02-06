@@ -123,5 +123,8 @@
   "messageLabel": "Message",
   "profileLabel": "Profile",
   "appliedLabel": "Applied",
-  "statsLabel": "Stats"
+  "statsLabel": "Stats",
+  "editJob": "Edit Job",
+  "viewApplications": "View Applications",
+  "deleteJob": "Delete Job"
 }

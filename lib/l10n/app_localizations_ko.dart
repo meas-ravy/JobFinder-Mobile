@@ -385,4 +385,13 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get statsLabel => '통계';
+
+  @override
+  String get editJob => '공고 편집';
+
+  @override
+  String get viewApplications => '지원자 보기';
+
+  @override
+  String get deleteJob => '공고 삭제';
 }

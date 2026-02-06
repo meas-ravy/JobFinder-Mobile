@@ -96,5 +96,8 @@
   "messageLabel": "消息",
   "profileLabel": "我的",
   "appliedLabel": "已申请",
-  "statsLabel": "统计"
+  "statsLabel": "统计",
+  "editJob": "编辑职位",
+  "viewApplications": "查看申请",
+  "deleteJob": "删除职位"
 }

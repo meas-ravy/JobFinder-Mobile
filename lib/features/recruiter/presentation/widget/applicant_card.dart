@@ -23,11 +23,20 @@ class ApplicantCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final textTheme = Theme.of(context).textTheme;
     return Container(
-      padding: const EdgeInsets.all(14),
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: cardColor,
-        borderRadius: BorderRadius.circular(18),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: cardBorder),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.02),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -40,8 +49,7 @@ class ApplicantCard extends StatelessWidget {
                 backgroundColor: palette['Resume']?.withValues(alpha: 0.15),
                 child: Text(
                   data.name.substring(0, 1),
-                  style: GoogleFonts.inter(
-                    fontSize: 16,
+                  style: textTheme.bodyLarge?.copyWith(
                     fontWeight: FontWeight.w700,
                     color: textPrimary,
                   ),

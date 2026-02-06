@@ -96,5 +96,8 @@
   "messageLabel": "Mesej",
   "profileLabel": "Profil",
   "appliedLabel": "Memohon",
-  "statsLabel": "Statistik"
+  "statsLabel": "Statistik",
+  "editJob": "Sunting Jawatan",
+  "viewApplications": "Lihat Permohonan",
+  "deleteJob": "Padam Jawatan"
 }

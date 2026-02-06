@@ -96,5 +96,8 @@
   "messageLabel": "메시지",
   "profileLabel": "프로필",
   "appliedLabel": "지원됨",
-  "statsLabel": "통계"
+  "statsLabel": "통계",
+  "editJob": "공고 편집",
+  "viewApplications": "지원자 보기",
+  "deleteJob": "공고 삭제"
 }

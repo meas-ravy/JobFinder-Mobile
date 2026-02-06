@@ -382,4 +382,13 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get statsLabel => '统计';
+
+  @override
+  String get editJob => '编辑职位';
+
+  @override
+  String get viewApplications => '查看申请';
+
+  @override
+  String get deleteJob => '删除职位';
 }

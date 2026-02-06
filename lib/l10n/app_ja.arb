@@ -96,5 +96,8 @@
   "messageLabel": "メッセージ",
   "profileLabel": "プロフィール",
   "appliedLabel": "応募済み",
-  "statsLabel": "統計"
+  "statsLabel": "統計",
+  "editJob": "求人を編集",
+  "viewApplications": "応募を表示",
+  "deleteJob": "求人を削除"
 }

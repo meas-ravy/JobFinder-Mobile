@@ -386,4 +386,13 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get statsLabel => 'Stats';
+
+  @override
+  String get editJob => 'Edit Job';
+
+  @override
+  String get viewApplications => 'View Applications';
+
+  @override
+  String get deleteJob => 'Delete Job';
 }

@@ -96,5 +96,8 @@
   "messageLabel": "ຂໍ້ຄວາມ",
   "profileLabel": "ໂປຣໄຟລ໌",
   "appliedLabel": "ສະໝັກແລ້ວ",
-  "statsLabel": "ສະຖິຕິ"
+  "statsLabel": "ສະຖິຕິ",
+  "editJob": "ແກ້ໄຂວຽກ",
+  "viewApplications": "ເບິ່ງການສະໝັກ",
+  "deleteJob": "ລຶບວຽກ"
 }
