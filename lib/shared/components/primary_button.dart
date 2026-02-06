@@ -20,6 +20,7 @@ class PrimaryButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
     return SizedBox(
       width: isFullWidth ? double.infinity : null,
       height: height,
@@ -35,8 +36,9 @@ class PrimaryButton extends StatelessWidget {
             elevation: 4,
             shadowColor: Colors.black.withValues(alpha: 0.2),
             shape: const StadiumBorder(),
-            textStyle: const TextStyle(
-              fontSize: 16,
+            textStyle: Theme.of(context).textTheme.titleMedium?.copyWith(
+              color: colorScheme.primary,
+              fontSize: 14,
               fontWeight: FontWeight.w600,
             ),
           ),

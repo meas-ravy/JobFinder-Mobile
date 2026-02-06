@@ -4,7 +4,7 @@ import 'package:job_finder/core/theme/app_color.dart';
 class AppTheme {
   const AppTheme._();
 
-  static final ThemeData light = _buildTheme(
+  static ThemeData light(String? fontFamily) => _buildTheme(
     colorScheme: const ColorScheme.light(
       primary: AppColor.primaryLight,
       onPrimary: AppColor.onPrimaryLight,
@@ -18,9 +18,10 @@ class AppTheme {
     ),
     scaffoldBackgroundColor: AppColor.backgroundColorLight,
     bottomNavigationBarColor: AppColor.bottomNavigationBarLight,
+    fontFamily: fontFamily,
   );
 
-  static final ThemeData dark = _buildTheme(
+  static ThemeData dark(String? fontFamily) => _buildTheme(
     colorScheme: const ColorScheme.dark(
       primary: AppColor.primaryDark,
       onPrimary: AppColor.onPrimaryDark,
@@ -34,16 +35,19 @@ class AppTheme {
     ),
     scaffoldBackgroundColor: AppColor.backgroundColorDark,
     bottomNavigationBarColor: AppColor.bottomNavigationBarDark,
+    fontFamily: fontFamily,
   );
 
   static ThemeData _buildTheme({
     required ColorScheme colorScheme,
     required Color scaffoldBackgroundColor,
     required Color bottomNavigationBarColor,
+    String? fontFamily,
   }) {
     return ThemeData(
       useMaterial3: true,
       colorScheme: colorScheme,
+      fontFamily: fontFamily,
       scaffoldBackgroundColor: scaffoldBackgroundColor,
       splashColor: Colors.transparent,
       appBarTheme: AppBarTheme(

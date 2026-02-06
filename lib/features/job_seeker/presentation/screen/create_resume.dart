@@ -4,6 +4,7 @@ import 'package:job_finder/features/job_seeker/data/model/template_model.dart';
 import 'package:job_finder/features/job_seeker/presentation/screen/cv_form_screen.dart';
 import 'package:job_finder/shared/widget/svg_icon.dart';
 import 'package:job_finder/shared/widget/zomtap_animation.dart';
+import 'package:job_finder/l10n/app_localizations.dart';
 
 class BuildTemplate extends StatefulWidget {
   const BuildTemplate({super.key});
@@ -15,7 +16,15 @@ class _BuildTemplateState extends State<BuildTemplate> {
   int _selectedTabIndex = 0;
   final TextEditingController _searchController = TextEditingController();
 
-  final List<String> _tabs = [
+  List<String> _getTabs(AppLocalizations l10n) => [
+    l10n.allTab,
+    l10n.simpleTab,
+    l10n.professionalTab,
+    l10n.minimalistTab,
+    l10n.modernTab,
+  ];
+
+  final List<String> _categoryKey = [
     "All",
     "Simple",
     "Professional",
@@ -40,7 +49,7 @@ class _BuildTemplateState extends State<BuildTemplate> {
   void _filterTemp() {
     setState(() {
       final query = _searchController.text.toLowerCase();
-      final selectedCategory = _tabs[_selectedTabIndex];
+      final selectedCategory = _categoryKey[_selectedTabIndex];
 
       filteredTemp = allTemp.where((template) {
         final matchesSearch =
@@ -57,13 +66,15 @@ class _BuildTemplateState extends State<BuildTemplate> {
   Widget build(BuildContext context) {
     final textTheme = Theme.of(context).textTheme;
     final colorScheme = Theme.of(context).colorScheme;
+    final l10n = AppLocalizations.of(context);
+    final tabs = _getTabs(l10n);
 
     return Scaffold(
       backgroundColor: colorScheme.surface,
       appBar: AppBar(
         //backgroundColor: colorScheme.surface,
         title: Text(
-          "Choose Template",
+          l10n.chooseTemplate,
           style: textTheme.titleLarge?.copyWith(
             fontWeight: FontWeight.w700,
             color: colorScheme.onSurface,
@@ -80,7 +91,7 @@ class _BuildTemplateState extends State<BuildTemplate> {
               child: TextField(
                 controller: _searchController,
                 decoration: InputDecoration(
-                  hintText: 'Search your template',
+                  hintText: l10n.searchTemplateHint,
                   hintStyle: TextStyle(
                     color: colorScheme.onSurface.withValues(alpha: 0.5),
                     fontSize: 15,
@@ -118,9 +129,9 @@ class _BuildTemplateState extends State<BuildTemplate> {
                 height: 40,
                 child: ListView.builder(
                   scrollDirection: Axis.horizontal,
-                  itemCount: _tabs.length,
+                  itemCount: tabs.length,
                   itemBuilder: (context, index) {
-                    final tab = _tabs[index];
+                    final tab = tabs[index];
                     final isSelected = _selectedTabIndex == index;
 
                     return Padding(
@@ -177,7 +188,7 @@ class _BuildTemplateState extends State<BuildTemplate> {
                           ),
                           const SizedBox(height: 16),
                           Text(
-                            'No templates found',
+                            l10n.noTemplatesFound,
                             style: textTheme.titleMedium?.copyWith(
                               color: colorScheme.onSurface.withValues(
                                 alpha: 0.5,

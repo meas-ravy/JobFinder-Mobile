@@ -9,9 +9,10 @@ import 'package:job_finder/core/theme/app_color.dart';
 import 'package:job_finder/features/auth/presentation/provider/auth_provider.dart';
 import 'package:job_finder/features/job_seeker/data/model/policy_services.dart';
 import 'package:job_finder/features/job_seeker/presentation/screen/jobb_seeker_document.dart';
-import 'package:job_finder/features/job_seeker/presentation/screen/language_screen.dart';
+import 'package:job_finder/core/helper/locale_controller.dart';
 import 'package:job_finder/features/job_seeker/presentation/screen/security_settings_screen.dart';
 import 'package:job_finder/features/job_seeker/presentation/widget/dialogs/show_doc.dart';
+import 'package:job_finder/l10n/app_localizations.dart';
 import 'package:job_finder/shared/widget/loading_dialog.dart';
 import 'package:job_finder/shared/widget/danger_tile.dart';
 import 'package:job_finder/shared/widget/section_title.dart';
@@ -23,12 +24,13 @@ class JobSeekerProfilePage extends HookConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final colorScheme = Theme.of(context).colorScheme;
     final textTheme = Theme.of(context).textTheme;
+    final l10n = AppLocalizations.of(context);
     return Scaffold(
       backgroundColor: colorScheme.surface,
       appBar: AppBar(
         backgroundColor: colorScheme.surface,
         elevation: 0,
-        title: const Text('Profile'),
+        title: Text(AppLocalizations.of(context).profileTitle),
       ),
       body: SafeArea(
         child: ListView(
@@ -37,9 +39,8 @@ class JobSeekerProfilePage extends HookConsumerWidget {
           children: [
             ProfileProgressCard(
               percent: 0.16,
-              title: 'Profile Completed!',
-              subtitle:
-                  'A complete profile increases the chances\nof a recruiter being more interested in\nrecruiting you',
+              title: AppLocalizations.of(context).profileCompletedTitle,
+              subtitle: AppLocalizations.of(context).profileCompletedSubtitle,
               colorScheme: colorScheme,
               textTheme: textTheme,
             ),
@@ -53,7 +54,7 @@ class JobSeekerProfilePage extends HookConsumerWidget {
             // ),
             SettingsTile(
               icon: AppIcon.documentBold,
-              title: 'My Documents',
+              title: AppLocalizations.of(context).myResume,
               onTap: () {
                 Navigator.push(
                   context,
@@ -63,26 +64,24 @@ class JobSeekerProfilePage extends HookConsumerWidget {
             ),
             SettingsTile(
               icon: AppIcon.switchRole,
-              title: 'Switch to Recruiter',
+              title: AppLocalizations.of(context).switchToRecruiter,
               onTap: () async {
                 // Show confirmation dialog
                 final confirmed = await showDialog<bool>(
                   context: context,
                   builder: (context) => AlertDialog(
-                    title: const Text('Switch Role'),
-                    content: const Text(
-                      'Switch to Recruiter mode? You can switch back anytime.',
-                    ),
+                    title: Text(l10n.switchRoleTitle),
+                    content: Text(l10n.switchRoleContent),
                     actions: [
                       TextButton(
                         onPressed: () => Navigator.pop(context, false),
-                        child: const Text('Cancel'),
+                        child: Text(l10n.cancel),
                       ),
                       FilledButton(
                         onPressed: () => Navigator.pop(context, true),
-                        child: const Text(
-                          'Switch',
-                          style: TextStyle(color: Colors.white),
+                        child: Text(
+                          l10n.switchLabel,
+                          style: const TextStyle(color: Colors.white),
                         ),
                       ),
                     ],
@@ -91,10 +90,7 @@ class JobSeekerProfilePage extends HookConsumerWidget {
 
                 if (confirmed != true || !context.mounted) return;
 
-                LoadingDialog.show(
-                  context,
-                  message: 'Switching to Recruiter...',
-                );
+                LoadingDialog.show(context, message: l10n.switchingToRecruiter);
 
                 final success = await ref
                     .read(authControllerProvider.notifier)
@@ -109,7 +105,7 @@ class JobSeekerProfilePage extends HookConsumerWidget {
                   final error = ref.read(authControllerProvider).errorMessage;
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
-                      content: Text(error ?? 'Failed to switch role'),
+                      content: Text(error ?? l10n.failedToSwitchRole),
                       backgroundColor: Theme.of(context).colorScheme.error,
                       behavior: SnackBarBehavior.floating,
                     ),
@@ -119,10 +115,13 @@ class JobSeekerProfilePage extends HookConsumerWidget {
             ),
 
             const SizedBox(height: 18),
-            SectionTitle(title: 'General', textTheme: textTheme),
+            SectionTitle(
+              title: AppLocalizations.of(context).generalSection,
+              textTheme: textTheme,
+            ),
             SettingsTile(
               icon: AppIcon.notification,
-              title: 'Notification',
+              title: AppLocalizations.of(context).notification,
               onTap: () {},
             ),
             // SettingsTile(
@@ -132,7 +131,7 @@ class JobSeekerProfilePage extends HookConsumerWidget {
             // ),
             SettingsTile(
               icon: AppIcon.shieldDone,
-              title: 'Security',
+              title: AppLocalizations.of(context).security,
               onTap: () {
                 Navigator.push(
                   context,
@@ -142,14 +141,33 @@ class JobSeekerProfilePage extends HookConsumerWidget {
                 );
               },
             ),
-            SettingsTile(
-              icon: AppIcon.show,
-              title: 'Language',
-              trailingText: 'English (US)',
-              onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (_) => const LanguageScreen()),
+            ValueListenableBuilder<Locale?>(
+              valueListenable: localeController,
+              builder: (context, locale, _) {
+                String langName;
+                switch (locale?.languageCode) {
+                  case 'km':
+                    langName = l10n.cambodia;
+                  case 'ja':
+                    langName = l10n.japan;
+                  case 'zh':
+                    langName = l10n.china;
+                  case 'ms':
+                    langName = l10n.malaysia;
+                  case 'lo':
+                    langName = l10n.laos;
+                  case 'ko':
+                    langName = l10n.korean;
+                  default:
+                    langName = l10n.englishUS;
+                }
+                return SettingsTile(
+                  icon: AppIcon.show,
+                  title: l10n.language,
+                  trailingText: langName,
+                  onTap: () {
+                    context.push(AppPath.language);
+                  },
                 );
               },
             ),
@@ -185,31 +203,31 @@ class JobSeekerProfilePage extends HookConsumerWidget {
             //   },
             // ),
             const SizedBox(height: 18),
-            SectionTitle(title: 'About', textTheme: textTheme),
+            SectionTitle(title: l10n.aboutSection, textTheme: textTheme),
             SettingsTile(
               icon: AppIcon.infoSqua,
-              title: 'Privacy & Policy',
+              title: l10n.privacyPolicy,
               onTap: () => ShowDoc.showLegalDocument(
                 context,
-                'Privacy Policy',
+                l10n.privacyPolicy,
                 PolicyServices.privacyPolicyContent,
               ),
             ),
             SettingsTile(
               icon: AppIcon.documentBold,
-              title: 'Terms of Services',
+              title: l10n.termsOfServices,
               onTap: () => ShowDoc.showLegalDocument(
                 context,
-                'Terms of Services',
+                l10n.termsOfServices,
                 PolicyServices.termsOfServiceContent,
               ),
             ),
             SettingsTile(
               icon: AppIcon.star,
-              title: 'About us',
+              title: l10n.aboutUs,
               onTap: () => ShowDoc.showLegalDocument(
                 context,
-                'About Us',
+                l10n.aboutUs,
                 PolicyServices.aboutUsContent,
               ),
             ),
@@ -218,27 +236,27 @@ class JobSeekerProfilePage extends HookConsumerWidget {
 
             DangerTile(
               icon: AppIcon.logout,
-              title: 'Logout',
+              title: l10n.logout,
               onTap: () async {
                 // Show confirmation dialog
                 final confirmed = await showDialog<bool>(
                   context: context,
                   builder: (context) => AlertDialog(
-                    title: const Text('Logout'),
-                    content: const Text('Are you sure you want to logout?'),
+                    title: Text(l10n.logoutConfirmTitle),
+                    content: Text(l10n.logoutConfirmContent),
                     actions: [
                       TextButton(
                         onPressed: () => Navigator.pop(context, false),
-                        child: const Text('Cancel'),
+                        child: Text(l10n.cancel),
                       ),
                       FilledButton(
                         onPressed: () => Navigator.pop(context, true),
                         style: FilledButton.styleFrom(
                           backgroundColor: Theme.of(context).colorScheme.error,
                         ),
-                        child: const Text(
-                          'Logout',
-                          style: TextStyle(color: Colors.white),
+                        child: Text(
+                          l10n.logout,
+                          style: const TextStyle(color: Colors.white),
                         ),
                       ),
                     ],

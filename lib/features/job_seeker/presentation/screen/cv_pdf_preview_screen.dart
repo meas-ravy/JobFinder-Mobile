@@ -1,7 +1,6 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:job_finder/core/theme/app_color.dart';
 import 'package:job_finder/features/job_seeker/domain/entities/cv_entity.dart';
 import 'package:job_finder/features/job_seeker/domain/usecase/cv_template_factory.dart';
 import 'package:job_finder/features/job_seeker/presentation/screen/jobb_seeker_document.dart';
@@ -9,6 +8,7 @@ import 'package:path_provider/path_provider.dart';
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 import 'package:printing/printing.dart';
+import 'package:job_finder/l10n/app_localizations.dart';
 import 'package:open_file/open_file.dart';
 
 class CvPdfPreviewScreen extends StatelessWidget {
@@ -21,19 +21,66 @@ class CvPdfPreviewScreen extends StatelessWidget {
     required this.templateName,
   });
 
+  bool _hasNonLatinCharacters(CvEntity cv) {
+    final allText = [
+      cv.fullName,
+      cv.summary,
+      cv.address,
+      ...cv.exp.map((e) => '${e.jobTitle} ${e.companyName} ${e.description}'),
+      ...cv.edu.map((e) => '${e.degree} ${e.institution}'),
+      ...cv.skills,
+      ...cv.language,
+      ...cv.ref.map((r) => '${r.name} ${r.position}'),
+    ].join(' ');
+
+    // Check if any character is outside the basic Latin / Latin-1 range
+    return allText.runes.any((rune) => rune > 255);
+  }
+
   @override
   Widget build(BuildContext context) {
     final colorTheme = Theme.of(context).colorScheme;
+    final l10n = AppLocalizations.of(context);
+    final hasUnicode = _hasNonLatinCharacters(cv);
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('CV Preview'),
+        title: Text(l10n.appName), // Use l10n if needed or keep static
         centerTitle: true,
         elevation: 0,
       ),
-
       body: Column(
         children: [
+          if (hasUnicode)
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              margin: const EdgeInsets.fromLTRB(16, 8, 16, 8),
+              decoration: BoxDecoration(
+                color: Colors.amber.shade50,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: Colors.amber.shade200),
+              ),
+              child: Row(
+                children: [
+                  Icon(
+                    Icons.warning_amber_rounded,
+                    color: Colors.amber.shade900,
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Text(
+                      l10n.pdfLanguageWarning,
+                      style: TextStyle(
+                        color: Colors.amber.shade900,
+                        fontSize: 13,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
           const SizedBox(height: 10),
           Expanded(
             child: Container(
@@ -73,7 +120,7 @@ class CvPdfPreviewScreen extends StatelessWidget {
                 Expanded(
                   child: ElevatedButton.icon(
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: AppColor.primaryDark,
+                      backgroundColor: colorTheme.primary,
                       foregroundColor: Colors.white,
                     ),
                     icon: const Icon(Icons.download),

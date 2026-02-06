@@ -9,6 +9,7 @@ import 'package:job_finder/features/job_seeker/presentation/widget/resume_card.d
 import 'package:job_finder/features/job_seeker/presentation/screen/cv_pdf_preview_screen.dart';
 import 'package:job_finder/features/job_seeker/presentation/providers/cv_provider.dart';
 import 'package:intl/intl.dart';
+import 'package:job_finder/l10n/app_localizations.dart';
 import 'package:job_finder/shared/widget/svg_icon.dart';
 
 class MyDocumentPage extends ConsumerWidget {
@@ -19,6 +20,7 @@ class MyDocumentPage extends ConsumerWidget {
     final colorScheme = Theme.of(context).colorScheme;
     final textTheme = Theme.of(context).textTheme;
     final cvListAsync = ref.watch(cvListProvider);
+    final l10n = AppLocalizations.of(context);
 
     return Scaffold(
       backgroundColor: colorScheme.surface,
@@ -26,7 +28,7 @@ class MyDocumentPage extends ConsumerWidget {
         backgroundColor: colorScheme.surface,
         elevation: 0,
         title: Text(
-          'My Documents',
+          l10n.myResumes,
           style: textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w700),
         ),
       ),
@@ -42,7 +44,7 @@ class MyDocumentPage extends ConsumerWidget {
                   Expanded(
                     child: ActionButton(
                       icon: 'assets/image/cv.png',
-                      label: 'New resume',
+                      label: l10n.newResume,
                       onTap: () async {
                         await Navigator.push(
                           context,
@@ -59,12 +61,12 @@ class MyDocumentPage extends ConsumerWidget {
                   Expanded(
                     child: ActionButton(
                       icon: 'assets/image/cover_letter.webp',
-                      label: 'Cover letter',
+                      label: l10n.coverLetter,
                       onTap: () {
                         ScaffoldMessenger.of(context).showSnackBar(
                           SnackBar(
                             content: Text(
-                              'We will add this feature soon, stay tuned!',
+                              l10n.featureSoonMessage,
                               style: textTheme.bodyMedium?.copyWith(
                                 fontWeight: FontWeight.w600,
                                 fontSize: 15,
@@ -87,7 +89,7 @@ class MyDocumentPage extends ConsumerWidget {
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 20),
               child: Text(
-                'My Resumes',
+                l10n.myResumes,
                 style: textTheme.titleMedium?.copyWith(
                   fontWeight: FontWeight.w700,
                   fontSize: 18,
@@ -100,7 +102,8 @@ class MyDocumentPage extends ConsumerWidget {
             Expanded(
               child: cvListAsync.when(
                 loading: () => const Center(child: CircularProgressIndicator()),
-                error: (error, stack) => Center(child: Text('Error: $error')),
+                error: (error, stack) =>
+                    Center(child: Text(l10n.errorLabel(error.toString()))),
                 data: (cvList) => cvList.isEmpty
                     ? Center(
                         child: Column(
@@ -114,7 +117,7 @@ class MyDocumentPage extends ConsumerWidget {
                             ),
                             const SizedBox(height: 16),
                             Text(
-                              'No resumes yet',
+                              l10n.noResumesYet,
                               style: textTheme.titleMedium?.copyWith(
                                 color: colorScheme.onSurface.withValues(
                                   alpha: 0.6,
@@ -123,7 +126,7 @@ class MyDocumentPage extends ConsumerWidget {
                             ),
                             const SizedBox(height: 8),
                             Text(
-                              'Create your first resume to get started',
+                              l10n.createFirstResume,
                               style: textTheme.bodyMedium?.copyWith(
                                 color: colorScheme.onSurface.withValues(
                                   alpha: 0.4,
@@ -154,22 +157,22 @@ class MyDocumentPage extends ConsumerWidget {
                               return await showDialog(
                                 context: context,
                                 builder: (context) => AlertDialog(
-                                  title: const Text('Delete CV'),
-                                  content: const Text(
-                                    'Are you sure you want to delete this CV?',
-                                  ),
+                                  title: Text(l10n.deleteCvTitle),
+                                  content: Text(l10n.deleteCvConfirm),
                                   actions: [
                                     TextButton(
                                       onPressed: () =>
                                           Navigator.pop(context, false),
-                                      child: const Text('Cancel'),
+                                      child: Text(l10n.cancel),
                                     ),
                                     TextButton(
                                       onPressed: () =>
                                           Navigator.pop(context, true),
-                                      child: const Text(
-                                        'Delete',
-                                        style: TextStyle(color: Colors.red),
+                                      child: Text(
+                                        l10n.deleteLabel,
+                                        style: const TextStyle(
+                                          color: Colors.red,
+                                        ),
                                       ),
                                     ),
                                   ],

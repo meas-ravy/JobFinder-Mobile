@@ -10,6 +10,7 @@ import 'package:job_finder/features/recruiter/presentation/screen/recruiter_home
 import 'package:job_finder/features/recruiter/presentation/screen/recruiter_message.dart';
 import 'package:job_finder/features/recruiter/presentation/screen/recruiter_profile.dart';
 import 'package:job_finder/features/recruiter/presentation/screen/recruiter_stats.dart';
+import 'package:job_finder/l10n/app_localizations.dart';
 
 class ButonNavRecruiter extends HookWidget {
   const ButonNavRecruiter({super.key});
@@ -65,7 +66,7 @@ class ButonNavRecruiter extends HookWidget {
           },
           items: [
             BottomNavigationBarItem(
-              label: "Home",
+              label: AppLocalizations.of(context).homeLabel,
               icon: AnimatedScale(
                 scale: pressedIndex.value == 0 ? 0.92 : 1,
                 duration: const Duration(milliseconds: 120),
@@ -95,7 +96,7 @@ class ButonNavRecruiter extends HookWidget {
             ),
 
             BottomNavigationBarItem(
-              label: "Applied",
+              label: AppLocalizations.of(context).appliedLabel,
               icon: AnimatedScale(
                 scale: pressedIndex.value == 1 ? 0.92 : 1,
                 duration: const Duration(milliseconds: 120),
@@ -125,7 +126,7 @@ class ButonNavRecruiter extends HookWidget {
             ),
 
             BottomNavigationBarItem(
-              label: "Stats",
+              label: AppLocalizations.of(context).statsLabel,
               icon: AnimatedScale(
                 scale: pressedIndex.value == 2 ? 0.92 : 1,
                 duration: const Duration(milliseconds: 120),
@@ -155,7 +156,7 @@ class ButonNavRecruiter extends HookWidget {
             ),
 
             BottomNavigationBarItem(
-              label: "Mesage",
+              label: AppLocalizations.of(context).messageLabel,
               icon: AnimatedScale(
                 scale: pressedIndex.value == 3 ? 0.92 : 1,
                 duration: const Duration(milliseconds: 120),
@@ -185,7 +186,7 @@ class ButonNavRecruiter extends HookWidget {
             ),
 
             BottomNavigationBarItem(
-              label: "Profile",
+              label: AppLocalizations.of(context).profileLabel,
               icon: AnimatedScale(
                 scale: pressedIndex.value == 4 ? 0.92 : 1,
                 duration: const Duration(milliseconds: 120),

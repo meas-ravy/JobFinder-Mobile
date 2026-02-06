@@ -3,6 +3,7 @@ import 'package:flutter_form_builder/flutter_form_builder.dart';
 import 'package:form_builder_validators/form_builder_validators.dart';
 import 'package:job_finder/features/job_seeker/domain/entities/cv_entity.dart';
 import 'package:job_finder/features/job_seeker/presentation/widget/cv_form.dart';
+import 'package:job_finder/l10n/app_localizations.dart';
 
 class ExperienceDialog {
   static void show(
@@ -11,6 +12,7 @@ class ExperienceDialog {
     required Function(ExpEntity) onSave,
   }) {
     final formKey = GlobalKey<FormBuilderState>();
+    final l10n = AppLocalizations.of(context);
 
     showModalBottomSheet(
       context: context,
@@ -32,7 +34,9 @@ class ExperienceDialog {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  existingExp != null ? 'Edit Experience' : 'Add Experience',
+                  existingExp != null
+                      ? l10n.editExperience
+                      : l10n.addExperience,
                   style: Theme.of(
                     context,
                   ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w700),
@@ -44,8 +48,8 @@ class ExperienceDialog {
                     children: [
                       CvForm(
                         name: 'jobTitle',
-                        label: 'Job Title',
-                        hint: 'Software Engineer',
+                        label: l10n.jobTitleLabel,
+                        hint: l10n.jobTitleHint,
                         initialValue: existingExp?.jobTitle,
                         validator: FormBuilderValidators.required(),
                         maxLines: 1,
@@ -53,8 +57,8 @@ class ExperienceDialog {
                       const SizedBox(height: 12),
                       CvForm(
                         name: 'companyName',
-                        label: 'Company Name',
-                        hint: 'Google',
+                        label: l10n.companyNameLabel,
+                        hint: l10n.companyNameHint,
                         initialValue: existingExp?.companyName,
                         validator: FormBuilderValidators.required(),
                         maxLines: 1,
@@ -62,12 +66,8 @@ class ExperienceDialog {
                       const SizedBox(height: 12),
                       CvForm(
                         name: 'description',
-                        label: 'Job Description',
-                        hint:
-                            'Type each point on a new line.\n'
-                            'e.g.\n'
-                            'Developed mobile apps\n'
-                            'Fixed critical bugs',
+                        label: l10n.jobDescriptionLabel,
+                        hint: l10n.jobDescriptionHint,
                         initialValue: existingExp?.description,
                         validator: FormBuilderValidators.required(),
                         maxLines: 5,
@@ -75,16 +75,16 @@ class ExperienceDialog {
                       const SizedBox(height: 12),
                       FormDateTime(
                         name: 'startDate',
-                        label: 'Start Date',
+                        label: l10n.startDateLabel,
                         initialValue: existingExp?.startDate,
-                        hint: '2024',
+                        hint: l10n.startDateHint,
                         validator: FormBuilderValidators.required(),
                       ),
                       const SizedBox(height: 12),
                       FormDateTime(
                         name: 'endDate',
-                        label: 'End Date',
-                        hint: '2026',
+                        label: l10n.endDateLabel,
+                        hint: l10n.endDateHint,
                         initialValue: existingExp?.endDate,
                         validator: FormBuilderValidators.required(),
                       ),
@@ -97,7 +97,7 @@ class ExperienceDialog {
                     Expanded(
                       child: OutlinedButton(
                         onPressed: () => Navigator.pop(context),
-                        child: const Text('Cancel'),
+                        child: Text(l10n.cancelButton),
                       ),
                     ),
                     const SizedBox(width: 12),
@@ -118,7 +118,9 @@ class ExperienceDialog {
                           }
                         },
                         child: Text(
-                          existingExp != null ? 'Update' : 'Add',
+                          existingExp != null
+                              ? l10n.updateButton
+                              : l10n.addButton,
                           style: const TextStyle(color: Colors.white),
                         ),
                       ),

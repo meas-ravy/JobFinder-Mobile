@@ -3,6 +3,7 @@ import 'package:flutter_form_builder/flutter_form_builder.dart';
 import 'package:form_builder_validators/form_builder_validators.dart';
 import 'package:job_finder/features/job_seeker/domain/entities/cv_entity.dart';
 import 'package:job_finder/features/job_seeker/presentation/widget/cv_form.dart';
+import 'package:job_finder/l10n/app_localizations.dart';
 
 class EducationDialog {
   static void show(
@@ -11,6 +12,7 @@ class EducationDialog {
     required Function(EduEntity) onSave,
   }) {
     final formKey = GlobalKey<FormBuilderState>();
+    final l10n = AppLocalizations.of(context);
 
     showModalBottomSheet(
       context: context,
@@ -32,7 +34,7 @@ class EducationDialog {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  existingEdu != null ? 'Edit Education' : 'Add Education',
+                  existingEdu != null ? l10n.editEducation : l10n.addEducation,
                   style: Theme.of(
                     context,
                   ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w700),
@@ -44,32 +46,32 @@ class EducationDialog {
                     children: [
                       CvForm(
                         name: 'degree',
-                        label: 'Degree',
-                        hint: 'Bachelor of Computer Science',
+                        label: l10n.degreeLabel,
+                        hint: l10n.degreeHint,
                         initialValue: existingEdu?.degree,
                         validator: FormBuilderValidators.required(),
                       ),
                       const SizedBox(height: 12),
                       CvForm(
                         name: 'institute',
-                        label: 'Institution',
-                        hint: 'Royal University of Phnom Penh',
+                        label: l10n.institutionLabel,
+                        hint: l10n.institutionHint,
                         initialValue: existingEdu?.institution,
                         validator: FormBuilderValidators.required(),
                       ),
                       const SizedBox(height: 12),
                       FormDateTime(
                         name: 'startDate',
-                        label: 'Start Date',
-                        hint: '2022',
+                        label: l10n.startDateLabel,
+                        hint: l10n.startDateHint,
                         initialValue: existingEdu?.startDate,
                         validator: FormBuilderValidators.required(),
                       ),
                       const SizedBox(height: 12),
                       FormDateTime(
                         name: 'endDate',
-                        label: 'End Date',
-                        hint: '2026',
+                        label: l10n.endDateLabel,
+                        hint: l10n.endDateHint,
                         initialValue: existingEdu?.endDate,
                         validator: FormBuilderValidators.required(),
                       ),
@@ -82,7 +84,7 @@ class EducationDialog {
                     Expanded(
                       child: OutlinedButton(
                         onPressed: () => Navigator.pop(context),
-                        child: const Text('Cancel'),
+                        child: Text(l10n.cancelButton),
                       ),
                     ),
                     const SizedBox(width: 12),
@@ -102,7 +104,9 @@ class EducationDialog {
                           }
                         },
                         child: Text(
-                          existingEdu != null ? 'Update' : 'Add',
+                          existingEdu != null
+                              ? l10n.updateButton
+                              : l10n.addButton,
                           style: const TextStyle(color: Colors.white),
                         ),
                       ),

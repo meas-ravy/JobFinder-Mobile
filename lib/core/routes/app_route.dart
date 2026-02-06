@@ -8,6 +8,7 @@ import 'package:job_finder/features/buton_nav_recruiter.dart';
 import 'package:job_finder/features/job_seeker/presentation/screen/create_resume.dart';
 import 'package:job_finder/features/main_wrapper.dart';
 import 'package:job_finder/features/splash_screen.dart';
+import 'package:job_finder/features/job_seeker/presentation/screen/language_screen.dart';
 import 'package:job_finder/features/wellcome_screen.dart';
 
 // Global navigator key for accessing navigation from outside widget tree (e.g., 401 interceptor)
@@ -60,6 +61,10 @@ class AppRouter {
       GoRoute(
         path: AppPath.buildTemplate,
         builder: (context, state) => const BuildTemplate(),
+      ),
+      GoRoute(
+        path: AppPath.language,
+        builder: (context, state) => const LanguageScreen(),
       ),
     ],
   );

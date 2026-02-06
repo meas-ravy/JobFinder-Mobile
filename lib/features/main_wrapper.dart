@@ -9,6 +9,7 @@ import 'package:job_finder/features/job_seeker/presentation/screen/job_seeker_ho
 import 'package:job_finder/features/job_seeker/presentation/screen/job_seeker_mesage_page.dart';
 import 'package:job_finder/features/job_seeker/presentation/screen/job_seeker_profile_page.dart';
 import 'package:job_finder/features/job_seeker/presentation/screen/job_seeker_save_page.dart';
+import 'package:job_finder/l10n/app_localizations.dart';
 
 class MainWrapper extends HookWidget {
   const MainWrapper({super.key});
@@ -64,7 +65,7 @@ class MainWrapper extends HookWidget {
           },
           items: [
             BottomNavigationBarItem(
-              label: "Home",
+              label: AppLocalizations.of(context).homeLabel,
               icon: AnimatedScale(
                 scale: pressedIndex.value == 0 ? 0.92 : 1,
                 duration: const Duration(milliseconds: 120),
@@ -94,7 +95,7 @@ class MainWrapper extends HookWidget {
             ),
 
             BottomNavigationBarItem(
-              label: "Save Job",
+              label: AppLocalizations.of(context).saveJobLabel,
               icon: AnimatedScale(
                 scale: pressedIndex.value == 1 ? 0.92 : 1,
                 duration: const Duration(milliseconds: 120),
@@ -124,7 +125,7 @@ class MainWrapper extends HookWidget {
             ),
 
             BottomNavigationBarItem(
-              label: "Application",
+              label: AppLocalizations.of(context).applicationLabel,
               icon: AnimatedScale(
                 scale: pressedIndex.value == 2 ? 0.92 : 1,
                 duration: const Duration(milliseconds: 120),
@@ -154,7 +155,7 @@ class MainWrapper extends HookWidget {
             ),
 
             BottomNavigationBarItem(
-              label: "Message",
+              label: AppLocalizations.of(context).messageLabel,
               icon: AnimatedScale(
                 scale: pressedIndex.value == 3 ? 0.92 : 1,
                 duration: const Duration(milliseconds: 120),
@@ -184,7 +185,7 @@ class MainWrapper extends HookWidget {
             ),
 
             BottomNavigationBarItem(
-              label: "Profile",
+              label: AppLocalizations.of(context).profileLabel,
               icon: AnimatedScale(
                 scale: pressedIndex.value == 4 ? 0.92 : 1,
                 duration: const Duration(milliseconds: 120),

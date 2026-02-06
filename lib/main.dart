@@ -9,6 +9,7 @@ import 'package:job_finder/l10n/app_localizations.dart';
 import 'package:job_finder/core/theme/app_theme.dart';
 import 'package:job_finder/features/job_seeker/data/data_source/object_box.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 late ObjectBox objectBox;
 
@@ -41,13 +42,15 @@ class MyApp extends StatelessWidget {
         return ValueListenableBuilder<Locale?>(
           valueListenable: localeController,
           builder: (context, locale, _) {
+            final String? fontFamily = _getFontFamily(locale);
+
             return MaterialApp.router(
               debugShowCheckedModeBanner: false,
               locale: locale,
               onGenerateTitle: (context) =>
                   AppLocalizations.of(context).appName,
-              theme: AppTheme.light,
-              darkTheme: AppTheme.dark,
+              theme: AppTheme.light(fontFamily),
+              darkTheme: AppTheme.dark(fontFamily),
               themeMode: themeMode,
               localizationsDelegates: AppLocalizations.localizationsDelegates,
               supportedLocales: AppLocalizations.supportedLocales,
@@ -60,5 +63,23 @@ class MyApp extends StatelessWidget {
         );
       },
     );
+  }
+
+  String? _getFontFamily(Locale? locale) {
+    if (locale == null) return GoogleFonts.inter().fontFamily;
+    switch (locale.languageCode) {
+      case 'km':
+        return GoogleFonts.battambang().fontFamily;
+      case 'ja':
+        return GoogleFonts.notoSansJp().fontFamily;
+      case 'zh':
+        return GoogleFonts.notoSansSc().fontFamily;
+      case 'lo':
+        return GoogleFonts.notoSansLao().fontFamily;
+      case 'ko':
+        return GoogleFonts.notoSansKr().fontFamily;
+      default:
+        return GoogleFonts.inter().fontFamily;
+    }
   }
 }

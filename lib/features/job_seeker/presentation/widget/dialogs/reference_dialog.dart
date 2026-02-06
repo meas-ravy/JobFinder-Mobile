@@ -3,6 +3,7 @@ import 'package:flutter_form_builder/flutter_form_builder.dart';
 import 'package:form_builder_validators/form_builder_validators.dart';
 import 'package:job_finder/features/job_seeker/domain/entities/cv_entity.dart';
 import 'package:job_finder/features/job_seeker/presentation/widget/cv_form.dart';
+import 'package:job_finder/l10n/app_localizations.dart';
 
 class ReferenceDialog {
   static void show(
@@ -11,6 +12,7 @@ class ReferenceDialog {
     required Function(Reference) onSave,
   }) {
     final formKey = GlobalKey<FormBuilderState>();
+    final l10n = AppLocalizations.of(context);
 
     showModalBottomSheet(
       context: context,
@@ -32,7 +34,7 @@ class ReferenceDialog {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  existingRef != null ? 'Edit Reference' : 'Add Reference',
+                  existingRef != null ? l10n.editReference : l10n.addReference,
                   style: Theme.of(
                     context,
                   ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w700),
@@ -44,8 +46,8 @@ class ReferenceDialog {
                     children: [
                       CvForm(
                         name: 'name',
-                        label: 'Full Name',
-                        hint: 'Alex Johnson',
+                        label: l10n.fullNameLabel,
+                        hint: l10n.referenceHint,
                         initialValue: existingRef?.name,
                         validator: FormBuilderValidators.required(),
                         maxLines: 1,
@@ -53,8 +55,8 @@ class ReferenceDialog {
                       const SizedBox(height: 12),
                       CvForm(
                         name: 'position',
-                        label: 'Position',
-                        hint: 'Senior Manager',
+                        label: l10n.positionLabel,
+                        hint: l10n.positionHint,
                         initialValue: existingRef?.position,
                         validator: FormBuilderValidators.required(),
                         maxLines: 1,
@@ -62,16 +64,16 @@ class ReferenceDialog {
                       const SizedBox(height: 12),
                       CvForm(
                         name: 'company',
-                        label: 'Company (Optional)',
-                        hint: 'ABC Corporation',
+                        label: l10n.companyOptionalLabel,
+                        hint: l10n.companyHint,
                         initialValue: existingRef?.company,
                         maxLines: 1,
                       ),
                       const SizedBox(height: 12),
                       CvForm(
                         name: 'email',
-                        label: 'Email',
-                        hint: 'alex.johnson@example.com',
+                        label: l10n.emailLabel,
+                        hint: l10n.referenceEmailHint,
                         initialValue: existingRef?.email,
                         validator: FormBuilderValidators.compose([
                           FormBuilderValidators.required(),
@@ -82,8 +84,8 @@ class ReferenceDialog {
                       const SizedBox(height: 12),
                       CvForm(
                         name: 'phone',
-                        label: 'Phone',
-                        hint: '+1 234 567 8900',
+                        label: l10n.phoneLabel,
+                        hint: l10n.referencePhoneHint,
                         initialValue: existingRef?.phone,
                         validator: FormBuilderValidators.required(),
                         maxLines: 1,
@@ -97,7 +99,7 @@ class ReferenceDialog {
                     Expanded(
                       child: OutlinedButton(
                         onPressed: () => Navigator.pop(context),
-                        child: const Text('Cancel'),
+                        child: Text(l10n.cancelButton),
                       ),
                     ),
                     const SizedBox(width: 12),
@@ -118,7 +120,9 @@ class ReferenceDialog {
                           }
                         },
                         child: Text(
-                          existingRef != null ? 'Update' : 'Add',
+                          existingRef != null
+                              ? l10n.updateButton
+                              : l10n.addButton,
                           style: const TextStyle(color: Colors.white),
                         ),
                       ),

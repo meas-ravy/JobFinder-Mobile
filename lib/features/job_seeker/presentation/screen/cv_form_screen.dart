@@ -15,6 +15,7 @@ import 'package:job_finder/features/job_seeker/presentation/widget/experience_ca
 import 'package:job_finder/features/job_seeker/presentation/widget/reference_card.dart';
 import 'package:job_finder/features/job_seeker/presentation/providers/cv_provider.dart';
 import 'package:job_finder/shared/components/primary_button.dart';
+import 'package:job_finder/l10n/app_localizations.dart';
 
 class CvFormScreen extends ConsumerStatefulWidget {
   final TempModel selectedTemplate;
@@ -97,11 +98,13 @@ class _CvFormScreenState extends ConsumerState<CvFormScreen> {
     final colorScheme = Theme.of(context).colorScheme;
     final textTheme = Theme.of(context).textTheme;
 
+    final l10n = AppLocalizations.of(context);
+
     return Scaffold(
       backgroundColor: colorScheme.surface,
       appBar: AppBar(
         title: Text(
-          'Create CV',
+          l10n.createCvTitle,
           style: textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w700),
         ),
         bottom: PreferredSize(
@@ -173,18 +176,19 @@ class _CvFormScreenState extends ConsumerState<CvFormScreen> {
 
   Widget _buildPersonalPage(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
+    final l10n = AppLocalizations.of(context);
     return SingleChildScrollView(
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'Personal Information',
+            l10n.personalInfo,
             style: Theme.of(context).textTheme.titleLarge,
           ),
           const SizedBox(height: 4),
           Text(
-            'Let recruiters know how to reach you',
+            l10n.reachRecruiters,
             style: TextStyle(
               fontSize: 13,
               color: colorScheme.onSurface.withValues(alpha: 0.6),
@@ -203,15 +207,15 @@ class _CvFormScreenState extends ConsumerState<CvFormScreen> {
           const SizedBox(height: 24),
           BuiltTextfield(
             name: 'fullName',
-            label: 'Full Name',
-            hint: 'Jake sonner',
+            label: l10n.fullNameLabel,
+            hint: l10n.fullNameHint,
             validator: FormBuilderValidators.required(),
           ),
           const SizedBox(height: 16),
           BuiltTextfield(
             name: 'email',
-            label: 'Email',
-            hint: 'jakesonner@gmail.com',
+            label: l10n.emailLabel,
+            hint: l10n.emailHint,
             validator: FormBuilderValidators.compose([
               FormBuilderValidators.required(),
               FormBuilderValidators.email(),
@@ -220,22 +224,22 @@ class _CvFormScreenState extends ConsumerState<CvFormScreen> {
           const SizedBox(height: 16),
           BuiltTextfield(
             name: 'location',
-            label: 'Location',
-            hint: 'Phnom Penh, Cambodia',
+            label: l10n.locationLabel,
+            hint: l10n.locationHint,
             validator: FormBuilderValidators.required(),
           ),
           const SizedBox(height: 16),
           BuiltTextfield(
             name: 'phone',
-            label: 'Phone',
-            hint: '0964516334',
+            label: l10n.phoneLabel,
+            hint: l10n.phoneHint,
             validator: FormBuilderValidators.required(),
           ),
           const SizedBox(height: 16),
           BuiltTextfield(
             name: 'Profile',
-            label: 'Personal Summary',
-            hint: 'Write a brief summary about yourself...',
+            label: l10n.personalSummaryLabel,
+            hint: l10n.personalSummaryHint,
             maxLine: 5,
           ),
         ],
@@ -245,17 +249,24 @@ class _CvFormScreenState extends ConsumerState<CvFormScreen> {
 
   Widget _buildExperiencePage(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
+    final l10n = AppLocalizations.of(context);
     return SingleChildScrollView(
       padding: const EdgeInsets.all(20),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'Work Experience',
+            l10n.workExperience,
             style: Theme.of(context).textTheme.titleLarge,
           ),
-          const SizedBox(height: 8),
-          const Text('Enter details about your previous jobs'),
+          const SizedBox(height: 4),
+          Text(
+            l10n.workExperienceSubtitle,
+            style: TextStyle(
+              fontSize: 13,
+              color: colorScheme.onSurface.withValues(alpha: 0.6),
+            ),
+          ),
           const SizedBox(height: 24),
           ..._experiences.map(
             (exp) => ExperienceCard(
@@ -288,7 +299,7 @@ class _CvFormScreenState extends ConsumerState<CvFormScreen> {
               },
             ),
             icon: const Icon(Icons.add),
-            label: const Text('Add Experience'),
+            label: Text(l10n.addExperience),
             style: OutlinedButton.styleFrom(
               minimumSize: const Size.fromHeight(55),
               side: BorderSide(color: colorScheme.primary),
@@ -301,14 +312,24 @@ class _CvFormScreenState extends ConsumerState<CvFormScreen> {
 
   Widget _buildEducationPage(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
+    final l10n = AppLocalizations.of(context);
     return SingleChildScrollView(
       padding: const EdgeInsets.all(20),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('Education', style: Theme.of(context).textTheme.titleLarge),
-          const SizedBox(height: 8),
-          const Text('List your educational background'),
+          Text(
+            l10n.educationTitle,
+            style: Theme.of(context).textTheme.titleLarge,
+          ),
+          const SizedBox(height: 4),
+          Text(
+            l10n.educationSubtitle,
+            style: TextStyle(
+              fontSize: 13,
+              color: colorScheme.onSurface.withValues(alpha: 0.6),
+            ),
+          ),
           const SizedBox(height: 24),
           ..._educations.map(
             (edu) => EducationCard(
@@ -341,7 +362,7 @@ class _CvFormScreenState extends ConsumerState<CvFormScreen> {
               },
             ),
             icon: const Icon(Icons.add),
-            label: const Text('Add Education'),
+            label: Text(l10n.addEducation),
             style: OutlinedButton.styleFrom(
               minimumSize: const Size.fromHeight(55),
               side: BorderSide(color: colorScheme.primary),
@@ -353,29 +374,37 @@ class _CvFormScreenState extends ConsumerState<CvFormScreen> {
   }
 
   Widget _buildSkillsLanguagesPage(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    final l10n = AppLocalizations.of(context);
     return SingleChildScrollView(
       padding: const EdgeInsets.all(20),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'Skills & Languages',
+            l10n.skillsLanguages,
             style: Theme.of(context).textTheme.titleLarge,
           ),
-          const SizedBox(height: 8),
-          const Text('Highlight your key competencies'),
+          const SizedBox(height: 4),
+          Text(
+            l10n.skillsLanguagesSubtitle,
+            style: TextStyle(
+              fontSize: 13,
+              color: colorScheme.onSurface.withValues(alpha: 0.6),
+            ),
+          ),
           const SizedBox(height: 24),
           BuiltTextfield(
             name: 'skills',
-            label: 'Skills',
-            hint: 'e.g., Flutter, Dart, UI/UX (comma separated)',
+            label: l10n.skillsLabel,
+            hint: l10n.skillsHint,
             maxLine: 3,
           ),
           const SizedBox(height: 16),
           BuiltTextfield(
             name: 'languages',
-            label: 'Languages',
-            hint: 'e.g., Khmer, English (comma separated)',
+            label: l10n.languagesLabel,
+            hint: l10n.languagesHint,
             maxLine: 3,
           ),
         ],
@@ -385,14 +414,24 @@ class _CvFormScreenState extends ConsumerState<CvFormScreen> {
 
   Widget _buildReferencesPage(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
+    final l10n = AppLocalizations.of(context);
     return SingleChildScrollView(
       padding: const EdgeInsets.all(20),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('References', style: Theme.of(context).textTheme.titleLarge),
-          const SizedBox(height: 8),
-          const Text('Add people who can vouch for you'),
+          Text(
+            l10n.referencesTitle,
+            style: Theme.of(context).textTheme.titleLarge,
+          ),
+          const SizedBox(height: 4),
+          Text(
+            l10n.referencesSubtitle,
+            style: TextStyle(
+              fontSize: 13,
+              color: colorScheme.onSurface.withValues(alpha: 0.6),
+            ),
+          ),
           const SizedBox(height: 24),
           ..._references.map(
             (ref) => ReferenceCard(
@@ -425,7 +464,7 @@ class _CvFormScreenState extends ConsumerState<CvFormScreen> {
               },
             ),
             icon: const Icon(Icons.add),
-            label: const Text('Add Reference'),
+            label: Text(l10n.addReference),
             style: OutlinedButton.styleFrom(
               minimumSize: const Size.fromHeight(55),
               side: BorderSide(color: colorScheme.primary),
@@ -438,6 +477,7 @@ class _CvFormScreenState extends ConsumerState<CvFormScreen> {
 
   Widget _buildBottomNavigation(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
+    final l10n = AppLocalizations.of(context);
 
     return Container(
       padding: const EdgeInsets.all(16),
@@ -464,7 +504,14 @@ class _CvFormScreenState extends ConsumerState<CvFormScreen> {
                       borderRadius: BorderRadius.circular(28),
                     ),
                   ),
-                  child: const Text('Back'),
+                  child: Text(
+                    l10n.backButton,
+                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                      color: colorScheme.primary,
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
                 ),
               ),
             if (_currentPage > 0) const SizedBox(width: 12),
@@ -472,8 +519,8 @@ class _CvFormScreenState extends ConsumerState<CvFormScreen> {
               child: PrimaryButton(
                 onPressed: _nextPage,
                 label: _currentPage == _totalPages - 1
-                    ? 'Preview & Export'
-                    : 'Next Step',
+                    ? l10n.previewExport
+                    : l10n.nextStep,
               ),
             ),
           ],
@@ -483,6 +530,7 @@ class _CvFormScreenState extends ConsumerState<CvFormScreen> {
   }
 
   void _previewCV() {
+    final l10n = AppLocalizations.of(context);
     if (_formKey.currentState!.saveAndValidate()) {
       final values = _formKey.currentState!.value;
 
@@ -529,9 +577,9 @@ class _CvFormScreenState extends ConsumerState<CvFormScreen> {
         duration: const Duration(milliseconds: 300),
         curve: Curves.easeInOut,
       );
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please fix errors in Personal Info')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(l10n.fixPersonalInfoError)));
     }
   }
 

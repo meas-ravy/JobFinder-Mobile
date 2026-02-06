@@ -47,6 +47,14 @@ class AppIcon {
   static const String image = "assets/icon/Image.svg";
   static const String edit = "assets/icon/Edit.svg";
   static const String delete = "assets/icon/Delete_border.svg";
+  static const String flagUs = "assets/icon/flag_us.svg";
+  static const String flagMalasy = "assets/icon/flag_malasy.svg";
+  static const String flagSigabor = "assets/icon/flag_sigabor.svg";
+  static const String flagCambodia = "assets/icon/flag_khmer.svg";
+  static const String flagChina = "assets/icon/flag_cn.svg";
+  static const String flagJapan = "assets/icon/flag_japen.svg";
+  static const String flagLaos = "assets/icon/flag_laov.svg";
+  static const String flagKorean = "assets/icon/flag_korean.svg";
 
   // --- SVG Icon Strings ---
   static const String phoneSvg =
