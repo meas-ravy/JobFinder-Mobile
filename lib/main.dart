@@ -3,6 +3,9 @@ import 'package:google_sign_in/google_sign_in.dart';
 import 'package:job_finder/core/constants/oauth_config.dart';
 import 'package:job_finder/core/helper/locale_controller.dart';
 import 'package:job_finder/core/helper/theme_mode_controller.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:job_finder/core/helper/secure_storage.dart';
+import 'package:job_finder/core/routes/app_path.dart';
 import 'package:job_finder/core/routes/app_route.dart';
 import 'package:job_finder/shared/widget/app_lock_wrapper.dart';
 import 'package:job_finder/l10n/app_localizations.dart';
@@ -19,10 +22,31 @@ Future<void> main() async {
   await GoogleSignIn.instance.initialize(
     serverClientId: OAuthConfig.googleServerClientId,
   );
+
+  // Logic to determine initial route
+  final storage = TokenStorageImpl(const FlutterSecureStorage());
+  final token = await storage.read();
+  final role = await storage.readRole();
+  final hasSeenOnboarding = await storage.readHasSeenOnboarding();
+
+  String initialRoute = AppPath.splash; // Default (animations)
+
+  if (hasSeenOnboarding) {
+    if (token == null || token.isEmpty) {
+      initialRoute = AppPath.sendOtp; // Go straight to Login
+    } else if (role == null || role.isEmpty) {
+      initialRoute = AppPath.selectRole;
+    } else {
+      initialRoute = role == 'Job_finder'
+          ? AppPath.jobSeekerHome
+          : AppPath.recruiterHome;
+    }
+  }
+
   runApp(
     ProviderScope(
       overrides: [objectBoxProvider.overrideWithValue(objectBox)],
-      child: const MyApp(),
+      child: MyApp(initialRoute: initialRoute),
     ),
   );
 }
@@ -31,8 +55,22 @@ final objectBoxProvider = Provider<ObjectBox>((ref) {
   throw UnimplementedError();
 });
 
-class MyApp extends StatelessWidget {
-  const MyApp({super.key});
+class MyApp extends StatefulWidget {
+  final String initialRoute;
+  const MyApp({super.key, required this.initialRoute});
+
+  @override
+  State<MyApp> createState() => _MyAppState();
+}
+
+class _MyAppState extends State<MyApp> {
+  late final AppRouter _appRouter;
+
+  @override
+  void initState() {
+    super.initState();
+    _appRouter = AppRouter(initialLocation: widget.initialRoute);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -54,7 +92,7 @@ class MyApp extends StatelessWidget {
               themeMode: themeMode,
               localizationsDelegates: AppLocalizations.localizationsDelegates,
               supportedLocales: AppLocalizations.supportedLocales,
-              routerConfig: AppRouter().router,
+              routerConfig: _appRouter.router,
               builder: (context, child) {
                 return AppLockWrapper(child: child!);
               },

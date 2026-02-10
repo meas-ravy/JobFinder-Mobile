@@ -79,7 +79,12 @@ class _AppLockWrapperState extends State<AppLockWrapper>
   @override
   Widget build(BuildContext context) {
     if (!_initialized) {
-      return const Scaffold(body: Center(child: CircularProgressIndicator()));
+      return const Scaffold(
+        backgroundColor: Color(
+          0xFF020617,
+        ), // Match your onboarding/splash background
+        body: SizedBox.shrink(),
+      );
     }
 
     return Stack(

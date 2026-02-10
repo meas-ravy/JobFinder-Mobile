@@ -15,13 +15,12 @@ import 'package:job_finder/features/onboarding_screen.dart';
 final GlobalKey<NavigatorState> rootNavigatorKey = GlobalKey<NavigatorState>();
 
 class AppRouter {
-  static final AppRouter _instance = AppRouter._internal();
-  factory AppRouter() => _instance;
-  AppRouter._internal();
+  final String initialLocation;
+  AppRouter({this.initialLocation = AppPath.splash});
 
   late final GoRouter router = GoRouter(
     navigatorKey: rootNavigatorKey,
-    initialLocation: AppPath.splash,
+    initialLocation: initialLocation,
     routes: [
       GoRoute(
         path: AppPath.splash,
@@ -29,22 +28,7 @@ class AppRouter {
       ),
       GoRoute(
         path: AppPath.wellcomescreen,
-        pageBuilder: (context, state) {
-          return CustomTransitionPage(
-            key: state.pageKey,
-            child: const OnboardingScreen(),
-            transitionsBuilder:
-                (context, animation, secondaryAnimation, child) {
-                  return FadeTransition(
-                    opacity: CurveTween(
-                      curve: Curves.easeInOutCirc,
-                    ).animate(animation),
-                    child: child,
-                  );
-                },
-            transitionDuration: const Duration(milliseconds: 800),
-          );
-        },
+        builder: (context, state) => const OnboardingScreen(),
       ),
       GoRoute(
         path: AppPath.sendOtp,
