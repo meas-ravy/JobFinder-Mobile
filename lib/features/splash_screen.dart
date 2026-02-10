@@ -29,6 +29,9 @@ class _SplashScreenState extends State<SplashScreen>
   late final Animation<double> _textTracking;
   late final Animation<double> _pulse;
 
+  late final AnimationController _exitController;
+  late final Animation<double> _exitFade;
+
   @override
   void initState() {
     super.initState();
@@ -40,6 +43,14 @@ class _SplashScreenState extends State<SplashScreen>
       vsync: this,
       duration: const Duration(milliseconds: 1200),
     );
+    _exitController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 600),
+    );
+    _exitFade = Tween<double>(
+      begin: 1.0,
+      end: 0.0,
+    ).animate(CurvedAnimation(parent: _exitController, curve: Curves.easeIn));
     _lottieController = AnimationController(vsync: this);
     _logoFade = CurvedAnimation(
       parent: _controller,
@@ -98,17 +109,26 @@ class _SplashScreenState extends State<SplashScreen>
 
     if (!mounted) return;
 
-    // Check stored token and role
+    // Check stored token, role, and first-time flag
     final storage = TokenStorageImpl(const FlutterSecureStorage());
     final token = await storage.read();
     final role = await storage.readRole();
+    final hasSeenOnboarding = await storage.readHasSeenOnboarding();
+
+    // Start exit animation
+    await _exitController.forward();
 
     if (!mounted) return;
 
-    // Route based on auth state
+    // Route based on auth state and first-time flag
     if (token == null || token.isEmpty) {
-      // No token → go to login
-      context.go(AppPath.sendOtp);
+      if (!hasSeenOnboarding) {
+        // Very first time using the app → go to onboarding
+        context.go(AppPath.wellcomescreen);
+      } else {
+        // Not first time but not logged in → go straight to login (Send OTP)
+        context.go(AppPath.sendOtp);
+      }
     } else if (role == null || role.isEmpty) {
       // Has token but no role → go to role selection
       context.go(AppPath.selectRole);
@@ -129,6 +149,7 @@ class _SplashScreenState extends State<SplashScreen>
   void dispose() {
     _controller.dispose();
     _pulseController.dispose();
+    _exitController.dispose();
     _lottieController.dispose();
     super.dispose();
   }
@@ -137,85 +158,91 @@ class _SplashScreenState extends State<SplashScreen>
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
 
-    return Scaffold(
-      backgroundColor: colorScheme.surface,
-      body: SafeArea(
-        child: Column(
-          children: [
-            const Spacer(),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                AnimatedBuilder(
-                  animation: Listenable.merge([_controller, _pulseController]),
-                  child: AppSvgIcon(
-                    assetName: AppIcon.appLogoTwo,
-                    size: 62,
-                    color: colorScheme.primary,
-                  ),
-                  builder: (context, child) {
-                    final pulseScale = _pulseController.isAnimating
-                        ? _pulse.value
-                        : 1.0;
-                    return Opacity(
-                      opacity: _logoFade.value,
-                      child: Transform.translate(
-                        offset: Offset(0, _logoSlideUp.value),
-                        child: Transform.scale(
-                          scale: _logoScale.value * pulseScale,
-                          child: child,
+    return FadeTransition(
+      opacity: _exitFade,
+      child: Scaffold(
+        backgroundColor: colorScheme.surface,
+        body: SafeArea(
+          child: Column(
+            children: [
+              const Spacer(),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  AnimatedBuilder(
+                    animation: Listenable.merge([
+                      _controller,
+                      _pulseController,
+                    ]),
+                    child: AppSvgIcon(
+                      assetName: AppIcon.appLogoTwo,
+                      size: 62,
+                      color: colorScheme.primary,
+                    ),
+                    builder: (context, child) {
+                      final pulseScale = _pulseController.isAnimating
+                          ? _pulse.value
+                          : 1.0;
+                      return Opacity(
+                        opacity: _logoFade.value,
+                        child: Transform.translate(
+                          offset: Offset(0, _logoSlideUp.value),
+                          child: Transform.scale(
+                            scale: _logoScale.value * pulseScale,
+                            child: child,
+                          ),
                         ),
-                      ),
-                    );
-                  },
-                ),
-                const SizedBox(width: 12),
-                AnimatedBuilder(
-                  animation: _controller,
-                  builder: (context, child) {
-                    return Opacity(
-                      opacity: _textFade.value,
-                      child: Transform.translate(
-                        offset: Offset(_textSlideX.value, 0),
-                        child: Transform.scale(
-                          scale: _textScale.value,
-                          child: Text(
-                            'Jober',
-                            style: GoogleFonts.poppins(
-                              fontSize: 42,
-                              fontWeight: FontWeight.w700,
-                              color: colorScheme.onSurface,
-                              letterSpacing: _textTracking.value,
+                      );
+                    },
+                  ),
+                  const SizedBox(width: 12),
+                  AnimatedBuilder(
+                    animation: _controller,
+                    builder: (context, child) {
+                      return Opacity(
+                        opacity: _textFade.value,
+                        child: Transform.translate(
+                          offset: Offset(_textSlideX.value, 0),
+                          child: Transform.scale(
+                            scale: _textScale.value,
+                            child: Text(
+                              'Jober',
+                              style: GoogleFonts.poppins(
+                                fontSize: 42,
+                                fontWeight: FontWeight.w700,
+                                color: colorScheme.onSurface,
+                                letterSpacing: _textTracking.value,
+                              ),
                             ),
                           ),
                         ),
-                      ),
-                    );
-                  },
-                ),
-              ],
-            ),
-            const Spacer(),
-            Padding(
-              padding: const EdgeInsets.only(bottom: 32),
-              child: SizedBox(
-                height: 100,
-                width: 100,
-                child: Lottie.asset(
-                  'assets/image/loading.json',
-                  controller: _lottieController,
-                  onLoaded: (composition) {
-                    _lottieController.duration = composition.duration;
-                    Future.delayed(const Duration(milliseconds: 200), () {
-                      if (mounted) {
-                        _lottieController.repeat();
-                      }
-                    });
-                  },
+                      );
+                    },
+                  ),
+                ],
+              ),
+              const Spacer(),
+              Padding(
+                padding: const EdgeInsets.only(bottom: 32),
+                child: SizedBox(
+                  height: 100,
+                  width: 100,
+                  child: Lottie.asset(
+                    'assets/image/loading.json',
+                    controller: _lottieController,
+                    onLoaded: (composition) {
+                      _lottieController.duration = composition.duration;
+                      Future.delayed(const Duration(milliseconds: 200), () {
+                        if (mounted) {
+                          _lottieController.repeat();
+                        }
+                      });
+                    },
+                  ),
                 ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );

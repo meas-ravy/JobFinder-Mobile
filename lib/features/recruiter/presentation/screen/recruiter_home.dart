@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:job_finder/features/recruiter/presentation/screen/post_job_screen.dart';
+import 'package:job_finder/features/onboarding_screen.dart';
 import 'package:job_finder/l10n/app_localizations.dart';
 
 class RecruiterHomePage extends StatelessWidget {
@@ -148,7 +148,7 @@ class _HeaderSection extends StatelessWidget {
           onPressed: () {
             Navigator.push(
               context,
-              MaterialPageRoute(builder: (context) => const PostJobScreen()),
+              MaterialPageRoute(builder: (context) => const OnboardingScreen()),
             );
           },
           style: FilledButton.styleFrom(

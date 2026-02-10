@@ -9,7 +9,7 @@ import 'package:job_finder/features/job_seeker/presentation/screen/create_resume
 import 'package:job_finder/features/main_wrapper.dart';
 import 'package:job_finder/features/splash_screen.dart';
 import 'package:job_finder/features/job_seeker/presentation/screen/language_screen.dart';
-import 'package:job_finder/features/wellcome_screen.dart';
+import 'package:job_finder/features/onboarding_screen.dart';
 
 // Global navigator key for accessing navigation from outside widget tree (e.g., 401 interceptor)
 final GlobalKey<NavigatorState> rootNavigatorKey = GlobalKey<NavigatorState>();
@@ -29,7 +29,22 @@ class AppRouter {
       ),
       GoRoute(
         path: AppPath.wellcomescreen,
-        builder: (context, state) => const WellcomeScreen(),
+        pageBuilder: (context, state) {
+          return CustomTransitionPage(
+            key: state.pageKey,
+            child: const OnboardingScreen(),
+            transitionsBuilder:
+                (context, animation, secondaryAnimation, child) {
+                  return FadeTransition(
+                    opacity: CurveTween(
+                      curve: Curves.easeInOutCirc,
+                    ).animate(animation),
+                    child: child,
+                  );
+                },
+            transitionDuration: const Duration(milliseconds: 800),
+          );
+        },
       ),
       GoRoute(
         path: AppPath.sendOtp,

@@ -4,7 +4,8 @@ import 'package:fresh_dio/fresh_dio.dart';
 enum TokensStorageKeys {
   // Key for storing authentication tokens
   accessToken('app_access_token'),
-  role('app_user_role');
+  role('app_user_role'),
+  hasSeenOnboarding('has_seen_onboarding');
 
   /// Key name
   final String keyName;
@@ -55,5 +56,19 @@ class TokenStorageImpl implements TokenStorage<String> {
 
   Future<void> deleteRole() {
     return _secureStorage.delete(key: TokensStorageKeys.role.keyName);
+  }
+
+  Future<bool> readHasSeenOnboarding() async {
+    final value = await _secureStorage.read(
+      key: TokensStorageKeys.hasSeenOnboarding.keyName,
+    );
+    return value == 'true';
+  }
+
+  Future<void> writeHasSeenOnboarding() {
+    return _secureStorage.write(
+      key: TokensStorageKeys.hasSeenOnboarding.keyName,
+      value: 'true',
+    );
   }
 }
