@@ -11,11 +11,14 @@ import 'package:job_finder/features/auth/presentation/provider/auth_provider.dar
 import 'package:job_finder/features/job_seeker/data/model/policy_services.dart';
 import 'package:job_finder/features/job_seeker/presentation/screen/security_settings_screen.dart';
 import 'package:job_finder/features/job_seeker/presentation/widget/dialogs/show_doc.dart';
+import 'package:job_finder/features/recruiter/data/models/company_model.dart';
 import 'package:job_finder/l10n/app_localizations.dart';
 import 'package:job_finder/shared/widget/danger_tile.dart';
 import 'package:job_finder/shared/widget/loading_dialog.dart';
 import 'package:job_finder/shared/widget/section_title.dart';
+import 'package:job_finder/shared/widget/shimmer_loading.dart';
 import 'package:job_finder/shared/widget/svg_icon.dart';
+import 'package:job_finder/features/recruiter/presentation/provider/recruiter_provider.dart';
 
 class RecruiterProfilePage extends HookConsumerWidget {
   const RecruiterProfilePage({super.key});
@@ -26,6 +29,9 @@ class RecruiterProfilePage extends HookConsumerWidget {
     final textTheme = Theme.of(context).textTheme;
     final l10n = AppLocalizations.of(context);
 
+    final recruiterState = ref.watch(recruiterControllerProvider);
+    final company = recruiterState.company;
+
     return Scaffold(
       backgroundColor: colorScheme.surface,
       appBar: AppBar(
@@ -35,233 +41,249 @@ class RecruiterProfilePage extends HookConsumerWidget {
         title: const _HeaderSection(),
       ),
       body: SafeArea(
-        child: ListView(
-          padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
-          children: [
-            _ProfileProgressCard(
-              percent: 0.95,
-              title: 'Profile Completed!',
-              subtitle:
-                  'A complete profile increases the chances\nof a recruiter being more interested in\nrecruiting you',
-              colorScheme: colorScheme,
-              textTheme: textTheme,
-            ),
-            const SizedBox(height: 18),
+        child: recruiterState.isLoading
+            ? const _ProfileShimmer()
+            : ListView(
+                padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
+                children: [
+                  _ProfileProgressCard(
+                    company: company,
+                    percent: 0.95,
+                    title: company != null
+                        ? 'Profile Completed!'
+                        : 'Complete Your Profile',
+                    subtitle: company != null
+                        ? 'A complete profile increases the chances\nof a recruiter being more interested in\nrecruiting you'
+                        : 'Establish your company presence to start posting jobs and finding candidates.',
+                    colorScheme: colorScheme,
+                    textTheme: textTheme,
+                  ),
+                  const SizedBox(height: 18),
 
-            _SettingsTile(
-              icon: AppIcon.switchRole,
-              title: 'Switch to Job Finder',
-              onTap: () async {
-                // Show confirmation dialog
-                final confirmed = await showDialog<bool>(
-                  context: context,
-                  builder: (context) => AlertDialog(
-                    title: const Text('Switch Role'),
-                    content: const Text(
-                      'Switch to Job Finder mode? You can switch back anytime.',
-                    ),
-                    actions: [
-                      TextButton(
-                        onPressed: () => Navigator.pop(context, false),
-                        child: const Text('Cancel'),
-                      ),
-                      FilledButton(
-                        onPressed: () => Navigator.pop(context, true),
-                        child: const Text(
-                          'Switch',
-                          style: TextStyle(color: Colors.white),
+                  _SettingsTile(
+                    icon: AppIcon.switchRole,
+                    title: 'Switch to Job Finder',
+                    onTap: () async {
+                      // Show confirmation dialog
+                      final confirmed = await showDialog<bool>(
+                        context: context,
+                        builder: (context) => AlertDialog(
+                          title: const Text('Switch Role'),
+                          content: const Text(
+                            'Switch to Job Finder mode? You can switch back anytime.',
+                          ),
+                          actions: [
+                            TextButton(
+                              onPressed: () => Navigator.pop(context, false),
+                              child: const Text('Cancel'),
+                            ),
+                            FilledButton(
+                              onPressed: () => Navigator.pop(context, true),
+                              child: const Text(
+                                'Switch',
+                                style: TextStyle(color: Colors.white),
+                              ),
+                            ),
+                          ],
                         ),
-                      ),
-                    ],
+                      );
+
+                      if (confirmed != true || !context.mounted) return;
+
+                      LoadingDialog.show(
+                        context,
+                        message: 'Switching to Job Finder...',
+                      );
+
+                      // Call select-role API
+                      final success = await ref
+                          .read(authControllerProvider.notifier)
+                          .selectRole('Job_finder');
+
+                      if (!context.mounted) return;
+                      LoadingDialog.hide(context);
+
+                      if (success) {
+                        // Navigate to Job Seeker home
+                        context.go(AppPath.jobSeekerHome);
+                      } else {
+                        // Show error
+                        final error = ref
+                            .read(authControllerProvider)
+                            .errorMessage;
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text(error ?? 'Failed to switch role'),
+                            backgroundColor: Theme.of(
+                              context,
+                            ).colorScheme.error,
+                            behavior: SnackBarBehavior.floating,
+                          ),
+                        );
+                      }
+                    },
                   ),
-                );
 
-                if (confirmed != true || !context.mounted) return;
-
-                LoadingDialog.show(
-                  context,
-                  message: 'Switching to Job Finder...',
-                );
-
-                // Call select-role API
-                final success = await ref
-                    .read(authControllerProvider.notifier)
-                    .selectRole('Job_finder');
-
-                if (!context.mounted) return;
-                LoadingDialog.hide(context);
-
-                if (success) {
-                  // Navigate to Job Seeker home
-                  context.go(AppPath.jobSeekerHome);
-                } else {
-                  // Show error
-                  final error = ref.read(authControllerProvider).errorMessage;
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text(error ?? 'Failed to switch role'),
-                      backgroundColor: Theme.of(context).colorScheme.error,
-                      behavior: SnackBarBehavior.floating,
-                    ),
-                  );
-                }
-              },
-            ),
-
-            const SizedBox(height: 18),
-            _SectionTitle(title: 'General', textTheme: textTheme),
-            _SettingsTile(
-              icon: AppIcon.notification,
-              title: 'Notification',
-              onTap: () {},
-            ),
-            // _SettingsTile(
-            //   icon: AppIcon.timeSquare,
-            //   title: 'Timezone',
-            //   onTap: () {},
-            // ),
-            _SettingsTile(
-              icon: AppIcon.shieldDone,
-              title: 'Security',
-              onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (_) => const SecuritySettingsScreen(),
+                  const SizedBox(height: 18),
+                  _SectionTitle(title: 'General', textTheme: textTheme),
+                  _SettingsTile(
+                    icon: AppIcon.notification,
+                    title: 'Notification',
+                    onTap: () {},
                   ),
-                );
-              },
-            ),
-            ValueListenableBuilder<Locale?>(
-              valueListenable: localeController,
-              builder: (context, locale, _) {
-                String langName;
-                switch (locale?.languageCode) {
-                  case 'km':
-                    langName = l10n.cambodia;
-                  case 'ja':
-                    langName = l10n.japan;
-                  case 'zh':
-                    langName = l10n.china;
-                  case 'ms':
-                    langName = l10n.malaysia;
-                  case 'lo':
-                    langName = l10n.laos;
-                  case 'ko':
-                    langName = l10n.korean;
-                  default:
-                    langName = l10n.englishUS;
-                }
-                return SettingsTile(
-                  icon: AppIcon.show,
-                  title: l10n.language,
-                  trailingText: langName,
-                  onTap: () {
-                    context.push(AppPath.language);
-                  },
-                );
-              },
-            ),
-            // ValueListenableBuilder<ThemeMode>(
-            //   valueListenable: themeModeController,
-            //   builder: (context, mode, _) {
-            //     final isSystem = mode == ThemeMode.system;
-            //     return Column(
-            //       children: [
-            //         _SettingsSwitchTile(
-            //           icon: AppIcon.settings,
-            //           title: 'Use device settings',
-            //           value: isSystem,
-            //           onChanged: (value) {
-            //             if (value) {
-            //               themeModeController.setThemeMode(ThemeMode.system);
-            //             } else {
-            //               themeModeController.setThemeMode(ThemeMode.light);
-            //             }
-            //           },
-            //         ),
-            //         _SettingsSwitchTile(
-            //           icon: AppIcon.eye,
-            //           title: 'Dark Mode',
-            //           value: mode == ThemeMode.dark,
-            //           onChanged: isSystem
-            //               ? null
-            //               : (value) => themeModeController.setDark(value),
-            //         ),
-            //       ],
-            //     );
-            //   },
-            // ),
-            const SizedBox(height: 18),
-            _SectionTitle(title: 'About', textTheme: textTheme),
-            SettingsTile(
-              icon: AppIcon.infoSqua,
-              title: 'Privacy & Policy',
-              onTap: () => ShowDoc.showLegalDocument(
-                context,
-                'Privacy Policy',
-                PolicyServices.privacyPolicyContent,
-              ),
-            ),
-            SettingsTile(
-              icon: AppIcon.documentBold,
-              title: 'Terms of Services',
-              onTap: () => ShowDoc.showLegalDocument(
-                context,
-                'Terms of Services',
-                PolicyServices.termsOfServiceContent,
-              ),
-            ),
-            SettingsTile(
-              icon: AppIcon.star,
-              title: 'About us',
-              onTap: () => ShowDoc.showLegalDocument(
-                context,
-                'About Us',
-                PolicyServices.aboutUsContent,
-              ),
-            ),
-
-            const SizedBox(height: 18),
-            DangerTile(
-              icon: AppIcon.logout,
-              title: 'Logout',
-              onTap: () async {
-                // Show confirmation dialog
-                final confirmed = await showDialog<bool>(
-                  context: context,
-                  builder: (context) => AlertDialog(
-                    title: const Text('Logout'),
-                    content: const Text('Are you sure you want to logout?'),
-                    actions: [
-                      TextButton(
-                        onPressed: () => Navigator.pop(context, false),
-                        child: const Text('Cancel'),
-                      ),
-                      FilledButton(
-                        onPressed: () => Navigator.pop(context, true),
-                        style: FilledButton.styleFrom(
-                          backgroundColor: Theme.of(context).colorScheme.error,
+                  // _SettingsTile(
+                  //   icon: AppIcon.timeSquare,
+                  //   title: 'Timezone',
+                  //   onTap: () {},
+                  // ),
+                  _SettingsTile(
+                    icon: AppIcon.shieldDone,
+                    title: 'Security',
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => const SecuritySettingsScreen(),
                         ),
-                        child: const Text('Logout'),
-                      ),
-                    ],
+                      );
+                    },
                   ),
-                );
+                  ValueListenableBuilder<Locale?>(
+                    valueListenable: localeController,
+                    builder: (context, locale, _) {
+                      String langName;
+                      switch (locale?.languageCode) {
+                        case 'km':
+                          langName = l10n.cambodia;
+                        case 'ja':
+                          langName = l10n.japan;
+                        case 'zh':
+                          langName = l10n.china;
+                        case 'ms':
+                          langName = l10n.malaysia;
+                        case 'lo':
+                          langName = l10n.laos;
+                        case 'ko':
+                          langName = l10n.korean;
+                        default:
+                          langName = l10n.englishUS;
+                      }
+                      return SettingsTile(
+                        icon: AppIcon.show,
+                        title: l10n.language,
+                        trailingText: langName,
+                        onTap: () {
+                          context.push(AppPath.language);
+                        },
+                      );
+                    },
+                  ),
+                  // ValueListenableBuilder<ThemeMode>(
+                  //   valueListenable: themeModeController,
+                  //   builder: (context, mode, _) {
+                  //     final isSystem = mode == ThemeMode.system;
+                  //     return Column(
+                  //       children: [
+                  //         _SettingsSwitchTile(
+                  //           icon: AppIcon.settings,
+                  //           title: 'Use device settings',
+                  //           value: isSystem,
+                  //           onChanged: (value) {
+                  //             if (value) {
+                  //               themeModeController.setThemeMode(ThemeMode.system);
+                  //             } else {
+                  //               themeModeController.setThemeMode(ThemeMode.light);
+                  //             }
+                  //           },
+                  //         ),
+                  //         _SettingsSwitchTile(
+                  //           icon: AppIcon.eye,
+                  //           title: 'Dark Mode',
+                  //           value: mode == ThemeMode.dark,
+                  //           onChanged: isSystem
+                  //               ? null
+                  //               : (value) => themeModeController.setDark(value),
+                  //         ),
+                  //       ],
+                  //     );
+                  //   },
+                  // ),
+                  const SizedBox(height: 18),
+                  _SectionTitle(title: 'About', textTheme: textTheme),
+                  SettingsTile(
+                    icon: AppIcon.infoSqua,
+                    title: 'Privacy & Policy',
+                    onTap: () => ShowDoc.showLegalDocument(
+                      context,
+                      'Privacy Policy',
+                      PolicyServices.privacyPolicyContent,
+                    ),
+                  ),
+                  SettingsTile(
+                    icon: AppIcon.documentBold,
+                    title: 'Terms of Services',
+                    onTap: () => ShowDoc.showLegalDocument(
+                      context,
+                      'Terms of Services',
+                      PolicyServices.termsOfServiceContent,
+                    ),
+                  ),
+                  SettingsTile(
+                    icon: AppIcon.star,
+                    title: 'About us',
+                    onTap: () => ShowDoc.showLegalDocument(
+                      context,
+                      'About Us',
+                      PolicyServices.aboutUsContent,
+                    ),
+                  ),
 
-                if (confirmed != true || !context.mounted) return;
+                  const SizedBox(height: 18),
+                  DangerTile(
+                    icon: AppIcon.logout,
+                    title: 'Logout',
+                    onTap: () async {
+                      // Show confirmation dialog
+                      final confirmed = await showDialog<bool>(
+                        context: context,
+                        builder: (context) => AlertDialog(
+                          title: const Text('Logout'),
+                          content: const Text(
+                            'Are you sure you want to logout?',
+                          ),
+                          actions: [
+                            TextButton(
+                              onPressed: () => Navigator.pop(context, false),
+                              child: const Text('Cancel'),
+                            ),
+                            FilledButton(
+                              onPressed: () => Navigator.pop(context, true),
+                              style: FilledButton.styleFrom(
+                                backgroundColor: Theme.of(
+                                  context,
+                                ).colorScheme.error,
+                              ),
+                              child: const Text('Logout'),
+                            ),
+                          ],
+                        ),
+                      );
 
-                // Clear token and role, then navigate to login
-                final storage = TokenStorageImpl(const FlutterSecureStorage());
-                await storage.delete();
-                await storage.deleteRole();
+                      if (confirmed != true || !context.mounted) return;
 
-                if (!context.mounted) return;
-                context.go(AppPath.sendOtp);
-              },
-            ),
-          ],
-        ),
+                      // Clear token and role, then navigate to login
+                      final storage = TokenStorageImpl(
+                        const FlutterSecureStorage(),
+                      );
+                      await storage.delete();
+                      await storage.deleteRole();
+
+                      if (!context.mounted) return;
+                      context.go(AppPath.sendOtp);
+                    },
+                  ),
+                ],
+              ),
       ),
     );
   }
@@ -269,6 +291,7 @@ class RecruiterProfilePage extends HookConsumerWidget {
 
 class _ProfileProgressCard extends StatelessWidget {
   const _ProfileProgressCard({
+    required this.company,
     required this.percent,
     required this.title,
     required this.subtitle,
@@ -276,6 +299,7 @@ class _ProfileProgressCard extends StatelessWidget {
     required this.textTheme,
   });
 
+  final CompanyModel? company;
   final double percent;
   final String title;
   final String subtitle;
@@ -284,9 +308,9 @@ class _ProfileProgressCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Savannah Nguyen's info
-    const name = 'Savannah Nguyen';
-    const email = 'debra.holt@example.com';
+    // Use actual company info if available, otherwise use defaults/placeholders
+    final name = company?.name ?? 'Complete Company Profile';
+    final email = company?.contactEmail ?? 'No email set';
 
     return Column(
       children: [
@@ -310,11 +334,26 @@ class _ProfileProgressCard extends StatelessWidget {
             children: [
               Row(
                 children: [
-                  const CircleAvatar(
+                  CircleAvatar(
                     radius: 40,
-                    backgroundImage: NetworkImage(
-                      'https://api.uifaces.co/our-content/donated/x4_8P_NS.jpg',
-                    ),
+                    backgroundColor: colorScheme.primary.withValues(alpha: 0.1),
+                    backgroundImage:
+                        (company?.logoUrl != null &&
+                            company!.logoUrl.isNotEmpty)
+                        ? NetworkImage(company!.logoUrl)
+                        : null,
+                    child:
+                        (company?.logoUrl == null || company!.logoUrl.isEmpty)
+                        ? Text(
+                            company?.name.characters.firstOrNull
+                                    ?.toUpperCase() ??
+                                'C',
+                            style: textTheme.headlineMedium?.copyWith(
+                              color: colorScheme.primary,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          )
+                        : null,
                   ),
                   const SizedBox(width: 16),
                   Expanded(
@@ -338,23 +377,24 @@ class _ProfileProgressCard extends StatelessWidget {
                           ),
                         ),
                         const SizedBox(height: 8),
-                        Row(
-                          children: [
-                            Icon(
-                              Icons.verified,
-                              color: colorScheme.primary,
-                              size: 20,
-                            ),
-                            const SizedBox(width: 6),
-                            Text(
-                              'Verified',
-                              style: textTheme.bodyMedium?.copyWith(
-                                fontWeight: FontWeight.bold,
-                                color: colorScheme.onSurface,
+                        if (company?.isVerified == true)
+                          Row(
+                            children: [
+                              Icon(
+                                Icons.verified,
+                                color: colorScheme.primary,
+                                size: 20,
                               ),
-                            ),
-                          ],
-                        ),
+                              const SizedBox(width: 6),
+                              Text(
+                                'Verified',
+                                style: textTheme.bodyMedium?.copyWith(
+                                  fontWeight: FontWeight.bold,
+                                  color: colorScheme.onSurface,
+                                ),
+                              ),
+                            ],
+                          ),
                       ],
                     ),
                   ),
@@ -370,22 +410,24 @@ class _ProfileProgressCard extends StatelessWidget {
                 mainAxisAlignment: MainAxisAlignment.spaceAround,
                 children: [
                   _StatItem(
-                    value: 520,
+                    value: 0, // TODO: Add jobs posted count to model if needed
                     label: 'Jobs posted',
                     textTheme: textTheme,
                     colorScheme: colorScheme,
                   ),
                   _VerticalDottedLine(colorScheme: colorScheme),
                   _StatItem(
-                    value: 50340,
+                    value: 0, // TODO: Add applied count to model if needed
                     label: 'Applied',
                     textTheme: textTheme,
                     colorScheme: colorScheme,
                   ),
                   _VerticalDottedLine(colorScheme: colorScheme),
                   _StatItem(
-                    value: 12500,
-                    label: 'Follower',
+                    value: company?.followerCount ?? 0,
+                    label: (company?.followerCount ?? 0) > 1
+                        ? 'Followers'
+                        : 'Follower',
                     textTheme: textTheme,
                     colorScheme: colorScheme,
                   ),
@@ -422,12 +464,12 @@ class _ProfileProgressCard extends StatelessWidget {
                     ),
                     const SizedBox(width: 8),
                     TweenAnimationBuilder<double>(
-                      tween: Tween(begin: 0, end: 85),
+                      tween: Tween(begin: 0, end: company?.hireRating ?? 0.0),
                       duration: const Duration(milliseconds: 1500),
                       curve: Curves.easeOutCubic,
                       builder: (context, val, child) {
                         return Text(
-                          '${val.toInt()}%',
+                          '${val.toStringAsFixed(1)}%',
                           style: textTheme.bodyLarge?.copyWith(
                             color: colorScheme.primary,
                             fontWeight: FontWeight.w800,
@@ -441,7 +483,13 @@ class _ProfileProgressCard extends StatelessWidget {
             ),
             const SizedBox(width: 16),
             FilledButton(
-              onPressed: () {},
+              onPressed: () {
+                if (company == null) {
+                  context.push(AppPath.createCompany);
+                } else {
+                  context.push(AppPath.editCompany);
+                }
+              },
               style: FilledButton.styleFrom(
                 backgroundColor: colorScheme.primary,
                 padding: const EdgeInsets.symmetric(
@@ -453,7 +501,7 @@ class _ProfileProgressCard extends StatelessWidget {
                 ),
               ),
               child: Text(
-                'Edit Bio',
+                company == null ? 'Set Up Profile' : 'Edit Bio',
                 style: textTheme.bodyLarge?.copyWith(
                   color: Colors.white,
                   fontSize: 14,
@@ -636,6 +684,112 @@ class _HeaderSection extends StatelessWidget {
             color: colorScheme.onSurface,
           ),
         ),
+      ],
+    );
+  }
+}
+
+class _ProfileShimmer extends StatelessWidget {
+  const _ProfileShimmer();
+
+  @override
+  Widget build(BuildContext context) {
+    return ListView(
+      padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
+      children: [
+        // Card Shimmer
+        Container(
+          padding: const EdgeInsets.all(20),
+          decoration: BoxDecoration(
+            color: Theme.of(context).colorScheme.surface,
+            borderRadius: BorderRadius.circular(24),
+            border: Border.all(
+              color: Theme.of(
+                context,
+              ).colorScheme.outlineVariant.withValues(alpha: 0.2),
+            ),
+          ),
+          child: Column(
+            children: [
+              Row(
+                children: [
+                  const ShimmerCircle(radius: 40),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: const [
+                        ShimmerLoading(width: 150, height: 20),
+                        SizedBox(height: 8),
+                        ShimmerLoading(width: 100, height: 16),
+                        SizedBox(height: 8),
+                        ShimmerLoading(width: 80, height: 16),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 24),
+              const Divider(),
+              const SizedBox(height: 24),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceAround,
+                children: const [
+                  Column(
+                    children: [
+                      ShimmerLoading(width: 40, height: 20),
+                      SizedBox(height: 4),
+                      ShimmerLoading(width: 60, height: 12),
+                    ],
+                  ),
+                  Column(
+                    children: [
+                      ShimmerLoading(width: 40, height: 20),
+                      SizedBox(height: 4),
+                      ShimmerLoading(width: 60, height: 12),
+                    ],
+                  ),
+                  Column(
+                    children: [
+                      ShimmerLoading(width: 40, height: 20),
+                      SizedBox(height: 4),
+                      ShimmerLoading(width: 60, height: 12),
+                    ],
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 20),
+        Row(
+          children: const [
+            Expanded(
+              child: ShimmerLoading(
+                width: double.infinity,
+                height: 48,
+                borderRadius: 24,
+              ),
+            ),
+            SizedBox(width: 16),
+            ShimmerLoading(width: 100, height: 48, borderRadius: 24),
+          ],
+        ),
+        const SizedBox(height: 32),
+        // Settings items shimmers
+        for (int i = 0; i < 5; i++)
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: 8),
+            child: Row(
+              children: const [
+                ShimmerCircle(radius: 12),
+                SizedBox(width: 16),
+                ShimmerLoading(width: 120, height: 16),
+                Spacer(),
+                ShimmerLoading(width: 20, height: 20),
+              ],
+            ),
+          ),
       ],
     );
   }

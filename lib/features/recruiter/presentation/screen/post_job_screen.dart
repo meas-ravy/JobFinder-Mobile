@@ -1,20 +1,22 @@
 import 'package:dotted_line/dotted_line.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_form_builder/flutter_form_builder.dart';
-import 'post_job_steps/company_info_step.dart';
-import 'post_job_steps/job_details_step.dart';
-import 'post_job_steps/job_description_step.dart';
-import 'post_job_steps/requirements_step.dart';
-import 'post_job_steps/review_step.dart';
+import 'package:hooks_riverpod/hooks_riverpod.dart';
+import 'package:job_finder/features/recruiter/presentation/provider/recruiter_provider.dart';
+import 'package:job_finder/features/recruiter/presentation/screen/post_job_steps/company_info_step.dart';
+import 'package:job_finder/features/recruiter/presentation/screen/post_job_steps/job_details_step.dart';
+import 'package:job_finder/features/recruiter/presentation/screen/post_job_steps/job_description_step.dart';
+import 'package:job_finder/features/recruiter/presentation/screen/post_job_steps/requirements_step.dart';
+import 'package:job_finder/features/recruiter/presentation/screen/post_job_steps/review_step.dart';
 
-class PostJobScreen extends StatefulWidget {
+class PostJobScreen extends ConsumerStatefulWidget {
   const PostJobScreen({super.key});
 
   @override
-  State<PostJobScreen> createState() => _PostJobScreenState();
+  ConsumerState<PostJobScreen> createState() => _PostJobScreenState();
 }
 
-class _PostJobScreenState extends State<PostJobScreen> {
+class _PostJobScreenState extends ConsumerState<PostJobScreen> {
   final _formKey = GlobalKey<FormBuilderState>();
   int _currentStep = 1;
 
@@ -22,6 +24,54 @@ class _PostJobScreenState extends State<PostJobScreen> {
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
     final textTheme = Theme.of(context).textTheme;
+
+    // Safety Guard: Check if company exists
+    final recruiterState = ref.watch(recruiterControllerProvider);
+
+    // If we're loading the initial state, show a basic scaffold with loader
+    if (recruiterState.isLoading && recruiterState.company == null) {
+      return Scaffold(
+        appBar: AppBar(title: const Text('Add Job Post')),
+        body: const Center(child: CircularProgressIndicator()),
+      );
+    }
+
+    // If loading is done and no company exists, block access
+    if (!recruiterState.isLoading && recruiterState.company == null) {
+      return Scaffold(
+        appBar: AppBar(title: const Text('Add Job Post')),
+        body: Center(
+          child: Padding(
+            padding: const EdgeInsets.all(24),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const Icon(
+                  Icons.business_rounded,
+                  size: 64,
+                  color: Colors.grey,
+                ),
+                const SizedBox(height: 16),
+                const Text(
+                  'Company Profile Required',
+                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+                ),
+                const SizedBox(height: 8),
+                const Text(
+                  'You need to set up your company profile before you can post a job.',
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 24),
+                FilledButton(
+                  onPressed: () => Navigator.pop(context),
+                  child: const Text('Go Back'),
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
+    }
 
     return Scaffold(
       backgroundColor: colorScheme.surface,
@@ -96,7 +146,14 @@ class _PostJobScreenState extends State<PostJobScreen> {
                           if (_currentStep < 5) {
                             setState(() => _currentStep++);
                           } else {
-                            // Submit form
+                            // TODO: Submit Job Posting
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                content: Text(
+                                  'Job posting is ready for implementation!',
+                                ),
+                              ),
+                            );
                           }
                         }
                       },
@@ -198,7 +255,6 @@ class _PostJobScreenState extends State<PostJobScreen> {
               ),
             );
           } else {
-            // Dotted line segment between circles
             final stepAfter = (index ~/ 2) + 2;
             final isCompletedLine = stepAfter <= _currentStep;
 

@@ -9,4 +9,6 @@ class ApiEnpoint {
   static const String logout = "api/logout";
   static const String oauth = "api/auth/oauth";
   static const String roleSelect = "api/select-role";
+  static const String company = "api/company";
+  static const String getUploadSignature = "api/upload/signature";
 }

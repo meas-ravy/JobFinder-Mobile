@@ -10,6 +10,9 @@ import 'package:job_finder/features/main_wrapper.dart';
 import 'package:job_finder/features/splash_screen.dart';
 import 'package:job_finder/features/job_seeker/presentation/screen/language_screen.dart';
 import 'package:job_finder/features/onboarding_screen.dart';
+import 'package:job_finder/features/recruiter/presentation/screen/create_company_screen.dart';
+import 'package:job_finder/features/recruiter/presentation/screen/edit_company_screen.dart';
+import 'package:job_finder/features/recruiter/presentation/screen/post_job_screen.dart';
 
 // Global navigator key for accessing navigation from outside widget tree (e.g., 401 interceptor)
 final GlobalKey<NavigatorState> rootNavigatorKey = GlobalKey<NavigatorState>();
@@ -64,6 +67,18 @@ class AppRouter {
       GoRoute(
         path: AppPath.language,
         builder: (context, state) => const LanguageScreen(),
+      ),
+      GoRoute(
+        path: AppPath.createCompany,
+        builder: (context, state) => const CreateCompanyScreen(),
+      ),
+      GoRoute(
+        path: AppPath.editCompany,
+        builder: (context, state) => const EditCompanyScreen(),
+      ),
+      GoRoute(
+        path: AppPath.postJob,
+        builder: (context, state) => const PostJobScreen(),
       ),
     ],
   );

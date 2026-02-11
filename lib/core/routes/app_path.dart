@@ -8,4 +8,7 @@ class AppPath {
   static const String recruiterHome = '/recruiter';
   static const String buildTemplate = '/build-template';
   static const String language = '/language';
+  static const String createCompany = '/create-company';
+  static const String editCompany = '/edit-company';
+  static const String postJob = '/post-job';
 }

@@ -1,50 +1,20 @@
 import 'package:flutter/material.dart';
-import 'package:job_finder/features/onboarding_screen.dart';
+import 'package:hooks_riverpod/hooks_riverpod.dart';
+import 'package:job_finder/core/routes/app_path.dart';
+import 'package:job_finder/features/recruiter/presentation/provider/recruiter_provider.dart';
+import 'package:go_router/go_router.dart';
 import 'package:job_finder/l10n/app_localizations.dart';
 
-class RecruiterHomePage extends StatelessWidget {
+import 'package:job_finder/shared/widget/shimmer_loading.dart';
+
+class RecruiterHomePage extends HookConsumerWidget {
   const RecruiterHomePage({super.key});
 
-  static const List<JobCardData> _jobs = [
-    JobCardData(
-      title: 'Product Designer',
-      company: 'Slack',
-      location: 'New York',
-      time: '5 hours ago',
-      logo: 'https://cdn-icons-png.flaticon.com/512/3800/3800024.png',
-      description: 'We are looking for a dynamic Product designer...',
-    ),
-    JobCardData(
-      title: 'UI UX Designer',
-      company: 'Webmoney',
-      location: 'New York',
-      time: '5 hours ago',
-      logo: 'https://cdn-icons-png.flaticon.com/512/888/888871.png',
-      description: 'We are looking for a dynamic Product designer...',
-    ),
-    JobCardData(
-      title: 'Marketing Manager',
-      company: 'Opera',
-      location: 'New York',
-      time: '5 hours ago',
-      logo: 'https://cdn-icons-png.flaticon.com/512/732/732233.png',
-      description: 'We are looking for a dynamic Product designer...',
-    ),
-    JobCardData(
-      title: 'Graphic Design',
-      company: 'Swift',
-      location: 'New York',
-      time: '5 hours ago',
-      logo: 'https://cdn-icons-png.flaticon.com/512/5968/5968363.png',
-      description: 'We are looking for a dynamic Product designer...',
-    ),
-  ];
-
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final colorScheme = Theme.of(context).colorScheme;
     final textTheme = Theme.of(context).textTheme;
-    // final primaryGreen = const Color(0xff22D38A);
+    final recruiterState = ref.watch(recruiterControllerProvider);
 
     return DefaultTabController(
       length: 3,
@@ -82,14 +52,15 @@ class RecruiterHomePage extends StatelessWidget {
             ),
           ),
         ),
-
-        body: TabBarView(
-          children: [
-            _buildJobsList(),
-            const Center(child: Text('Upcoming Jobs')),
-            const Center(child: Text('Previous Jobs')),
-          ],
-        ),
+        body: recruiterState.isLoading
+            ? const _HomeShimmer()
+            : TabBarView(
+                children: [
+                  _buildJobsList(),
+                  const Center(child: Text('Upcoming Jobs')),
+                  const Center(child: Text('Previous Jobs')),
+                ],
+              ),
       ),
     );
   }
@@ -104,57 +75,116 @@ class RecruiterHomePage extends StatelessWidget {
       },
     );
   }
+
+  static const List<JobCardData> _jobs = [
+    JobCardData(
+      title: 'Product Designer',
+      company: 'Slack',
+      location: 'New York',
+      time: '5 hours ago',
+      logo: 'https://cdn-icons-png.flaticon.com/512/3800/3800024.png',
+      description: 'We are looking for a dynamic Product designer...',
+    ),
+    JobCardData(
+      title: 'UI UX Designer',
+      company: 'Webmoney',
+      location: 'New York',
+      time: '5 hours ago',
+      logo: 'https://cdn-icons-png.flaticon.com/512/888/888871.png',
+      description: 'We are looking for a dynamic Product designer...',
+    ),
+    JobCardData(
+      title: 'Marketing Manager',
+      company: 'Opera',
+      location: 'New York',
+      time: '5 hours ago',
+      logo: 'https://cdn-icons-png.flaticon.com/512/732/732233.png',
+      description: 'We are looking for a dynamic Product designer...',
+    ),
+    JobCardData(
+      title: 'Graphic Design',
+      company: 'Swift',
+      location: 'New York',
+      time: '5 hours ago',
+      logo: 'https://cdn-icons-png.flaticon.com/512/5968/5968363.png',
+      description: 'We are looking for a dynamic Product designer...',
+    ),
+  ];
 }
 
-class _HeaderSection extends StatelessWidget {
+class _HeaderSection extends ConsumerWidget {
   const _HeaderSection();
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final colorScheme = Theme.of(context).colorScheme;
     final textTheme = Theme.of(context).textTheme;
+    final recruiterState = ref.watch(recruiterControllerProvider);
+    final company = recruiterState.company;
+    final isLoading = recruiterState.isLoading && company == null;
 
     return Row(
       children: [
-        const CircleAvatar(
-          radius: 24,
-          backgroundImage: NetworkImage(
-            'https://api.uifaces.co/our-content/donated/x4_8P_NS.jpg',
+        if (isLoading)
+          const ShimmerCircle(radius: 24)
+        else
+          CircleAvatar(
+            radius: 24,
+            backgroundColor: colorScheme.primary.withValues(alpha: 0.1),
+            backgroundImage:
+                (company?.logoUrl != null && company!.logoUrl.isNotEmpty)
+                ? NetworkImage(company.logoUrl)
+                : null,
+            child: (company?.logoUrl == null || company!.logoUrl.isEmpty)
+                ? Text(
+                    company?.name.characters.firstOrNull?.toUpperCase() ?? 'R',
+                    style: textTheme.titleMedium?.copyWith(
+                      color: colorScheme.primary,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  )
+                : null,
           ),
-        ),
         const SizedBox(width: 12),
         Expanded(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             mainAxisSize: MainAxisSize.min,
             children: [
-              Text(
-                'Hello',
-                style: textTheme.bodyMedium?.copyWith(
-                  color: colorScheme.onSurfaceVariant,
+              if (isLoading) ...[
+                const ShimmerLoading(width: 40, height: 14),
+                const SizedBox(height: 4),
+                const ShimmerLoading(width: 120, height: 18),
+              ] else ...[
+                Text(
+                  'Hello',
+                  style: textTheme.bodyMedium?.copyWith(
+                    color: colorScheme.onSurfaceVariant,
+                  ),
                 ),
-              ),
-              Text(
-                'Savannah Nguyen',
-                style: textTheme.bodyLarge?.copyWith(
-                  fontWeight: FontWeight.w700,
-                  color: colorScheme.onSurface,
+                Text(
+                  company?.name ?? 'Recruiter',
+                  style: textTheme.bodyLarge?.copyWith(
+                    fontWeight: FontWeight.w700,
+                    color: colorScheme.onSurface,
+                  ),
                 ),
-              ),
+              ],
             ],
           ),
         ),
         FilledButton(
           onPressed: () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(builder: (context) => const OnboardingScreen()),
-            );
+            if (company == null) {
+              _showProfileRestrictionDialog(context);
+            } else {
+              context.push(AppPath.postJob);
+            }
           },
           style: FilledButton.styleFrom(
             backgroundColor: colorScheme.primary,
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-            shape: StadiumBorder(),
+            shape: const StadiumBorder(),
           ),
           child: Text(
             'Post a Job',
@@ -165,6 +195,39 @@ class _HeaderSection extends StatelessWidget {
           ),
         ),
       ],
+    );
+  }
+
+  void _showProfileRestrictionDialog(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Profile Required'),
+        content: Text(
+          'Before you can post your first job, you need to set up your company profile. This helps candidates know who they are applying to!',
+          style: TextStyle(color: colorScheme.onSurfaceVariant),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text(
+              'Later',
+              style: TextStyle(color: colorScheme.onSurface),
+            ),
+          ),
+          FilledButton(
+            onPressed: () {
+              Navigator.pop(context);
+              context.push(AppPath.createCompany);
+            },
+            child: Text(
+              'Set Up Profile',
+              style: TextStyle(color: colorScheme.onSurface),
+            ),
+          ),
+        ],
+      ),
     );
   }
 }
@@ -317,4 +380,63 @@ class JobCardData {
   final String time;
   final String logo;
   final String description;
+}
+
+class _HomeShimmer extends StatelessWidget {
+  const _HomeShimmer();
+
+  @override
+  Widget build(BuildContext context) {
+    return ListView.separated(
+      padding: const EdgeInsets.all(20),
+      itemCount: 3,
+      separatorBuilder: (context, index) => const SizedBox(height: 16),
+      itemBuilder: (context, index) {
+        return Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(
+              color: Theme.of(
+                context,
+              ).colorScheme.outline.withValues(alpha: 0.05),
+            ),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  const ShimmerCircle(radius: 24),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: const [
+                        ShimmerLoading(width: 150, height: 18),
+                        SizedBox(height: 4),
+                        ShimmerLoading(width: 200, height: 14),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 16),
+              Padding(
+                padding: const EdgeInsets.only(left: 60),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: const [
+                    ShimmerLoading(width: double.infinity, height: 14),
+                    SizedBox(height: 4),
+                    ShimmerLoading(width: 200, height: 14),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
 }

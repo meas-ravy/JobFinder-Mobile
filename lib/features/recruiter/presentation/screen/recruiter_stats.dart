@@ -1,18 +1,16 @@
 import 'package:dotted_line/dotted_line.dart';
 import 'package:flutter/material.dart';
-import 'package:job_finder/features/recruiter/domain/models/candidate_stat.dart';
+import 'package:hooks_riverpod/hooks_riverpod.dart';
+import 'package:job_finder/features/recruiter/data/models/candidate_stat.dart';
+import 'package:job_finder/features/recruiter/presentation/provider/recruiter_provider.dart';
 import 'package:job_finder/features/recruiter/presentation/widget/header_section.dart';
 import 'package:job_finder/features/recruiter/presentation/widget/radar_chart.dart';
 import 'package:job_finder/features/recruiter/presentation/widget/stats_widgets.dart';
+import 'package:job_finder/shared/widget/shimmer_loading.dart';
 
-class RecruiterStatsPage extends StatefulWidget {
+class RecruiterStatsPage extends HookConsumerWidget {
   const RecruiterStatsPage({super.key});
 
-  @override
-  State<RecruiterStatsPage> createState() => _RecruiterStatsPageState();
-}
-
-class _RecruiterStatsPageState extends State<RecruiterStatsPage> {
   final List<CandidateStat> _candidates = const [
     CandidateStat(
       role: 'Product designer',
@@ -45,9 +43,10 @@ class _RecruiterStatsPageState extends State<RecruiterStatsPage> {
   ];
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final colorScheme = Theme.of(context).colorScheme;
     final textTheme = Theme.of(context).textTheme;
+    final recruiterState = ref.watch(recruiterControllerProvider);
 
     return DefaultTabController(
       length: 3,
@@ -58,77 +57,85 @@ class _RecruiterStatsPageState extends State<RecruiterStatsPage> {
           toolbarHeight: 80,
           title: const HeaderSection(),
         ),
-        body: SingleChildScrollView(
-          padding: const EdgeInsets.fromLTRB(20, 16, 20, 24),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(
-                    'Last 1 Years',
-                    style: textTheme.titleLarge?.copyWith(
-                      fontWeight: FontWeight.w800,
-                      fontSize: 18,
-                      color: colorScheme.onSurface,
-                    ),
-                  ),
-                  InkWell(
-                    onTap: () {},
-                    child: Row(
+        body: recruiterState.isLoading
+            ? const _StatsShimmer()
+            : SingleChildScrollView(
+                padding: const EdgeInsets.fromLTRB(20, 16, 20, 24),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         Text(
-                          '1 Years',
-                          style: textTheme.bodyMedium?.copyWith(
-                            fontWeight: FontWeight.bold,
-                            color: colorScheme.primary,
+                          'Last 1 Years',
+                          style: textTheme.titleLarge?.copyWith(
+                            fontWeight: FontWeight.w800,
+                            fontSize: 18,
+                            color: colorScheme.onSurface,
                           ),
                         ),
-                        const SizedBox(width: 4),
-                        Icon(
-                          Icons.keyboard_arrow_down_rounded,
-                          color: colorScheme.primary,
-                          size: 20,
+                        InkWell(
+                          onTap: () {},
+                          child: Row(
+                            children: [
+                              Text(
+                                '1 Years',
+                                style: textTheme.bodyMedium?.copyWith(
+                                  fontWeight: FontWeight.bold,
+                                  color: colorScheme.primary,
+                                ),
+                              ),
+                              const SizedBox(width: 4),
+                              Icon(
+                                Icons.keyboard_arrow_down_rounded,
+                                color: colorScheme.primary,
+                                size: 20,
+                              ),
+                            ],
+                          ),
                         ),
                       ],
                     ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 20),
-              _buildRadarCard(colorScheme, textTheme),
-              const SizedBox(height: 16),
-              _buildLegend(colorScheme),
-              const SizedBox(height: 20),
-              TabBar(
-                dividerColor: colorScheme.outlineVariant.withValues(alpha: 0.2),
-                indicatorColor: colorScheme.primary,
-                indicatorSize: TabBarIndicatorSize.tab,
-                labelColor: colorScheme.primary,
-                unselectedLabelColor: colorScheme.onSurfaceVariant,
-                labelStyle: textTheme.bodyMedium?.copyWith(
-                  fontWeight: FontWeight.w700,
+                    const SizedBox(height: 20),
+                    _buildRadarCard(colorScheme, textTheme),
+                    const SizedBox(height: 16),
+                    _buildLegend(colorScheme),
+                    const SizedBox(height: 20),
+                    TabBar(
+                      dividerColor: colorScheme.outlineVariant.withValues(
+                        alpha: 0.2,
+                      ),
+                      indicatorColor: colorScheme.primary,
+                      indicatorSize: TabBarIndicatorSize.tab,
+                      labelColor: colorScheme.primary,
+                      unselectedLabelColor: colorScheme.onSurfaceVariant,
+                      labelStyle: textTheme.bodyMedium?.copyWith(
+                        fontWeight: FontWeight.w700,
+                      ),
+                      unselectedLabelStyle: textTheme.bodyMedium?.copyWith(
+                        fontWeight: FontWeight.w600,
+                      ),
+                      tabs: const [
+                        Tab(text: 'Applied'),
+                        Tab(text: 'Interview'),
+                        Tab(text: 'Confirm'),
+                      ],
+                    ),
+                    const SizedBox(height: 16),
+                    ..._candidates.map(
+                      (item) => Padding(
+                        padding: const EdgeInsets.only(bottom: 12),
+                        child: _buildCandidateTile(
+                          item,
+                          colorScheme,
+                          textTheme,
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
-                unselectedLabelStyle: textTheme.bodyMedium?.copyWith(
-                  fontWeight: FontWeight.w600,
-                ),
-                tabs: const [
-                  Tab(text: 'Applied'),
-                  Tab(text: 'Interview'),
-                  Tab(text: 'Confirm'),
-                ],
               ),
-              const SizedBox(height: 16),
-              ..._candidates.map(
-                (item) => Padding(
-                  padding: const EdgeInsets.only(bottom: 12),
-                  child: _buildCandidateTile(item, colorScheme, textTheme),
-                ),
-              ),
-            ],
-          ),
-        ),
       ),
     );
   }
@@ -255,6 +262,49 @@ class _RecruiterStatsPageState extends State<RecruiterStatsPage> {
           value: '180',
         ),
       ],
+    );
+  }
+}
+
+class _StatsShimmer extends StatelessWidget {
+  const _StatsShimmer();
+
+  @override
+  Widget build(BuildContext context) {
+    return SingleChildScrollView(
+      padding: const EdgeInsets.fromLTRB(20, 16, 20, 24),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const ShimmerLoading(width: 150, height: 24),
+          const SizedBox(height: 20),
+          const ShimmerLoading(
+            width: double.infinity,
+            height: 260,
+            borderRadius: 20,
+          ),
+          const SizedBox(height: 20),
+          for (int i = 0; i < 3; i++) ...[
+            const ShimmerLoading(width: double.infinity, height: 40),
+            const SizedBox(height: 12),
+          ],
+          const SizedBox(height: 20),
+          const ShimmerLoading(
+            width: double.infinity,
+            height: 48,
+            borderRadius: 24,
+          ),
+          const SizedBox(height: 16),
+          for (int i = 0; i < 3; i++) ...[
+            const ShimmerLoading(
+              width: double.infinity,
+              height: 80,
+              borderRadius: 16,
+            ),
+            const SizedBox(height: 12),
+          ],
+        ],
+      ),
     );
   }
 }
