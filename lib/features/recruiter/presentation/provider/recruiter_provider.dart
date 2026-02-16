@@ -28,11 +28,41 @@ final updateCompanyUseCaseProvider = Provider<UpdateCompanyUseCase>((ref) {
   return UpdateCompanyUseCase(ref.watch(recruiterRepositoryProvider));
 });
 
+final createJobUseCaseProvider = Provider<CreateJobUseCase>((ref) {
+  return CreateJobUseCase(ref.watch(recruiterRepositoryProvider));
+});
+
+final submitJobUseCaseProvider = Provider<SubmitJobUseCase>((ref) {
+  return SubmitJobUseCase(ref.watch(recruiterRepositoryProvider));
+});
+
+final getJobsUseCaseProvider = Provider<GetJobsUseCase>((ref) {
+  return GetJobsUseCase(ref.watch(recruiterRepositoryProvider));
+});
+
+final updateJobStatusUseCaseProvider = Provider<UpdateJobStatusUseCase>((ref) {
+  return UpdateJobStatusUseCase(ref.watch(recruiterRepositoryProvider));
+});
+
+final updateJobUseCaseProvider = Provider<UpdateJobUseCase>((ref) {
+  return UpdateJobUseCase(ref.watch(recruiterRepositoryProvider));
+});
+
+final deleteJobUseCaseProvider = Provider<DeleteJobUseCase>((ref) {
+  return DeleteJobUseCase(ref.watch(recruiterRepositoryProvider));
+});
+
 final recruiterControllerProvider =
     StateNotifierProvider<RecruiterController, RecruiterState>((ref) {
       return RecruiterController(
         createCompanyUseCase: ref.watch(createCompanyUseCaseProvider),
         getCompanyProfileUseCase: ref.watch(getCompanyProfileUseCaseProvider),
         updateCompanyUseCase: ref.watch(updateCompanyUseCaseProvider),
+        createJobUseCase: ref.watch(createJobUseCaseProvider),
+        submitJobUseCase: ref.watch(submitJobUseCaseProvider),
+        getJobsUseCase: ref.watch(getJobsUseCaseProvider),
+        updateJobStatusUseCase: ref.watch(updateJobStatusUseCaseProvider),
+        updateJobUseCase: ref.watch(updateJobUseCaseProvider),
+        deleteJobUseCase: ref.watch(deleteJobUseCaseProvider),
       );
     });

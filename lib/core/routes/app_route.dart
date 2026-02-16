@@ -78,7 +78,10 @@ class AppRouter {
       ),
       GoRoute(
         path: AppPath.postJob,
-        builder: (context, state) => const PostJobScreen(),
+        builder: (context, state) {
+          final jobData = state.extra as Map<String, dynamic>?;
+          return PostJobScreen(initialJobData: jobData);
+        },
       ),
     ],
   );

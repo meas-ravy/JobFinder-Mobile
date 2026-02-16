@@ -501,7 +501,7 @@ class _ProfileProgressCard extends StatelessWidget {
                 ),
               ),
               child: Text(
-                company == null ? 'Set Up Profile' : 'Edit Bio',
+                company == null ? 'Set Up Profile' : 'Edit Profile',
                 style: textTheme.bodyLarge?.copyWith(
                   color: Colors.white,
                   fontSize: 14,

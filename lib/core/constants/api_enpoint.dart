@@ -11,4 +11,9 @@ class ApiEnpoint {
   static const String roleSelect = "api/select-role";
   static const String company = "api/company";
   static const String getUploadSignature = "api/upload/signature";
+  static const String jobs = "api/jobs";
+  static String submitJob(String jobId) => "api/jobs/$jobId/submit";
+  static String updateJobStatus(String jobId) => "api/jobs/$jobId/status";
+  static String updateJob(String jobId) => "api/jobs/$jobId";
+  static String deleteJob(String jobId) => "api/jobs/$jobId";
 }

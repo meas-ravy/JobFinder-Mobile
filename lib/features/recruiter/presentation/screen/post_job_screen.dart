@@ -3,14 +3,16 @@ import 'package:flutter/material.dart';
 import 'package:flutter_form_builder/flutter_form_builder.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:job_finder/features/recruiter/presentation/provider/recruiter_provider.dart';
-import 'package:job_finder/features/recruiter/presentation/screen/post_job_steps/company_info_step.dart';
 import 'package:job_finder/features/recruiter/presentation/screen/post_job_steps/job_details_step.dart';
 import 'package:job_finder/features/recruiter/presentation/screen/post_job_steps/job_description_step.dart';
 import 'package:job_finder/features/recruiter/presentation/screen/post_job_steps/requirements_step.dart';
 import 'package:job_finder/features/recruiter/presentation/screen/post_job_steps/review_step.dart';
+import 'package:job_finder/shared/widget/loading_dialog.dart';
 
 class PostJobScreen extends ConsumerStatefulWidget {
-  const PostJobScreen({super.key});
+  const PostJobScreen({super.key, this.initialJobData});
+
+  final Map<String, dynamic>? initialJobData;
 
   @override
   ConsumerState<PostJobScreen> createState() => _PostJobScreenState();
@@ -19,27 +21,150 @@ class PostJobScreen extends ConsumerStatefulWidget {
 class _PostJobScreenState extends ConsumerState<PostJobScreen> {
   final _formKey = GlobalKey<FormBuilderState>();
   int _currentStep = 1;
+  late final bool _isEditing;
+  late final Map<String, dynamic> _normalizedInitialData;
+
+  @override
+  void initState() {
+    super.initState();
+    _isEditing = widget.initialJobData != null;
+    _normalizedInitialData = _normalizeData(widget.initialJobData);
+  }
+
+  Map<String, dynamic> _normalizeData(Map<String, dynamic>? data) {
+    if (data == null) return {};
+    final normalized = Map<String, dynamic>.from(data);
+
+    // Normalize applicationDeadline
+    if (normalized['applicationDeadline'] is String) {
+      normalized['applicationDeadline'] = DateTime.tryParse(
+        normalized['applicationDeadline'],
+      );
+    }
+
+    // Normalize salary fields to String for FormBuilder compatibility
+    if (normalized['salaryMin'] != null) {
+      normalized['salaryMin'] = normalized['salaryMin'].toString();
+    }
+    if (normalized['salaryMax'] != null) {
+      normalized['salaryMax'] = normalized['salaryMax'].toString();
+    }
+
+    // Normalize positionsAvailable to String
+    if (normalized['positionsAvailable'] != null) {
+      normalized['positionsAvailable'] = normalized['positionsAvailable']
+          .toString();
+    }
+
+    return normalized;
+  }
+
+  Future<void> _submitJob() async {
+    if (_formKey.currentState?.saveAndValidate() ?? false) {
+      final values = Map<String, dynamic>.from(_formKey.currentState!.value);
+
+      // Parse numbers
+      final minSalary = int.tryParse(values['salaryMin'].toString()) ?? 0;
+      final maxSalary = int.tryParse(values['salaryMax'].toString()) ?? 0;
+      final positionsAvailable =
+          int.tryParse(values['positionsAvailable']?.toString() ?? '1') ?? 1;
+
+      if (values['salaryType'] == 'Range' &&
+          minSalary > maxSalary &&
+          maxSalary != 0) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text(
+              'Minimum salary cannot be higher than maximum salary',
+            ),
+            backgroundColor: Colors.red,
+          ),
+        );
+        return;
+      }
+
+      values['salaryMin'] = minSalary;
+      values['salaryMax'] = maxSalary;
+      values['positionsAvailable'] = positionsAvailable;
+
+      // Format date to ISO
+      if (values['applicationDeadline'] is DateTime) {
+        values['applicationDeadline'] =
+            (values['applicationDeadline'] as DateTime).toIso8601String();
+      }
+
+      LoadingDialog.show(context, message: 'Posting job...');
+
+      try {
+        final controller = ref.read(recruiterControllerProvider.notifier);
+
+        if (_isEditing) {
+          final jobId =
+              widget.initialJobData!['_id'] ?? widget.initialJobData!['id'];
+          await controller.updateJob(jobId, values);
+        } else {
+          await controller.createJob(values);
+        }
+
+        if (mounted) LoadingDialog.hide(context);
+
+        final state = ref.read(recruiterControllerProvider);
+        if (state.errorMessage != null) {
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(state.errorMessage!),
+                backgroundColor: Colors.red,
+              ),
+            );
+          }
+        } else {
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(
+                  _isEditing
+                      ? 'Job updated successfully!'
+                      : 'Job posted successfully!',
+                ),
+                backgroundColor: Colors.green,
+              ),
+            );
+            Navigator.pop(context);
+          }
+        }
+      } catch (e) {
+        if (mounted) {
+          LoadingDialog.hide(context);
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Error: $e'), backgroundColor: Colors.red),
+          );
+        }
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
     final textTheme = Theme.of(context).textTheme;
 
-    // Safety Guard: Check if company exists
     final recruiterState = ref.watch(recruiterControllerProvider);
 
-    // If we're loading the initial state, show a basic scaffold with loader
     if (recruiterState.isLoading && recruiterState.company == null) {
       return Scaffold(
-        appBar: AppBar(title: const Text('Add Job Post')),
+        appBar: AppBar(
+          title: Text(_isEditing ? 'Edit Job Post' : 'Add Job Post'),
+        ),
         body: const Center(child: CircularProgressIndicator()),
       );
     }
 
-    // If loading is done and no company exists, block access
     if (!recruiterState.isLoading && recruiterState.company == null) {
       return Scaffold(
-        appBar: AppBar(title: const Text('Add Job Post')),
+        appBar: AppBar(
+          title: Text(_isEditing ? 'Edit Job Post' : 'Add Job Post'),
+        ),
         body: Center(
           child: Padding(
             padding: const EdgeInsets.all(24),
@@ -87,7 +212,7 @@ class _PostJobScreenState extends ConsumerState<PostJobScreen> {
         ),
         centerTitle: true,
         title: Text(
-          'Add Job Post',
+          _isEditing ? 'Edit Job Post' : 'Add Job Post',
           style: textTheme.titleLarge?.copyWith(
             fontWeight: FontWeight.w700,
             fontSize: 18,
@@ -102,7 +227,11 @@ class _PostJobScreenState extends ConsumerState<PostJobScreen> {
           Expanded(
             child: SingleChildScrollView(
               padding: const EdgeInsets.symmetric(horizontal: 24),
-              child: FormBuilder(key: _formKey, child: _buildCurrentStep()),
+              child: FormBuilder(
+                key: _formKey,
+                initialValue: _normalizedInitialData,
+                child: _buildCurrentStep(),
+              ),
             ),
           ),
           Padding(
@@ -143,17 +272,10 @@ class _PostJobScreenState extends ConsumerState<PostJobScreen> {
                     child: FilledButton(
                       onPressed: () {
                         if (_formKey.currentState?.saveAndValidate() ?? false) {
-                          if (_currentStep < 5) {
+                          if (_currentStep < 4) {
                             setState(() => _currentStep++);
                           } else {
-                            // TODO: Submit Job Posting
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                content: Text(
-                                  'Job posting is ready for implementation!',
-                                ),
-                              ),
-                            );
+                            _submitJob();
                           }
                         }
                       },
@@ -164,7 +286,9 @@ class _PostJobScreenState extends ConsumerState<PostJobScreen> {
                         ),
                       ),
                       child: Text(
-                        _currentStep < 5 ? 'Next' : 'Post Job',
+                        _currentStep < 4
+                            ? 'Next'
+                            : (_isEditing ? 'Update Job' : 'Post Job'),
                         style: textTheme.titleMedium?.copyWith(
                           color: Colors.white,
                           fontWeight: FontWeight.w700,
@@ -184,17 +308,15 @@ class _PostJobScreenState extends ConsumerState<PostJobScreen> {
   Widget _buildCurrentStep() {
     switch (_currentStep) {
       case 1:
-        return const CompanyInfoStep();
-      case 2:
         return const JobDetailsStep();
-      case 3:
+      case 2:
         return const JobDescriptionStep();
-      case 4:
+      case 3:
         return const RequirementsStep();
-      case 5:
+      case 4:
         return const ReviewStep();
       default:
-        return const CompanyInfoStep();
+        return const JobDetailsStep();
     }
   }
 
@@ -202,7 +324,7 @@ class _PostJobScreenState extends ConsumerState<PostJobScreen> {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 24),
       child: Row(
-        children: List.generate(5 * 2 - 1, (index) {
+        children: List.generate(4 * 2 - 1, (index) {
           if (index % 2 == 0) {
             final step = (index ~/ 2) + 1;
             final isActive = step == _currentStep;

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:form_builder_validators/form_builder_validators.dart';
 import 'shared_widgets.dart';
 
 class RequirementsStep extends StatelessWidget {
@@ -12,23 +13,133 @@ class RequirementsStep extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'Requirements',
+          'Compensation & Benefits',
           style: textTheme.titleLarge?.copyWith(
             fontWeight: FontWeight.w800,
             fontSize: 20,
           ),
         ),
         const SizedBox(height: 24),
-        const FormFieldLabel(label: 'Skills Required'),
+        const FormFieldLabel(label: 'Salary Type'),
         const SizedBox(height: 8),
-        const FormTextInput(
-          name: 'skills',
-          hint: 'e.g. Flutter, Dart, Firebase',
+        FormDropdownInput(
+          name: 'salaryType',
+          hint: 'Select Salary Type',
+          items: ['Range', 'Fixed', 'Negotiable'],
+          validators: [FormBuilderValidators.required()],
         ),
         const SizedBox(height: 20),
-        const FormFieldLabel(label: 'Experience Level'),
+        Row(
+          children: [
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const FormFieldLabel(label: 'Min Salary'),
+                  const SizedBox(height: 8),
+                  FormTextInput(
+                    name: 'salaryMin',
+                    hint: 'e.g. 1000',
+                    keyboardType: TextInputType.number,
+                    validators: [
+                      FormBuilderValidators.required(),
+                      FormBuilderValidators.numeric(),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const FormFieldLabel(label: 'Max Salary'),
+                  const SizedBox(height: 8),
+                  FormTextInput(
+                    name: 'salaryMax',
+                    hint: 'e.g. 2000',
+                    keyboardType: TextInputType.number,
+                    validators: [
+                      // Only required if type is Range
+                      (value) {
+                        return null; // Simplified for now, can add conditional logic if needed
+                      },
+                      FormBuilderValidators.numeric(),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 20),
+        Row(
+          children: [
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const FormFieldLabel(label: 'Currency'),
+                  const SizedBox(height: 8),
+                  FormDropdownInput(
+                    name: 'salaryCurrency',
+                    hint: 'Select',
+                    items: ['USD', 'KHR', 'THB', 'EUR'],
+                    validators: [FormBuilderValidators.required()],
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const FormFieldLabel(label: 'Period'),
+                  const SizedBox(height: 8),
+                  FormDropdownInput(
+                    name: 'salaryPeriod',
+                    hint: 'Select',
+                    items: ['Month', 'Year', 'Week', 'Day', 'Hour'],
+                    validators: [FormBuilderValidators.required()],
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 20),
+        FormListInput(
+          name: 'benefits',
+          hint: 'Type a benefit and press enter...',
+          label: 'Benefits',
+          suggestions: const [
+            'Health Insurance',
+            'Flexible hours',
+            'Travel allowance',
+            'Gym membership',
+            'Remote work',
+            'Annual bonus',
+          ],
+          validators: [FormBuilderValidators.required()],
+        ),
+        const SizedBox(height: 20),
+        const FormFieldLabel(label: 'Application Deadline'),
         const SizedBox(height: 8),
-        const FormTextInput(name: 'experience', hint: 'e.g. 2+ years'),
+        FormDatePicker(
+          name: 'applicationDeadline',
+          hint: 'Select Deadline',
+          validators: [
+            FormBuilderValidators.required(),
+            (value) {
+              if (value != null && value.isBefore(DateTime.now())) {
+                return 'Deadline cannot be in the past';
+              }
+              return null;
+            },
+          ],
+        ),
         const SizedBox(height: 32),
       ],
     );

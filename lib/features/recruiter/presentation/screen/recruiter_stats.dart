@@ -103,9 +103,7 @@ class RecruiterStatsPage extends HookConsumerWidget {
                     _buildLegend(colorScheme),
                     const SizedBox(height: 20),
                     TabBar(
-                      dividerColor: colorScheme.outlineVariant.withValues(
-                        alpha: 0.2,
-                      ),
+                      dividerColor: colorScheme.outline.withValues(alpha: 0.05),
                       indicatorColor: colorScheme.primary,
                       indicatorSize: TabBarIndicatorSize.tab,
                       labelColor: colorScheme.primary,
@@ -130,6 +128,7 @@ class RecruiterStatsPage extends HookConsumerWidget {
                           item,
                           colorScheme,
                           textTheme,
+                          context,
                         ),
                       ),
                     ),
@@ -144,6 +143,7 @@ class RecruiterStatsPage extends HookConsumerWidget {
     CandidateStat item,
     ColorScheme colorScheme,
     TextTheme textTheme,
+    BuildContext context,
   ) {
     return Container(
       padding: const EdgeInsets.all(16),
@@ -151,15 +151,8 @@ class RecruiterStatsPage extends HookConsumerWidget {
         color: colorScheme.surface,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
-          color: colorScheme.outlineVariant.withValues(alpha: 0.20),
+          color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.05),
         ),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.02),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
-          ),
-        ],
       ),
       child: Row(
         children: [

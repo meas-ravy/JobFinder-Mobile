@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
-import 'package:job_finder/core/constants/assets.dart';
+import 'package:job_finder/core/routes/app_path.dart';
 import 'package:job_finder/features/recruiter/presentation/provider/recruiter_provider.dart';
 import 'package:job_finder/shared/widget/shimmer_loading.dart';
-import 'package:job_finder/shared/widget/svg_icon.dart';
 
-class HeaderSection extends ConsumerWidget {
-  const HeaderSection({super.key});
+class RecruiterHeaderSection extends ConsumerWidget {
+  const RecruiterHeaderSection({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -77,20 +77,61 @@ class HeaderSection extends ConsumerWidget {
             ],
           ),
         ),
-        Container(
-          width: 48,
-          height: 48,
-          decoration: BoxDecoration(
-            color: colorScheme.onSurface.withValues(alpha: 0.05),
-            shape: BoxShape.circle,
+        FilledButton(
+          onPressed: () {
+            if (company == null) {
+              _showProfileRestrictionDialog(context);
+            } else {
+              context.push(AppPath.postJob);
+            }
+          },
+          style: FilledButton.styleFrom(
+            backgroundColor: colorScheme.primary,
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            shape: const StadiumBorder(),
           ),
-          padding: const EdgeInsets.all(11),
-          child: AppSvgIcon(
-            assetName: AppIcon.notification,
-            color: colorScheme.onSurface,
+          child: Text(
+            'Post a Job',
+            style: textTheme.bodyMedium?.copyWith(
+              fontWeight: FontWeight.w600,
+              color: Colors.white,
+            ),
           ),
         ),
       ],
+    );
+  }
+
+  void _showProfileRestrictionDialog(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Profile Required'),
+        content: Text(
+          'Before you can post your first job, you need to set up your company profile. This helps candidates know who they are applying to!',
+          style: TextStyle(color: colorScheme.onSurfaceVariant),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text(
+              'Later',
+              style: TextStyle(color: colorScheme.onSurface),
+            ),
+          ),
+          FilledButton(
+            onPressed: () {
+              Navigator.pop(context);
+              context.push(AppPath.createCompany);
+            },
+            child: Text(
+              'Set Up Profile',
+              style: TextStyle(color: colorScheme.onSurface),
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

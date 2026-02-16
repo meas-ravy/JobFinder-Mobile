@@ -22,4 +22,34 @@ class RecruiterRepositoryImpl implements RecruiterRepository {
   ResultFuture<DataMap> getCompanyProfile() {
     return _server.getCompanyProfile();
   }
+
+  @override
+  ResultFuture<DataMap> createJob(DataMap job) {
+    return _server.createJob(job);
+  }
+
+  @override
+  ResultFuture<DataMap> submitJob(String jobId) {
+    return _server.submitJob(jobId);
+  }
+
+  @override
+  ResultFuture<DataMap> getJobs({String? status}) {
+    return _server.getJobs(status: status);
+  }
+
+  @override
+  ResultFuture<DataMap> updateJobStatus(String jobId, String status) {
+    return _server.updateJobStatus(jobId, status);
+  }
+
+  @override
+  ResultFuture<DataMap> updateJob(String jobId, DataMap job) {
+    return _server.updateJob(jobId, job);
+  }
+
+  @override
+  ResultFuture<DataMap> deleteJob(String jobId) {
+    return _server.deleteJob(jobId);
+  }
 }
