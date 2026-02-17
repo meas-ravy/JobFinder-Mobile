@@ -11,6 +11,7 @@ import 'package:job_finder/features/splash_screen.dart';
 import 'package:job_finder/features/job_seeker/presentation/screen/language_screen.dart';
 import 'package:job_finder/features/onboarding_screen.dart';
 import 'package:job_finder/features/recruiter/presentation/screen/create_company_screen.dart';
+import 'package:job_finder/features/recruiter/presentation/screen/recruiter_applied.dart';
 import 'package:job_finder/features/recruiter/presentation/screen/edit_company_screen.dart';
 import 'package:job_finder/features/recruiter/presentation/screen/post_job_screen.dart';
 
@@ -81,6 +82,13 @@ class AppRouter {
         builder: (context, state) {
           final jobData = state.extra as Map<String, dynamic>?;
           return PostJobScreen(initialJobData: jobData);
+        },
+      ),
+      GoRoute(
+        path: AppPath.viewApplicants,
+        builder: (context, state) {
+          final jobId = state.extra as String?;
+          return RecruiterAppliedPage(jobId: jobId);
         },
       ),
     ],

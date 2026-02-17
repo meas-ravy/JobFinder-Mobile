@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:job_finder/core/constants/assets.dart';
 import 'package:job_finder/core/theme/app_color.dart';
 import 'package:job_finder/features/recruiter/data/models/job_card_data.dart';
 import 'package:job_finder/l10n/app_localizations.dart';
+import 'package:job_finder/shared/widget/svg_icon.dart';
 
 class JobCard extends StatelessWidget {
   const JobCard({
@@ -19,224 +21,309 @@ class JobCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
     final textTheme = Theme.of(context).textTheme;
+
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: colorScheme.outline.withValues(alpha: 0.05)),
+        color: colorScheme.brightness == Brightness.light
+            ? Colors.white
+            : AppColor.cardDark,
+        borderRadius: BorderRadius.circular(34),
+        border: Border.all(
+          color: colorScheme.brightness == Brightness.light
+              ? colorScheme.outline.withValues(alpha: 0.1)
+              : AppColor.cardDark,
+        ),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withValues(alpha: 0.02),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
+            blurRadius: 20,
+            offset: const Offset(0, 8),
           ),
         ],
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Container(
-                width: 48,
-                height: 48,
-                padding: const EdgeInsets.all(2),
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(20),
-                  child: Image.network(
-                    data.logo,
-                    fit: BoxFit.cover,
-                    errorBuilder: (context, error, stackTrace) {
-                      return const Icon(Icons.business, size: 24);
-                    },
+      child: Padding(
+        padding: const EdgeInsets.all(10.0),
+        child: Column(
+          children: [
+            // Header Section
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Container(
+                  width: 64,
+                  height: 64,
+                  padding: const EdgeInsets.all(10),
+                  decoration: BoxDecoration(
+                    color: colorScheme.brightness == Brightness.light
+                        ? Colors.white
+                        : Colors.white.withValues(alpha: 0.05),
+                    borderRadius: BorderRadius.circular(20),
+                    border: Border.all(
+                      color: colorScheme.outline.withValues(alpha: 0.1),
+                    ),
+                  ),
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(8),
+                    child: Image.network(
+                      data.logo,
+                      fit: BoxFit.contain,
+                      errorBuilder: (context, error, stackTrace) {
+                        return const Icon(Icons.business, size: 30);
+                      },
+                    ),
                   ),
                 ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      children: [
-                        Flexible(
-                          child: Text(
-                            _capitalize(data.title),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: textTheme.titleMedium?.copyWith(
-                              fontWeight: FontWeight.w700,
-                              height: 1.2,
-                              color: colorScheme.onSurface,
-                            ),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        _capitalize(data.title),
+                        style: textTheme.titleLarge?.copyWith(
+                          fontWeight: FontWeight.w800,
+                          fontSize: 16,
+                          color: colorScheme.onSurface,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        data.company,
+                        style: textTheme.bodyLarge?.copyWith(
+                          color: colorScheme.onSurfaceVariant.withValues(
+                            alpha: 0.8,
+                          ),
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                PopupMenuButton<String>(
+                  enabled: !isLoading,
+                  icon: Icon(
+                    Icons.more_horiz_rounded,
+                    color: colorScheme.onSurfaceVariant,
+                    size: 28,
+                  ),
+                  onSelected: (value) {
+                    if (onStatusUpdate != null) {
+                      onStatusUpdate!(value);
+                    }
+                  },
+                  itemBuilder: (context) {
+                    final l10n = AppLocalizations.of(context);
+                    if (data.status == 'Draft' || data.status == 'Rejected') {
+                      return [
+                        PopupMenuItem(
+                          value: 'edit',
+                          child: Row(
+                            children: [
+                              AppSvgIcon(
+                                assetName: AppIcon.edit,
+                                color: colorScheme.onSurface,
+                                size: 20,
+                              ),
+                              const SizedBox(width: 12),
+                              Text(l10n.editJob),
+                            ],
                           ),
                         ),
-                        if (data.status.isNotEmpty) ...[
-                          const SizedBox(width: 8),
-                          _buildStatusBadge(context, data.status),
-                        ],
-                      ],
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      _buildSubtitle(data),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: textTheme.bodySmall?.copyWith(
-                        color: colorScheme.onSurfaceVariant.withValues(
-                          alpha: 0.8,
+                        PopupMenuItem(
+                          value: 'delete',
+                          child: Row(
+                            children: [
+                              AppSvgIcon(
+                                assetName: AppIcon.delete,
+                                color: Colors.red,
+                                size: 20,
+                              ),
+                              const SizedBox(width: 12),
+                              Text(
+                                l10n.deleteJob,
+                                style: const TextStyle(color: Colors.red),
+                              ),
+                            ],
+                          ),
                         ),
-                        fontWeight: FontWeight.w600,
-                        letterSpacing: 0.2,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              PopupMenuButton<String>(
-                enabled: !isLoading,
-                icon: Icon(
-                  Icons.more_vert,
-                  color: colorScheme.onSurfaceVariant,
-                  size: 28,
-                ),
-                onSelected: (value) {
-                  if (onStatusUpdate != null) {
-                    onStatusUpdate!(value);
-                  }
-                },
-                itemBuilder: (context) {
-                  final l10n = AppLocalizations.of(context);
-                  if (data.status == 'Draft') {
+                        if (data.status == 'Rejected')
+                          const PopupMenuItem(
+                            value: 'resubmit',
+                            child: Row(
+                              children: [
+                                Icon(Icons.send_rounded, size: 20),
+                                SizedBox(width: 12),
+                                Text('Resubmit'),
+                              ],
+                            ),
+                          ),
+                      ];
+                    }
+
+                    if (data.status == 'Closed') {
+                      return [
+                        PopupMenuItem(
+                          value: 'view_candidates',
+                          child: Row(
+                            children: [
+                              const Icon(Icons.people_outline, size: 20),
+                              const SizedBox(width: 12),
+                              const Text('View Candidates'),
+                            ],
+                          ),
+                        ),
+                      ];
+                    }
+
                     return [
                       PopupMenuItem(
-                        value: 'edit',
+                        value: 'Paused',
                         child: Row(
                           children: [
-                            const Icon(Icons.edit_outlined, size: 20),
+                            const Icon(
+                              Icons.pause_circle_outline,
+                              size: 20,
+                              color: AppColor.appliedLight,
+                            ),
                             const SizedBox(width: 12),
-                            Text(l10n.editJob),
+                            const Text('Pause Job'),
                           ],
                         ),
                       ),
                       PopupMenuItem(
-                        value: 'delete',
+                        value: 'Closed',
                         child: Row(
                           children: [
                             const Icon(
-                              Icons.delete_outline,
-                              color: Colors.red,
+                              Icons.cancel_outlined,
                               size: 20,
+                              color: AppColor.errorLight,
                             ),
                             const SizedBox(width: 12),
-                            Text(
-                              l10n.deleteJob,
-                              style: const TextStyle(color: Colors.red),
+                            const Text('Close Job'),
+                          ],
+                        ),
+                      ),
+                      PopupMenuItem(
+                        value: 'Filled',
+                        child: Row(
+                          children: [
+                            const Icon(
+                              Icons.check_circle_outline,
+                              size: 20,
+                              color: AppColor.findJob,
                             ),
+                            const SizedBox(width: 12),
+                            const Text('Mark as Filled'),
                           ],
                         ),
                       ),
                     ];
-                  }
-                  return [
-                    PopupMenuItem(
-                      value: 'Paused',
-                      child: Row(
-                        children: [
-                          const Icon(
-                            Icons.pause_circle_outline,
-                            size: 20,
-                            color: AppColor.appliedLight,
-                          ),
-                          const SizedBox(width: 12),
-                          const Text('Pause Job'),
-                        ],
-                      ),
-                    ),
-                    PopupMenuItem(
-                      value: 'Closed',
-                      child: Row(
-                        children: [
-                          const Icon(
-                            Icons.cancel_outlined,
-                            size: 20,
-                            color: AppColor.errorLight,
-                          ),
-                          const SizedBox(width: 12),
-                          const Text('Close Job'),
-                        ],
-                      ),
-                    ),
-                    PopupMenuItem(
-                      value: 'Filled',
-                      child: Row(
-                        children: [
-                          const Icon(
-                            Icons.check_circle_outline,
-                            size: 20,
-                            color: AppColor.findJob,
-                          ),
-                          const SizedBox(width: 12),
-                          const Text('Mark as Filled'),
-                        ],
-                      ),
-                    ),
-                  ];
-                },
-              ),
-            ],
-          ),
-          const SizedBox(height: 16),
-          Padding(
-            padding: const EdgeInsets.only(left: 60),
-            child: Wrap(
-              spacing: 8,
-              runSpacing: 8,
+                  },
+                ),
+              ],
+            ),
+            const SizedBox(height: 16),
+            Divider(
+              color: colorScheme.brightness == Brightness.light
+                  ? colorScheme.outline.withValues(alpha: 0.05)
+                  : colorScheme.outline.withValues(alpha: 0.1),
+            ),
+            const SizedBox(height: 16),
+
+            // Center Info Section
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                Text(
+                  data.location,
+                  style: textTheme.bodyLarge?.copyWith(
+                    color: colorScheme.onSurfaceVariant.withValues(alpha: 0.8),
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+                const SizedBox(height: 8),
                 if (data.salaryMin != null)
-                  _buildInfoTag(
-                    context,
-                    Icons.payments_outlined,
+                  Text(
                     _buildSalaryString(data),
-                    colorScheme.primary,
-                  ),
-                if (data.employmentType != null)
-                  _buildInfoTag(
-                    context,
-                    Icons.work_outline_rounded,
-                    data.employmentType!,
-                    Colors.orange,
-                  ),
-                if (data.workArrangement != null)
-                  _buildInfoTag(
-                    context,
-                    Icons.location_on_outlined,
-                    data.workArrangement!,
-                    Colors.blue,
+                    textAlign: TextAlign.center,
+                    style: textTheme.titleLarge?.copyWith(
+                      color: colorScheme.primary,
+                      fontWeight: FontWeight.w700,
+                      fontSize: 18,
+                    ),
                   ),
               ],
             ),
-          ),
-          const SizedBox(height: 12),
-          Padding(
-            padding: const EdgeInsets.only(left: 60),
-            child: Text(
-              data.description,
-              maxLines: 4,
-              overflow: TextOverflow.ellipsis,
-              style: textTheme.bodyMedium?.copyWith(
-                color: colorScheme.onSurfaceVariant,
-                fontSize: 14,
-                height: 1.5,
-                fontWeight: FontWeight.w400,
+            const SizedBox(height: 16),
+
+            // Bottom Tags
+            SizedBox(
+              width: double.infinity,
+              child: Wrap(
+                spacing: 12,
+                runSpacing: 12,
+                alignment: WrapAlignment.center,
+                children: [
+                  if (data.employmentType != null)
+                    _buildOutlineTag(context, data.employmentType!),
+                  if (data.workArrangement != null)
+                    _buildOutlineTag(context, data.workArrangement!),
+
+                  if (data.status == 'Rejected' &&
+                      data.rejectionReason != null) ...[
+                    const SizedBox(height: 16),
+                    Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: colorScheme.error.withValues(alpha: 0.05),
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(
+                          color: colorScheme.error.withValues(alpha: 0.1),
+                        ),
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.center,
+                        children: [
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(
+                                Icons.error_outline_rounded,
+                                color: colorScheme.error,
+                                size: 16,
+                              ),
+                              const SizedBox(width: 8),
+                              Text(
+                                'Rejection Reason',
+                                style: textTheme.labelMedium?.copyWith(
+                                  color: colorScheme.error,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            data.rejectionReason!,
+                            style: textTheme.bodySmall?.copyWith(
+                              color: colorScheme.onSurfaceVariant,
+                              height: 1.4,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ],
               ),
             ),
-          ),
-          if (data.status == 'Draft') ...[
-            const SizedBox(height: 16),
-            Padding(
-              padding: const EdgeInsets.only(left: 60),
-              child: SizedBox(
+
+            if (data.status == 'Draft') ...[
+              const SizedBox(height: 24),
+              SizedBox(
                 width: double.infinity,
                 child: FilledButton.icon(
                   onPressed: isLoading
@@ -262,16 +349,41 @@ class JobCard extends StatelessWidget {
                   style: FilledButton.styleFrom(
                     backgroundColor: colorScheme.primary,
                     foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(vertical: 12),
+                    padding: const EdgeInsets.symmetric(vertical: 14),
                     shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
+                      borderRadius: BorderRadius.circular(16),
                     ),
                   ),
                 ),
               ),
-            ),
+            ],
           ],
-        ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildOutlineTag(BuildContext context, String label) {
+    final colorScheme = Theme.of(context).colorScheme;
+    final isDark = colorScheme.brightness == Brightness.dark;
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      decoration: BoxDecoration(
+        color: isDark ? AppColor.cardDarkSecondary : Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        border: isDark
+            ? null
+            : Border.all(color: colorScheme.outline.withValues(alpha: 0.3)),
+      ),
+      child: Text(
+        label,
+        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+          color: isDark
+              ? colorScheme.onSurface
+              : colorScheme.onSurfaceVariant.withValues(alpha: 0.8),
+          fontWeight: FontWeight.w600,
+        ),
       ),
     );
   }
@@ -297,104 +409,11 @@ class JobCard extends StatelessWidget {
               ? '${(data.salaryMax! / 1000).toStringAsFixed(1)}k'
               : '${data.salaryMax}')
         : '';
-    final currency = data.salaryCurrency ?? 'USD';
+    final period = data.salaryPeriod ?? 'month';
 
     if (max.isNotEmpty) {
-      return '$min - $max $currency';
+      return '\$$min - \$$max /$period';
     }
-    return '$min $currency';
-  }
-
-  Widget _buildInfoTag(
-    BuildContext context,
-    IconData icon,
-    String label,
-    Color color,
-  ) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-      decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.08),
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: color.withValues(alpha: 0.15)),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(icon, size: 14, color: color),
-          const SizedBox(width: 6),
-          Text(
-            label,
-            style: TextStyle(
-              color: color,
-              fontSize: 12,
-              fontWeight: FontWeight.w700,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  String _buildSubtitle(JobCardData data) {
-    final parts = <String>[];
-    if (data.company.isNotEmpty) parts.add(data.company);
-    if (data.location.isNotEmpty) parts.add(data.location);
-
-    String subtitle = parts.join(' • ');
-    if (data.time.isNotEmpty) {
-      subtitle += ' | ${data.time}';
-    }
-    return subtitle;
-  }
-
-  Widget _buildStatusBadge(BuildContext context, String status) {
-    final colorScheme = Theme.of(context).colorScheme;
-    Color bgColor;
-    Color textColor;
-
-    switch (status.toLowerCase()) {
-      case 'active':
-        bgColor = AppColor.appliedLight.withValues(alpha: 0.1);
-        textColor = AppColor.appliedLight;
-        break;
-      case 'draft':
-        bgColor = colorScheme.secondaryContainer.withValues(alpha: 0.5);
-        textColor = colorScheme.onSecondaryContainer;
-        break;
-      case 'paused':
-        bgColor = AppColor.findJob.withValues(alpha: 0.1);
-        textColor = AppColor.findJob;
-        break;
-      case 'closed':
-        bgColor = AppColor.errorLight.withValues(alpha: 0.1);
-        textColor = AppColor.errorLight;
-        break;
-      case 'filled':
-        bgColor = colorScheme.primary.withValues(alpha: 0.1);
-        textColor = colorScheme.primary;
-        break;
-      default:
-        bgColor = colorScheme.surfaceContainerHighest.withValues(alpha: 0.5);
-        textColor = colorScheme.onSurfaceVariant;
-    }
-
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-      decoration: BoxDecoration(
-        color: bgColor,
-        borderRadius: BorderRadius.circular(6),
-        border: Border.all(color: textColor.withValues(alpha: 0.2)),
-      ),
-      child: Text(
-        status.toUpperCase(),
-        style: TextStyle(
-          color: textColor,
-          fontSize: 10,
-          fontWeight: FontWeight.w800,
-          letterSpacing: 0.5,
-        ),
-      ),
-    );
+    return '\$$min /$period';
   }
 }

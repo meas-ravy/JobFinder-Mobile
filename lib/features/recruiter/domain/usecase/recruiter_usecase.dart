@@ -136,3 +136,13 @@ class DeleteJobUseCase extends UseCaseWithParams<DataMap, DeleteJobParams> {
     return _repository.deleteJob(params.jobId);
   }
 }
+
+class GetJobApplicationsUseCase extends UseCaseWithParams<DataMap, String> {
+  const GetJobApplicationsUseCase(this._repository);
+  final RecruiterRepository _repository;
+
+  @override
+  ResultFuture<DataMap> call(String params) {
+    return _repository.getJobApplications(params);
+  }
+}

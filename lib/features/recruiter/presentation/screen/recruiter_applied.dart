@@ -3,17 +3,31 @@ import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:job_finder/features/recruiter/presentation/data/applies_data.dart';
 import 'package:job_finder/features/recruiter/presentation/provider/recruiter_provider.dart';
 import 'package:job_finder/features/recruiter/presentation/widget/applicant_card.dart';
-import 'package:job_finder/features/recruiter/presentation/widget/header_section.dart';
 import 'package:job_finder/shared/widget/shimmer_loading.dart';
+import 'package:flutter_hooks/flutter_hooks.dart';
+import 'package:job_finder/core/helper/typedef.dart';
 
 class RecruiterAppliedPage extends HookConsumerWidget {
-  const RecruiterAppliedPage({super.key});
+  const RecruiterAppliedPage({super.key, this.jobId});
+
+  final String? jobId;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final colorScheme = Theme.of(context).colorScheme;
     final recruiterState = ref.watch(recruiterControllerProvider);
     final isDark = colorScheme.brightness == Brightness.dark;
+
+    useEffect(() {
+      if (jobId != null) {
+        Future.delayed(Duration.zero, () {
+          ref
+              .read(recruiterControllerProvider.notifier)
+              .getJobApplications(jobId!);
+        });
+      }
+      return null;
+    }, [jobId]);
 
     final cardColor = isDark
         ? colorScheme.surfaceContainerHighest.withValues(alpha: 0.3)
@@ -30,23 +44,43 @@ class RecruiterAppliedPage extends HookConsumerWidget {
     return Scaffold(
       backgroundColor: colorScheme.surface,
       appBar: AppBar(
+        title: const Text('Applications'),
         backgroundColor: colorScheme.surface,
         elevation: 0,
         scrolledUnderElevation: 0,
-        toolbarHeight: 80,
-        title: const HeaderSection(),
+        centerTitle: true,
       ),
-
       body: recruiterState.isLoading
           ? const _AppliedShimmer()
+          : recruiterState.applicants.isEmpty
+          ? const Center(child: Text('No applications yet'))
           : ListView.separated(
               padding: const EdgeInsets.fromLTRB(20, 8, 20, 24),
-              itemCount: applicants.length,
+              itemCount: recruiterState.applicants.length,
               separatorBuilder: (context, index) => const SizedBox(height: 12),
               itemBuilder: (context, index) {
-                final item = applicants[index];
+                final item = recruiterState.applicants[index] as DataMap;
+                final user = item['user'] as DataMap? ?? {};
+
+                // Adapt real data to ApplicantCardData for visual rendering
+                final displayData = ApplicantCardData(
+                  name: user['name']?.toString() ?? 'Unknown',
+                  date:
+                      'Just now', // You might want to parse createdAt if available
+                  role: 'Applicant',
+                  snippet:
+                      item['coverLetter']?.toString() ??
+                      'Interested in this position',
+                  attachments: [
+                    const AttachmentData(
+                      label: 'Resume',
+                      icon: Icons.description_outlined,
+                    ),
+                  ],
+                );
+
                 return ApplicantCard(
-                  data: item,
+                  data: displayData,
                   cardColor: cardColor,
                   cardBorder: cardBorder,
                   textPrimary: textPrimary,

@@ -19,7 +19,7 @@ class RecruiterHomePage extends HookConsumerWidget {
     final recruiterState = ref.watch(recruiterControllerProvider);
 
     return DefaultTabController(
-      length: 3,
+      length: 4,
       child: Scaffold(
         appBar: AppBar(
           elevation: 0,
@@ -31,22 +31,48 @@ class RecruiterHomePage extends HookConsumerWidget {
             child: Column(
               children: [
                 TabBar(
-                  dividerColor: colorScheme.outline.withValues(alpha: 0.05),
+                  isScrollable: true,
+                  tabAlignment: TabAlignment.start,
+                  dividerColor: Colors.transparent,
                   indicatorColor: colorScheme.primary,
-                  indicatorSize: TabBarIndicatorSize.tab,
+                  indicatorSize: TabBarIndicatorSize.label,
+                  indicatorWeight: 4,
+                  indicator: UnderlineTabIndicator(
+                    borderSide: BorderSide(
+                      width: 4,
+                      color: colorScheme.primary,
+                    ),
+                    borderRadius: const BorderRadius.only(
+                      topLeft: Radius.circular(4),
+                      topRight: Radius.circular(4),
+                    ),
+                  ),
                   labelColor: colorScheme.primary,
-                  unselectedLabelColor: colorScheme.onSurfaceVariant,
-                  labelStyle: textTheme.bodyMedium?.copyWith(
+                  unselectedLabelColor: colorScheme.onSurfaceVariant.withValues(
+                    alpha: 0.6,
+                  ),
+                  labelStyle: textTheme.titleSmall?.copyWith(
+                    fontWeight: FontWeight.w800,
+                    letterSpacing: 0.2,
+                  ),
+                  unselectedLabelStyle: textTheme.titleSmall?.copyWith(
                     fontWeight: FontWeight.w700,
+                    letterSpacing: 0.2,
                   ),
-                  unselectedLabelStyle: textTheme.bodyMedium?.copyWith(
-                    fontWeight: FontWeight.w600,
-                  ),
+                  labelPadding: const EdgeInsets.symmetric(horizontal: 20),
                   tabs: const [
                     Tab(text: 'Active Post'),
                     Tab(text: 'Upcoming'),
+                    Tab(text: 'Rejected'),
                     Tab(text: 'Previous'),
                   ],
+                ),
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 0),
+                  child: Divider(
+                    height: 1,
+                    color: colorScheme.outline.withValues(alpha: 0.05),
+                  ),
                 ),
               ],
             ),
@@ -66,7 +92,16 @@ class RecruiterHomePage extends HookConsumerWidget {
                     recruiterState.draftJobs,
                     'No draft jobs found',
                   ),
-                  _buildJobsList(ref, [], 'No previous jobs found'),
+                  _buildJobsList(
+                    ref,
+                    recruiterState.rejectedJobs,
+                    'No rejected jobs found',
+                  ),
+                  _buildJobsList(
+                    ref,
+                    recruiterState.previousJobs,
+                    'No previous jobs found',
+                  ),
                 ],
               ),
       ),
@@ -110,10 +145,12 @@ class RecruiterHomePage extends HookConsumerWidget {
               context.push(AppPath.postJob, extra: job);
             } else if (status == 'delete') {
               _showDeleteConfirmation(context, ref, job['_id'] ?? job['id']);
-            } else if (status == 'submit') {
+            } else if (status == 'submit' || status == 'resubmit') {
               ref
                   .read(recruiterControllerProvider.notifier)
                   .submitJob(job['_id'] ?? job['id']);
+            } else if (status == 'view_candidates') {
+              context.push(AppPath.viewApplicants, extra: jobId);
             } else {
               ref
                   .read(recruiterControllerProvider.notifier)

@@ -17,6 +17,7 @@ abstract class RecruiterServer {
   ResultFuture<DataMap> updateJobStatus(String jobId, String status);
   ResultFuture<DataMap> updateJob(String jobId, DataMap job);
   ResultFuture<DataMap> deleteJob(String jobId);
+  ResultFuture<DataMap> getJobApplications(String jobId);
 }
 
 class RecruiterServerImpl implements RecruiterServer {
@@ -163,6 +164,22 @@ class RecruiterServerImpl implements RecruiterServer {
   ResultFuture<DataMap> deleteJob(String jobId) async {
     try {
       final response = await dio.delete(ApiEnpoint.deleteJob(jobId));
+      final data = response.data;
+      if (data is DataMap) {
+        return Right(data);
+      }
+      return Right(<String, dynamic>{'data': data});
+    } on DioException catch (e) {
+      final statusCode = e.response?.statusCode ?? -1;
+      final message = errorMessage(statusCode, e);
+      return Left(ApiFailure(message: message, statusCode: statusCode));
+    }
+  }
+
+  @override
+  ResultFuture<DataMap> getJobApplications(String jobId) async {
+    try {
+      final response = await dio.get(ApiEnpoint.jobApplications(jobId));
       final data = response.data;
       if (data is DataMap) {
         return Right(data);

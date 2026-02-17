@@ -52,4 +52,9 @@ class RecruiterRepositoryImpl implements RecruiterRepository {
   ResultFuture<DataMap> deleteJob(String jobId) {
     return _server.deleteJob(jobId);
   }
+
+  @override
+  ResultFuture<DataMap> getJobApplications(String jobId) {
+    return _server.getJobApplications(jobId);
+  }
 }

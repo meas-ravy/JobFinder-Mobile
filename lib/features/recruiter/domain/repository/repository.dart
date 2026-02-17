@@ -10,4 +10,5 @@ abstract class RecruiterRepository {
   ResultFuture<DataMap> updateJobStatus(String jobId, String status);
   ResultFuture<DataMap> updateJob(String jobId, DataMap job);
   ResultFuture<DataMap> deleteJob(String jobId);
+  ResultFuture<DataMap> getJobApplications(String jobId);
 }

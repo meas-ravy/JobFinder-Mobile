@@ -52,6 +52,12 @@ final deleteJobUseCaseProvider = Provider<DeleteJobUseCase>((ref) {
   return DeleteJobUseCase(ref.watch(recruiterRepositoryProvider));
 });
 
+final getJobApplicationsUseCaseProvider = Provider<GetJobApplicationsUseCase>((
+  ref,
+) {
+  return GetJobApplicationsUseCase(ref.watch(recruiterRepositoryProvider));
+});
+
 final recruiterControllerProvider =
     StateNotifierProvider<RecruiterController, RecruiterState>((ref) {
       return RecruiterController(
@@ -64,5 +70,6 @@ final recruiterControllerProvider =
         updateJobStatusUseCase: ref.watch(updateJobStatusUseCaseProvider),
         updateJobUseCase: ref.watch(updateJobUseCaseProvider),
         deleteJobUseCase: ref.watch(deleteJobUseCaseProvider),
+        getJobApplicationsUseCase: ref.watch(getJobApplicationsUseCaseProvider),
       );
     });

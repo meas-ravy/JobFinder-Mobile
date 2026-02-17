@@ -1,84 +1,88 @@
-import 'package:job_finder/core/helper/typedef.dart';
 import 'package:job_finder/features/recruiter/data/models/company_model.dart';
 
 class JobCardData {
-  const JobCardData({
-    required this.id,
-    required this.title,
-    required this.company,
-    required this.location,
-    required this.time,
-    required this.logo,
-    required this.description,
-    required this.status,
-    this.employmentType,
-    this.workArrangement,
-    this.experienceLevel,
-    this.salaryMin,
-    this.salaryMax,
-    this.salaryCurrency,
-    this.salaryPeriod,
-    this.positionsAvailable,
-  });
-
   final String id;
   final String title;
   final String company;
-  final String location;
-  final String time;
   final String logo;
-  final String description;
-  final String status;
-
-  // New fields
-  final String? employmentType;
-  final String? workArrangement;
-  final String? experienceLevel;
+  final String location;
   final int? salaryMin;
   final int? salaryMax;
   final String? salaryCurrency;
   final String? salaryPeriod;
+  final String? employmentType;
+  final String? workArrangement;
+  final String? experienceLevel;
   final int? positionsAvailable;
+  final String status;
+  final String description;
+  final String? rejectionReason;
 
-  factory JobCardData.fromJson(DataMap json, {CompanyModel? fallbackCompany}) {
-    final companyRaw = json['company'];
-    DataMap? companyData;
+  JobCardData({
+    required this.id,
+    required this.title,
+    required this.company,
+    required this.logo,
+    required this.location,
+    required this.status,
+    required this.description,
+    this.salaryMin,
+    this.salaryMax,
+    this.salaryCurrency,
+    this.salaryPeriod,
+    this.employmentType,
+    this.workArrangement,
+    this.experienceLevel,
+    this.positionsAvailable,
+    this.rejectionReason,
+  });
 
-    if (companyRaw is Map<String, dynamic>) {
-      companyData = companyRaw;
+  factory JobCardData.fromJson(
+    Map<String, dynamic> json, {
+    CompanyModel? fallbackCompany,
+  }) {
+    // Determine company name and logo
+    String companyName = '';
+    String companyLogo = '';
+
+    // Check if job json has company object
+    if (json['company'] != null && json['company'] is Map<String, dynamic>) {
+      final compJson = json['company'] as Map<String, dynamic>;
+      companyName = compJson['name']?.toString() ?? '';
+      companyLogo = compJson['logoUrl']?.toString() ?? '';
+    } else if (fallbackCompany != null) {
+      companyName = fallbackCompany.name;
+      companyLogo = fallbackCompany.logoUrl;
+    } else {
+      // Last resort fallbacks
+      companyName = json['companyName']?.toString() ?? 'Unknown Company';
+      companyLogo = json['companyLogo']?.toString() ?? '';
     }
 
-    final companyName =
-        companyData?['name'] ?? fallbackCompany?.name ?? 'Company';
-    final logo =
-        companyData?['logoUrl'] ??
-        companyData?['logo'] ??
-        fallbackCompany?.logoUrl ??
-        'https://cdn-icons-png.flaticon.com/512/3800/3800024.png';
-
     return JobCardData(
-      id: json['_id'] ?? json['id'] ?? '',
-      title: json['title'] ?? '',
+      id: (json['_id'] ?? json['id'] ?? '').toString(),
+      title: (json['title'] ?? '').toString(),
       company: companyName,
-      location: json['location'] ?? '',
-      time: 'Posted just now',
-      logo: logo,
-      description: json['description'] ?? '',
-      status: json['status'] ?? 'Active',
-      employmentType: json['employmentType'],
-      workArrangement: json['workArrangement'],
-      experienceLevel: json['experienceLevel'],
+      logo: companyLogo,
+      location: (json['location'] ?? fallbackCompany?.location ?? '')
+          .toString(),
+      status: (json['status'] ?? '').toString(),
+      description: (json['description'] ?? '').toString(),
       salaryMin: json['salaryMin'] != null
-          ? (json['salaryMin'] as num).toInt()
+          ? int.tryParse(json['salaryMin'].toString())
           : null,
       salaryMax: json['salaryMax'] != null
-          ? (json['salaryMax'] as num).toInt()
+          ? int.tryParse(json['salaryMax'].toString())
           : null,
-      salaryCurrency: json['salaryCurrency'],
-      salaryPeriod: json['salaryPeriod'],
+      salaryCurrency: json['salaryCurrency']?.toString(),
+      salaryPeriod: json['salaryPeriod']?.toString(),
+      employmentType: json['employmentType']?.toString(),
+      workArrangement: json['workArrangement']?.toString(),
+      experienceLevel: json['experienceLevel']?.toString(),
       positionsAvailable: json['positionsAvailable'] != null
-          ? (json['positionsAvailable'] as num).toInt()
+          ? int.tryParse(json['positionsAvailable'].toString())
           : null,
+      rejectionReason: json['rejectionReason']?.toString(),
     );
   }
 }

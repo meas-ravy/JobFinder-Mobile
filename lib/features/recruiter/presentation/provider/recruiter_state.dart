@@ -11,6 +11,7 @@ enum RecruiterAction {
   updateJobStatus,
   updateJob,
   deleteJob,
+  getJobApplications,
 }
 
 class RecruiterState {
@@ -23,6 +24,9 @@ class RecruiterState {
     this.company,
     this.jobs = const [],
     this.draftJobs = const [],
+    this.rejectedJobs = const [],
+    this.previousJobs = const [],
+    this.applicants = const [],
   });
 
   final bool isLoading;
@@ -33,6 +37,9 @@ class RecruiterState {
   final CompanyModel? company;
   final List<dynamic> jobs;
   final List<dynamic> draftJobs;
+  final List<dynamic> rejectedJobs;
+  final List<dynamic> previousJobs;
+  final List<dynamic> applicants;
 
   RecruiterState copyWith({
     bool? isLoading,
@@ -43,6 +50,9 @@ class RecruiterState {
     CompanyModel? company,
     List<dynamic>? jobs,
     List<dynamic>? draftJobs,
+    List<dynamic>? rejectedJobs,
+    List<dynamic>? previousJobs,
+    List<dynamic>? applicants,
   }) {
     return RecruiterState(
       isLoading: isLoading ?? this.isLoading,
@@ -53,6 +63,9 @@ class RecruiterState {
       company: company ?? this.company,
       jobs: jobs ?? this.jobs,
       draftJobs: draftJobs ?? this.draftJobs,
+      rejectedJobs: rejectedJobs ?? this.rejectedJobs,
+      previousJobs: previousJobs ?? this.previousJobs,
+      applicants: applicants ?? this.applicants,
     );
   }
 }

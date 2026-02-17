@@ -58,7 +58,8 @@ abstract class AppColor {
   static const Color leftMessageColorDark = Color(0xff443463);
   static const Color rightMessageTextColorDark = Color(0xffeeeeee);
   static const Color leftMessageTextColorDark = Color(0xffeeeeee);
-  static const Color cardDark = Color(0xFF161E34);
+  static const Color cardDark = Color(0xFF1f222a);
+  static const Color cardDarkSecondary = Color(0xFF35383f);
   static const Color cardBorderDark = Color(0xFF253054);
   static const Color textMutedDark = Color(0xFF8A94A8);
   static const Color appliedDark = Color(0xFF22D38A);

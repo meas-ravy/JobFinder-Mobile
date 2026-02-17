@@ -15,6 +15,7 @@ class RecruiterController extends StateNotifier<RecruiterState> {
     required UpdateJobStatusUseCase updateJobStatusUseCase,
     required UpdateJobUseCase updateJobUseCase,
     required DeleteJobUseCase deleteJobUseCase,
+    required GetJobApplicationsUseCase getJobApplicationsUseCase,
   }) : _createCompanyUseCase = createCompanyUseCase,
        _getCompanyProfileUseCase = getCompanyProfileUseCase,
        _updateCompanyUseCase = updateCompanyUseCase,
@@ -24,10 +25,13 @@ class RecruiterController extends StateNotifier<RecruiterState> {
        _updateJobStatusUseCase = updateJobStatusUseCase,
        _updateJobUseCase = updateJobUseCase,
        _deleteJobUseCase = deleteJobUseCase,
+       _getJobApplicationsUseCase = getJobApplicationsUseCase,
        super(const RecruiterState()) {
     getCompanyProfile();
     getJobs(status: 'Active');
     getJobs(status: 'Draft');
+    getJobs(status: 'Rejected');
+    getJobs(status: 'Closed');
   }
 
   final CreateCompanyUseCase _createCompanyUseCase;
@@ -39,6 +43,7 @@ class RecruiterController extends StateNotifier<RecruiterState> {
   final UpdateJobStatusUseCase _updateJobStatusUseCase;
   final UpdateJobUseCase _updateJobUseCase;
   final DeleteJobUseCase _deleteJobUseCase;
+  final GetJobApplicationsUseCase _getJobApplicationsUseCase;
 
   CompanyModel? _parseCompany(DataMap data) {
     // Check for 'company' key (from some API responses)
@@ -99,6 +104,8 @@ class RecruiterController extends StateNotifier<RecruiterState> {
         state = state.copyWith(isLoading: false, data: data, activeJobId: null);
         getJobs(status: 'Active');
         getJobs(status: 'Draft');
+        getJobs(status: 'Rejected');
+        getJobs(status: 'Closed');
       },
     );
   }
@@ -181,6 +188,18 @@ class RecruiterController extends StateNotifier<RecruiterState> {
             data: data,
             draftJobs: jobsList,
           );
+        } else if (status == 'Rejected') {
+          state = state.copyWith(
+            isLoading: false,
+            data: data,
+            rejectedJobs: jobsList,
+          );
+        } else if (status == 'Closed') {
+          state = state.copyWith(
+            isLoading: false,
+            data: data,
+            previousJobs: jobsList,
+          );
         } else {
           state = state.copyWith(isLoading: false, data: data, jobs: jobsList);
         }
@@ -210,6 +229,8 @@ class RecruiterController extends StateNotifier<RecruiterState> {
         state = state.copyWith(isLoading: false, data: data, activeJobId: null);
         getJobs(status: 'Active');
         getJobs(status: 'Draft');
+        getJobs(status: 'Rejected');
+        getJobs(status: 'Closed');
       },
     );
   }
@@ -231,6 +252,8 @@ class RecruiterController extends StateNotifier<RecruiterState> {
         state = state.copyWith(isLoading: false, data: data);
         getJobs(status: 'Active');
         getJobs(status: 'Draft');
+        getJobs(status: 'Rejected');
+        getJobs(status: 'Closed');
       },
     );
   }
@@ -255,6 +278,34 @@ class RecruiterController extends StateNotifier<RecruiterState> {
         state = state.copyWith(isLoading: false, data: data, activeJobId: null);
         getJobs(status: 'Active');
         getJobs(status: 'Draft');
+        getJobs(status: 'Rejected');
+        getJobs(status: 'Closed');
+      },
+    );
+  }
+
+  Future<void> getJobApplications(String jobId) async {
+    state = state.copyWith(
+      isLoading: true,
+      errorMessage: null,
+      lastAction: RecruiterAction.getJobApplications,
+    );
+    final result = await _getJobApplicationsUseCase(jobId);
+    result.fold(
+      (failure) {
+        state = state.copyWith(isLoading: false, errorMessage: failure.message);
+      },
+      (data) {
+        final List<dynamic> applicants =
+            data['applicants'] ??
+            data['data']?['applicants'] ??
+            data['data'] ??
+            [];
+        state = state.copyWith(
+          isLoading: false,
+          data: data,
+          applicants: applicants,
+        );
       },
     );
   }

@@ -16,4 +16,5 @@ class ApiEnpoint {
   static String updateJobStatus(String jobId) => "api/jobs/$jobId/status";
   static String updateJob(String jobId) => "api/jobs/$jobId";
   static String deleteJob(String jobId) => "api/jobs/$jobId";
+  static String jobApplications(String jobId) => "api/jobs/$jobId/applications";
 }
