@@ -12,4 +12,5 @@ class AppPath {
   static const String editCompany = '/edit-company';
   static const String postJob = '/post-job';
   static const String viewApplicants = '/view-applicants';
+  static const String notifications = '/notifications';
 }

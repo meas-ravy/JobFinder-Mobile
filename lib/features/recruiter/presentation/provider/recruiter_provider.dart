@@ -73,3 +73,5 @@ final recruiterControllerProvider =
         getJobApplicationsUseCase: ref.watch(getJobApplicationsUseCaseProvider),
       );
     });
+
+final recruiterHomeTabProvider = StateProvider<int>((ref) => 0);

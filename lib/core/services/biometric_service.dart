@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:local_auth/local_auth.dart';
+import 'package:job_finder/core/helper/secure_storage.dart';
 
 /// Service to handle local biometric authentication (fingerprint, face ID, PIN)
 class BiometricService {
@@ -10,19 +11,16 @@ class BiometricService {
   BiometricService._internal();
 
   final LocalAuthentication _localAuth = LocalAuthentication();
-  final FlutterSecureStorage _storage = const FlutterSecureStorage();
+  final SecureStorageService _storage = const SecureStorageService(
+    FlutterSecureStorage(),
+  );
   final ValueNotifier<bool> lockNotifier = ValueNotifier<bool>(false);
   final ValueNotifier<int> settingsNotifier = ValueNotifier<int>(0);
-  static const String _biometricEnabledKey = 'biometric_enabled';
-  static const String _appPinKey = 'app_pin';
-  static const String _appLockEnabledKey = 'app_lock_enabled';
-  static const String _securityQuestionKey = 'security_question';
-  static const String _securityAnswerKey = 'security_answer';
 
   /// Check if app lock is enabled
   Future<bool> isAppLockEnabled() async {
     try {
-      final value = await _storage.read(key: _appLockEnabledKey);
+      final value = await _storage.read(SecureStorageKey.appLockEnabled);
       return value == 'true';
     } catch (e) {
       return false;
@@ -31,60 +29,60 @@ class BiometricService {
 
   /// Enable or disable app lock
   Future<void> setAppLockEnabled(bool enabled) async {
-    await _storage.write(key: _appLockEnabledKey, value: enabled.toString());
+    await _storage.write(SecureStorageKey.appLockEnabled, enabled.toString());
     settingsNotifier.value++;
   }
 
   /// Set the 4-digit App PIN
   Future<void> setAppPin(String pin) async {
-    await _storage.write(key: _appPinKey, value: pin);
+    await _storage.write(SecureStorageKey.appPin, pin);
     settingsNotifier.value++;
   }
 
   /// Verify the App PIN
   Future<bool> verifyAppPin(String pin) async {
-    final savedPin = await _storage.read(key: _appPinKey);
+    final savedPin = await _storage.read(SecureStorageKey.appPin);
     return savedPin == pin;
   }
 
   /// Check if an App PIN is already set
   Future<bool> hasAppPin() async {
-    final savedPin = await _storage.read(key: _appPinKey);
+    final savedPin = await _storage.read(SecureStorageKey.appPin);
     return savedPin != null && savedPin.isNotEmpty;
   }
 
   /// Delete the App PIN
   Future<void> deleteAppPin() async {
-    await _storage.delete(key: _appPinKey);
+    await _storage.delete(SecureStorageKey.appPin);
     settingsNotifier.value++;
   }
 
   /// Save security question and answer
   Future<void> saveSecurityData(String question, String answer) async {
-    await _storage.write(key: _securityQuestionKey, value: question);
+    await _storage.write(SecureStorageKey.securityQuestion, question);
     await _storage.write(
-      key: _securityAnswerKey,
-      value: answer.toLowerCase().trim(),
+      SecureStorageKey.securityAnswer,
+      answer.toLowerCase().trim(),
     );
     settingsNotifier.value++;
   }
 
   /// Get the saved security question
   Future<String?> getSecurityQuestion() async {
-    return await _storage.read(key: _securityQuestionKey);
+    return await _storage.read(SecureStorageKey.securityQuestion);
   }
 
   /// Verify the security answer
   Future<bool> verifySecurityAnswer(String answer) async {
-    final savedAnswer = await _storage.read(key: _securityAnswerKey);
+    final savedAnswer = await _storage.read(SecureStorageKey.securityAnswer);
     return savedAnswer == answer.toLowerCase().trim();
   }
 
   /// Delete all security data
   Future<void> deleteAllSecurityData() async {
-    await _storage.delete(key: _appPinKey);
-    await _storage.delete(key: _securityQuestionKey);
-    await _storage.delete(key: _securityAnswerKey);
+    await _storage.delete(SecureStorageKey.appPin);
+    await _storage.delete(SecureStorageKey.securityQuestion);
+    await _storage.delete(SecureStorageKey.securityAnswer);
     await setAppLockEnabled(false);
     settingsNotifier.value++;
   }
@@ -119,7 +117,7 @@ class BiometricService {
   /// Check if user has enabled biometric authentication in app settings
   Future<bool> isBiometricEnabled() async {
     try {
-      final value = await _storage.read(key: _biometricEnabledKey);
+      final value = await _storage.read(SecureStorageKey.biometricEnabled);
       return value == 'true';
     } catch (e) {
       return false;
@@ -128,7 +126,7 @@ class BiometricService {
 
   /// Enable or disable biometric authentication in app settings
   Future<void> setBiometricEnabled(bool enabled) async {
-    await _storage.write(key: _biometricEnabledKey, value: enabled.toString());
+    await _storage.write(SecureStorageKey.biometricEnabled, enabled.toString());
     settingsNotifier.value++;
   }
 

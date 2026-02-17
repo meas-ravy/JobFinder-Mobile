@@ -80,6 +80,7 @@ class RecruiterController extends StateNotifier<RecruiterState> {
       },
       (data) {
         state = state.copyWith(isLoading: false, data: data);
+        getJobs(status: 'Draft');
       },
     );
   }

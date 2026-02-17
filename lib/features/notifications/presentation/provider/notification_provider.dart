@@ -1,0 +1,91 @@
+import 'package:hooks_riverpod/hooks_riverpod.dart';
+import 'package:job_finder/features/notifications/data/models/notification_model.dart';
+import 'package:job_finder/features/notifications/data/repository_imp/notification_repository_imp.dart';
+import 'package:job_finder/features/notifications/data/server/notification_server.dart';
+import 'package:job_finder/features/notifications/domain/repository/notification_repository.dart';
+import 'package:job_finder/features/notifications/domain/usecase/notification_usecase.dart';
+import 'package:job_finder/features/notifications/presentation/provider/notification_state.dart';
+
+final notificationServerProvider = Provider<NotificationServer>((ref) {
+  return NotificationServerImpl();
+});
+
+final notificationRepositoryProvider = Provider<NotificationRepository>((ref) {
+  return NotificationRepositoryImpl(ref.watch(notificationServerProvider));
+});
+
+final getNotificationsUseCaseProvider = Provider<GetNotificationsUseCase>((
+  ref,
+) {
+  return GetNotificationsUseCase(ref.watch(notificationRepositoryProvider));
+});
+
+final markAsReadUseCaseProvider = Provider<MarkNotificationAsReadUseCase>((
+  ref,
+) {
+  return MarkNotificationAsReadUseCase(
+    ref.watch(notificationRepositoryProvider),
+  );
+});
+
+final notificationControllerProvider =
+    StateNotifierProvider<NotificationController, NotificationState>((ref) {
+      return NotificationController(
+        getNotificationsUseCase: ref.watch(getNotificationsUseCaseProvider),
+        markAsReadUseCase: ref.watch(markAsReadUseCaseProvider),
+      );
+    });
+
+class NotificationController extends StateNotifier<NotificationState> {
+  final GetNotificationsUseCase _getNotificationsUseCase;
+  final MarkNotificationAsReadUseCase _markAsReadUseCase;
+
+  NotificationController({
+    required GetNotificationsUseCase getNotificationsUseCase,
+    required MarkNotificationAsReadUseCase markAsReadUseCase,
+  }) : _getNotificationsUseCase = getNotificationsUseCase,
+       _markAsReadUseCase = markAsReadUseCase,
+       super(NotificationState.initial()) {
+    getNotifications();
+  }
+
+  Future<void> getNotifications() async {
+    state = state.copyWith(isLoading: true, errorMessage: null);
+    final result = await _getNotificationsUseCase();
+    result.fold(
+      (failure) {
+        state = state.copyWith(isLoading: false, errorMessage: failure.message);
+      },
+      (data) {
+        final List<dynamic> list = data['notifications'] ?? data['data'] ?? [];
+        final notifications = list
+            .map((e) => NotificationModel.fromJson(e as Map<String, dynamic>))
+            .toList();
+        state = state.copyWith(isLoading: false, notifications: notifications);
+      },
+    );
+  }
+
+  Future<void> markAsRead(String id) async {
+    // Optimistic update
+    final originalNotifications = [...state.notifications];
+    final updatedNotifications = state.notifications.map((n) {
+      if (n.id == id) {
+        return n.copyWith(isRead: true);
+      }
+      return n;
+    }).toList();
+    state = state.copyWith(notifications: updatedNotifications);
+
+    final result = await _markAsReadUseCase(id);
+    result.fold(
+      (failure) {
+        // Rollback if failed
+        state = state.copyWith(notifications: originalNotifications);
+      },
+      (data) {
+        // Success, keep the local state
+      },
+    );
+  }
+}

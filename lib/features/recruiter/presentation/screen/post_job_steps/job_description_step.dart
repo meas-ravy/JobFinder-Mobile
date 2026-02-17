@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_form_builder/flutter_form_builder.dart';
 import 'package:form_builder_validators/form_builder_validators.dart';
-import 'shared_widgets.dart';
+import 'package:job_finder/features/recruiter/presentation/shared/form_field_label.dart';
+import 'package:job_finder/features/recruiter/presentation/shared/form_list_input.dart';
+import 'package:job_finder/features/recruiter/presentation/shared/form_text_input.dart';
 
 class JobDescriptionStep extends StatelessWidget {
   const JobDescriptionStep({super.key});
@@ -68,14 +70,16 @@ class JobDescriptionStep extends StatelessWidget {
   List<String> _getResponsibilities(String category) {
     switch (category) {
       case 'Technology':
+      case 'Engineering':
         return [
-          'Develop and maintain features',
-          'Optimize app performance',
-          'Collaborate with team',
-          'Write clean code',
-          'Fix critical bugs',
+          'Develop, implement, and maintain application features',
+          'Optimize application performance and scalability',
+          'Collaborate with cross-functional teams (design, QA, product)',
+          'Write clean, maintainable, and well-documented code',
+          'Identify, troubleshoot, and fix critical bugs and issues',
         ];
       case 'Marketing':
+      case 'Sales':
         return [
           'Manage social media',
           'Create marketing campaigns',
@@ -99,63 +103,103 @@ class JobDescriptionStep extends StatelessWidget {
           'Prepare audits',
           'Evaluate investments',
         ];
-      case 'Management':
+      case 'Healthcare':
         return [
-          'Lead team projects',
-          'Define strategic goals',
-          'Evaluate performance',
-          'Manage resources',
-          'Improve workflows',
+          'Patient care and monitoring',
+          'Maintain medical records',
+          'Administer medications',
+          'Collaborate with health team',
+          'Ensure safety protocols',
+        ];
+      case 'Education':
+        return [
+          'Develop lesson plans',
+          'Evaluate student progress',
+          'Teach core subjects',
+          'Manage classroom behavior',
+          'Engage with parents',
+        ];
+      case 'Operations':
+      case 'HumanResources':
+        return [
+          'Streamline workflows',
+          'Manage internal resources',
+          'Ensure compliance',
+          'Handle recruitment',
+          'Coordinate team activities',
         ];
       default:
-        return ['Task 1', 'Task 2'];
+        return [
+          'Perform daily tasks',
+          'Collaborate with team',
+          'Report to supervisor',
+          'Maintain work quality',
+          'Follow safety guidelines',
+        ];
     }
   }
 
   List<String> _getRequirements(String category) {
     switch (category) {
       case 'Technology':
+      case 'Engineering':
         return [
-          '3+ years Flutter exp',
-          'Strong Dart knowledge',
-          'State management expertise',
-          'RESTful API integration',
+          '3+ years technical exp',
+          'Relevant degree',
+          'Problem solving skills',
+          'Team player mindset',
           'CI/CD experience',
         ];
       case 'Marketing':
+      case 'Sales':
         return [
-          'Degree in Marketing',
-          'Exp with Google Ads',
+          'Degree in relevant field',
           'Strong communication',
-          'Content creation skills',
           'Analytical mindset',
+          'Digital tool proficiency',
+          'Target-driven attitude',
         ];
       case 'Design':
         return [
-          'Expert in Figma/Adobe',
+          'Expert in design tools',
           'Portfolio of work',
           'Visual design degree',
-          'Prototyping experience',
           'Attention to detail',
+          'Creative thinking',
         ];
       case 'Finance':
+      case 'Legal':
         return [
-          'CPA or equivalent',
-          'Expert in Excel',
-          'Financial modeling exp',
-          'Auditing background',
+          'Professional certification',
+          'Relevant degree',
           'High integrity',
+          'Analytical skills',
+          'Industry experience',
         ];
-      case 'Management':
+      case 'Healthcare':
         return [
-          'MBA preferred',
-          'Leadership experience',
-          'Decision making skills',
-          'Project management exp',
-          'Mentoring ability',
+          'Valid medical license',
+          'Clinical experience',
+          'Patience and empathy',
+          'Strong observation',
+          'Relevant degree',
+        ];
+      case 'Education':
+        return [
+          'Teaching certificate',
+          'Subject expertise',
+          'Classroom management',
+          'Organizational ability',
+          'Relevant degree',
         ];
       default:
-        return ['Skill 1', 'Skill 2'];
+        return [
+          'Relevant experience',
+          'Strong communication',
+          'Positive attitude',
+          'Reliability',
+          'Willingness to learn',
+        ];
     }
   }
 }

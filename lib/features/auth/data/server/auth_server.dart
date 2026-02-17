@@ -1,12 +1,12 @@
 import 'package:dartz/dartz.dart';
 import 'package:dio/dio.dart';
-import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:job_finder/core/constants/api_enpoint.dart';
 import 'package:job_finder/core/helper/error.dart';
 import 'package:job_finder/core/helper/error_message.dart';
 import 'package:job_finder/core/helper/secure_storage.dart';
 import 'package:job_finder/core/helper/typedef.dart';
 import 'package:job_finder/core/networks/dio_client.dart';
+import 'package:job_finder/core/services/notification_service.dart';
 import 'package:job_finder/features/auth/data/model/sent_otp_model.dart';
 import 'package:job_finder/features/auth/data/model/verify_otp_model.dart';
 
@@ -27,6 +27,9 @@ abstract class AuthServer {
 }
 
 class AuthServerImpl implements AuthServer {
+  AuthServerImpl(this._tokenStorage);
+
+  final TokenStorageImpl _tokenStorage;
   final dio = setupAuthenticatedDio(ApiEnpoint.baseUrl);
 
   @override
@@ -81,12 +84,7 @@ class AuthServerImpl implements AuthServer {
       if (data is DataMap) {
         final accessToken = data['accessToken'];
         if (accessToken is String && accessToken.isNotEmpty) {
-          final tokenStorage = TokenStorageImpl(const FlutterSecureStorage());
-          await tokenStorage.write(
-            // OTP token is temporary: it only authorizes (select-role)
-            // After role selection, we overwrite storage with the role token
-            accessToken,
-          );
+          await _tokenStorage.write(accessToken);
         }
         return Right(data);
       }
@@ -116,8 +114,7 @@ class AuthServerImpl implements AuthServer {
       if (data is DataMap) {
         final jwtAccess = data['accessToken'];
         if (jwtAccess is String && jwtAccess.isNotEmpty) {
-          final tokenStorage = TokenStorageImpl(const FlutterSecureStorage());
-          await tokenStorage.write(jwtAccess);
+          await _tokenStorage.write(jwtAccess);
         }
         return Right(data);
       }
@@ -147,8 +144,7 @@ class AuthServerImpl implements AuthServer {
       if (data is DataMap) {
         final jwtAccess = data['accessToken'];
         if (jwtAccess is String && jwtAccess.isNotEmpty) {
-          final tokenStorage = TokenStorageImpl(const FlutterSecureStorage());
-          await tokenStorage.write(jwtAccess);
+          await _tokenStorage.write(jwtAccess);
         }
         return Right(data);
       }
@@ -171,17 +167,19 @@ class AuthServerImpl implements AuthServer {
       if (data is DataMap) {
         final tokenUpdated = data['tokenUpdated'] == true;
         final roleAccessToken = data['accessToken'];
-        final tokenStorage = TokenStorageImpl(const FlutterSecureStorage());
-
         // Always persist selected role locally (used for startup routing).
-        await tokenStorage.writeRole(role);
+        await _tokenStorage.writeRole(role);
 
         // Only overwrite the token if backend says it's updated.
         if (tokenUpdated &&
             roleAccessToken is String &&
             roleAccessToken.isNotEmpty) {
-          await tokenStorage.write(roleAccessToken);
+          await _tokenStorage.write(roleAccessToken);
         }
+
+        // Register device token for notifications now that we are authenticated
+        NotificationService.instance.registerDeviceToken();
+
         return Right(data);
       }
       return Right(<String, dynamic>{'data': data});

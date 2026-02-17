@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:job_finder/core/constants/assets.dart';
+import 'package:job_finder/core/routes/app_path.dart';
+import 'package:job_finder/features/notifications/presentation/provider/notification_provider.dart';
 import 'package:job_finder/features/recruiter/presentation/provider/recruiter_provider.dart';
 import 'package:job_finder/shared/widget/shimmer_loading.dart';
 import 'package:job_finder/shared/widget/svg_icon.dart';
@@ -13,8 +16,12 @@ class HeaderSection extends ConsumerWidget {
     final colorScheme = Theme.of(context).colorScheme;
     final textTheme = Theme.of(context).textTheme;
     final recruiterState = ref.watch(recruiterControllerProvider);
+    final notificationState = ref.watch(notificationControllerProvider);
     final company = recruiterState.company;
     final isLoading = recruiterState.isLoading && company == null;
+    final unreadCount = notificationState.notifications
+        .where((n) => !n.isRead)
+        .length;
 
     return Row(
       children: [
@@ -77,17 +84,52 @@ class HeaderSection extends ConsumerWidget {
             ],
           ),
         ),
-        Container(
-          width: 48,
-          height: 48,
-          decoration: BoxDecoration(
-            color: colorScheme.onSurface.withValues(alpha: 0.05),
-            shape: BoxShape.circle,
-          ),
-          padding: const EdgeInsets.all(11),
-          child: AppSvgIcon(
-            assetName: AppIcon.notification,
-            color: colorScheme.onSurface,
+        GestureDetector(
+          onTap: () => context.push(AppPath.notifications),
+          child: Stack(
+            clipBehavior: Clip.none,
+            children: [
+              Container(
+                width: 48,
+                height: 48,
+                decoration: BoxDecoration(
+                  color: colorScheme.onSurface.withValues(alpha: 0.05),
+                  shape: BoxShape.circle,
+                ),
+                padding: const EdgeInsets.all(11),
+                child: AppSvgIcon(
+                  assetName: AppIcon.notification,
+                  color: colorScheme.onSurface,
+                ),
+              ),
+              if (unreadCount > 0)
+                Positioned(
+                  right: -2,
+                  top: -2,
+                  child: Container(
+                    padding: const EdgeInsets.all(4),
+                    decoration: BoxDecoration(
+                      color: Colors.red,
+                      shape: BoxShape.circle,
+                      border: Border.all(color: colorScheme.surface, width: 2),
+                    ),
+                    constraints: const BoxConstraints(
+                      minWidth: 18,
+                      minHeight: 18,
+                    ),
+                    child: Center(
+                      child: Text(
+                        unreadCount > 9 ? '9+' : unreadCount.toString(),
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 9,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+            ],
           ),
         ),
       ],

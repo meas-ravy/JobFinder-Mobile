@@ -2,7 +2,6 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:job_finder/core/constants/assets.dart';
@@ -66,7 +65,7 @@ class _VeriffyOtpScreenState extends ConsumerState<VeriffyOtpScreen> {
           final hasJobFinder = roleList.contains('Job_finder');
           final hasRecruiter = roleList.contains('Recruiter');
 
-          final storage = TokenStorageImpl(const FlutterSecureStorage());
+          final storage = ref.read(tokenStorageProvider);
 
           if (hasJobFinder) {
             await storage.writeRole('Job_finder');

@@ -13,11 +13,19 @@ import 'package:job_finder/core/theme/app_theme.dart';
 import 'package:job_finder/features/job_seeker/data/data_source/object_box.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'package:job_finder/firebase_options.dart';
+import 'package:job_finder/core/services/notification_service.dart';
 
 late ObjectBox objectBox;
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+
+  // Initialize Notification Service
+  await NotificationService.instance.initialize();
+
   objectBox = await ObjectBox.create();
   await GoogleSignIn.instance.initialize(
     serverClientId: OAuthConfig.googleServerClientId,

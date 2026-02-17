@@ -87,6 +87,11 @@ class _PostJobScreenState extends ConsumerState<PostJobScreen> {
       values['salaryMax'] = maxSalary;
       values['positionsAvailable'] = positionsAvailable;
 
+      // Handle Fixed salary type requirement for backend
+      if (values['salaryType'] == 'Fixed') {
+        values['salaryFixed'] = minSalary;
+      }
+
       // Format date to ISO
       if (values['applicationDeadline'] is DateTime) {
         values['applicationDeadline'] =
@@ -130,6 +135,9 @@ class _PostJobScreenState extends ConsumerState<PostJobScreen> {
                 backgroundColor: Colors.green,
               ),
             );
+            if (!_isEditing) {
+              ref.read(recruiterHomeTabProvider.notifier).state = 1;
+            }
             Navigator.pop(context);
           }
         }

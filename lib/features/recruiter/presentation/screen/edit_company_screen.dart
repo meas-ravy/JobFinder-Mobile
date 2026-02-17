@@ -11,7 +11,10 @@ import 'package:job_finder/core/helper/typedef.dart';
 import 'package:job_finder/core/services/cloudinary_service.dart';
 import 'package:job_finder/features/recruiter/presentation/provider/recruiter_provider.dart';
 import 'package:job_finder/features/recruiter/presentation/provider/recruiter_state.dart';
-import 'package:job_finder/features/recruiter/presentation/screen/post_job_steps/shared_widgets.dart';
+import 'package:job_finder/features/recruiter/presentation/shared/dashed_rectpainter.dart';
+import 'package:job_finder/features/recruiter/presentation/shared/form_dropdown_input.dart';
+import 'package:job_finder/features/recruiter/presentation/shared/form_field_label.dart';
+import 'package:job_finder/features/recruiter/presentation/shared/form_text_input.dart';
 import 'package:job_finder/shared/widget/loading_dialog.dart';
 
 import 'package:job_finder/shared/widget/shimmer_loading.dart';

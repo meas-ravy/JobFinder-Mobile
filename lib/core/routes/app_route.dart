@@ -14,6 +14,7 @@ import 'package:job_finder/features/recruiter/presentation/screen/create_company
 import 'package:job_finder/features/recruiter/presentation/screen/recruiter_applied.dart';
 import 'package:job_finder/features/recruiter/presentation/screen/edit_company_screen.dart';
 import 'package:job_finder/features/recruiter/presentation/screen/post_job_screen.dart';
+import 'package:job_finder/features/notifications/presentation/screen/notification_screen.dart';
 
 // Global navigator key for accessing navigation from outside widget tree (e.g., 401 interceptor)
 final GlobalKey<NavigatorState> rootNavigatorKey = GlobalKey<NavigatorState>();
@@ -87,9 +88,13 @@ class AppRouter {
       GoRoute(
         path: AppPath.viewApplicants,
         builder: (context, state) {
-          final jobId = state.extra as String?;
+          final jobId = state.pathParameters['jobId'];
           return RecruiterAppliedPage(jobId: jobId);
         },
+      ),
+      GoRoute(
+        path: AppPath.notifications,
+        builder: (context, state) => const NotificationScreen(),
       ),
     ],
   );

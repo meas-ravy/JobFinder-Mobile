@@ -6,9 +6,10 @@ import 'package:job_finder/features/auth/domain/repository/repository.dart';
 import 'package:job_finder/features/auth/domain/usecase/auth_usecase.dart';
 import 'package:job_finder/features/auth/presentation/provider/auth_controller.dart';
 import 'package:job_finder/features/auth/presentation/provider/auth_state.dart';
+import 'package:job_finder/core/helper/secure_storage.dart';
 
 final authServerProvider = Provider<AuthServer>((ref) {
-  return AuthServerImpl();
+  return AuthServerImpl(ref.watch(tokenStorageProvider));
 });
 
 final authRepositoryProvider = Provider<AuthRepository>((ref) {

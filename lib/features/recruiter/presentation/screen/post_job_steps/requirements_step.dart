@@ -1,6 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_form_builder/flutter_form_builder.dart';
+import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:form_builder_validators/form_builder_validators.dart';
-import 'shared_widgets.dart';
+import 'package:job_finder/features/recruiter/presentation/shared/form_date_picker.dart';
+import 'package:job_finder/features/recruiter/presentation/shared/form_dropdown_input.dart';
+import 'package:job_finder/features/recruiter/presentation/shared/form_field_label.dart';
+import 'package:job_finder/features/recruiter/presentation/shared/form_list_input.dart';
+import 'package:job_finder/features/recruiter/presentation/shared/form_text_input.dart';
 
 class RequirementsStep extends StatelessWidget {
   const RequirementsStep({super.key});
@@ -25,53 +31,66 @@ class RequirementsStep extends StatelessWidget {
         FormDropdownInput(
           name: 'salaryType',
           hint: 'Select Salary Type',
-          items: ['Range', 'Fixed', 'Negotiable'],
+          items: const ['Range', 'Fixed', 'Negotiable'],
           validators: [FormBuilderValidators.required()],
         ),
         const SizedBox(height: 20),
-        Row(
-          children: [
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const FormFieldLabel(label: 'Min Salary'),
-                  const SizedBox(height: 8),
-                  FormTextInput(
-                    name: 'salaryMin',
-                    hint: 'e.g. 1000',
-                    keyboardType: TextInputType.number,
-                    validators: [
-                      FormBuilderValidators.required(),
-                      FormBuilderValidators.numeric(),
+        Consumer(
+          builder: (context, ref, child) {
+            final salaryType = FormBuilder.of(
+              context,
+            )?.fields['salaryType']?.value;
+            final isFixed = salaryType == 'Fixed';
+            final isRange = salaryType == 'Range';
+
+            if (!isFixed && !isRange) return const SizedBox.shrink();
+
+            return Row(
+              children: [
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      FormFieldLabel(
+                        label: isFixed ? 'Salary Amount' : 'Min Salary',
+                      ),
+                      const SizedBox(height: 8),
+                      FormTextInput(
+                        name: 'salaryMin',
+                        hint: 'e.g. 1000',
+                        keyboardType: TextInputType.number,
+                        validators: [
+                          FormBuilderValidators.required(),
+                          FormBuilderValidators.numeric(),
+                        ],
+                      ),
                     ],
                   ),
-                ],
-              ),
-            ),
-            const SizedBox(width: 16),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const FormFieldLabel(label: 'Max Salary'),
-                  const SizedBox(height: 8),
-                  FormTextInput(
-                    name: 'salaryMax',
-                    hint: 'e.g. 2000',
-                    keyboardType: TextInputType.number,
-                    validators: [
-                      // Only required if type is Range
-                      (value) {
-                        return null; // Simplified for now, can add conditional logic if needed
-                      },
-                      FormBuilderValidators.numeric(),
-                    ],
+                ),
+                if (isRange) ...[
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const FormFieldLabel(label: 'Max Salary'),
+                        const SizedBox(height: 8),
+                        FormTextInput(
+                          name: 'salaryMax',
+                          hint: 'e.g. 2000',
+                          keyboardType: TextInputType.number,
+                          validators: [
+                            FormBuilderValidators.required(),
+                            FormBuilderValidators.numeric(),
+                          ],
+                        ),
+                      ],
+                    ),
                   ),
                 ],
-              ),
-            ),
-          ],
+              ],
+            );
+          },
         ),
         const SizedBox(height: 20),
         Row(
@@ -85,7 +104,7 @@ class RequirementsStep extends StatelessWidget {
                   FormDropdownInput(
                     name: 'salaryCurrency',
                     hint: 'Select',
-                    items: ['USD', 'KHR', 'THB', 'EUR'],
+                    items: const ['USD', 'KHR'],
                     validators: [FormBuilderValidators.required()],
                   ),
                 ],
@@ -101,7 +120,7 @@ class RequirementsStep extends StatelessWidget {
                   FormDropdownInput(
                     name: 'salaryPeriod',
                     hint: 'Select',
-                    items: ['Month', 'Year', 'Week', 'Day', 'Hour'],
+                    items: const ['Month', 'Year', 'Week', 'Day', 'Hour'],
                     validators: [FormBuilderValidators.required()],
                   ),
                 ],
@@ -115,12 +134,14 @@ class RequirementsStep extends StatelessWidget {
           hint: 'Type a benefit and press enter...',
           label: 'Benefits',
           suggestions: const [
-            'Health Insurance',
-            'Flexible hours',
-            'Travel allowance',
-            'Gym membership',
-            'Remote work',
-            'Annual bonus',
+            'Health insurance',
+            'Flexible working hours',
+            'Remote / hybrid work option',
+            'Annual performance bonus',
+            'Paid annual leave',
+            'Professional training & certifications',
+            'Career growth opportunities',
+            'Travel or transport allowance',
           ],
           validators: [FormBuilderValidators.required()],
         ),

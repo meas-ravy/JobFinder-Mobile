@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:form_builder_validators/form_builder_validators.dart';
-import 'shared_widgets.dart';
+import 'package:job_finder/features/recruiter/presentation/shared/form_field_label.dart';
+import 'package:job_finder/features/recruiter/presentation/shared/form_text_input.dart';
+import 'package:job_finder/features/recruiter/presentation/shared/form_uploadad_area.dart';
 
 class CompanyInfoStep extends StatelessWidget {
   const CompanyInfoStep({super.key});

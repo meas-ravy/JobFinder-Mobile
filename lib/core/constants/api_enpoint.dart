@@ -17,4 +17,6 @@ class ApiEnpoint {
   static String updateJob(String jobId) => "api/jobs/$jobId";
   static String deleteJob(String jobId) => "api/jobs/$jobId";
   static String jobApplications(String jobId) => "api/jobs/$jobId/applications";
+  static const String notifications = "api/notifications";
+  static const String markNotificationRead = "api/notifications";
 }
