@@ -19,4 +19,8 @@ class ApiEnpoint {
   static String jobApplications(String jobId) => "api/jobs/$jobId/applications";
   static const String notifications = "api/notifications";
   static const String markNotificationRead = "api/notifications";
+  static const String profile = "api/profile";
+  static const String tips = "api/tips";
+  static String tipDetail(String tipId) => "api/tips/$tipId";
+  static const String categories = "api/jobs/categories";
 }

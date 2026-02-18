@@ -21,7 +21,7 @@ class RecruiterHomePage extends HookConsumerWidget {
     final recruiterState = ref.watch(recruiterControllerProvider);
     final activeTab = ref.watch(recruiterHomeTabProvider);
 
-    final tabController = useTabController(initialLength: 4);
+    final tabController = useTabController(initialLength: 5);
 
     // Sync tab index with provider
     useEffect(() {
@@ -30,11 +30,17 @@ class RecruiterHomePage extends HookConsumerWidget {
     }, [activeTab]);
 
     // Update provider when tab changes manually
-    tabController.addListener(() {
-      if (!tabController.indexIsChanging) {
-        ref.read(recruiterHomeTabProvider.notifier).state = tabController.index;
+    useEffect(() {
+      void listener() {
+        if (!tabController.indexIsChanging) {
+          ref.read(recruiterHomeTabProvider.notifier).state =
+              tabController.index;
+        }
       }
-    });
+
+      tabController.addListener(listener);
+      return () => tabController.removeListener(listener);
+    }, [tabController]);
 
     return Scaffold(
       appBar: AppBar(
@@ -77,6 +83,7 @@ class RecruiterHomePage extends HookConsumerWidget {
                 tabs: const [
                   Tab(text: 'Active Post'),
                   Tab(text: 'Upcoming'),
+                  Tab(text: 'Paused'),
                   Tab(text: 'Rejected'),
                   Tab(text: 'Previous'),
                 ],
@@ -104,8 +111,13 @@ class RecruiterHomePage extends HookConsumerWidget {
                 ),
                 _buildJobsList(
                   ref,
-                  recruiterState.draftJobs,
-                  'No draft jobs found',
+                  recruiterState.pendingJobs,
+                  'No upcoming jobs found',
+                ),
+                _buildJobsList(
+                  ref,
+                  recruiterState.pausedJobs,
+                  'No paused jobs found',
                 ),
                 _buildJobsList(
                   ref,
@@ -181,8 +193,7 @@ class RecruiterHomePage extends HookConsumerWidget {
             job,
             fallbackCompany: recruiterState.company,
           ),
-          isLoading:
-              recruiterState.isLoading && recruiterState.activeJobId == jobId,
+          isLoading: recruiterState.activeJobId == jobId,
           onStatusUpdate: (status) {
             if (status == 'edit') {
               context.push(AppPath.postJob, extra: job);
@@ -193,7 +204,7 @@ class RecruiterHomePage extends HookConsumerWidget {
                   .read(recruiterControllerProvider.notifier)
                   .submitJob(job['_id'] ?? job['id']);
             } else if (status == 'view_candidates') {
-              context.push(AppPath.viewApplicants);
+              context.push(AppPath.viewApplicants, extra: jobId);
             } else {
               ref
                   .read(recruiterControllerProvider.notifier)

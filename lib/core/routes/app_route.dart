@@ -15,6 +15,11 @@ import 'package:job_finder/features/recruiter/presentation/screen/recruiter_appl
 import 'package:job_finder/features/recruiter/presentation/screen/edit_company_screen.dart';
 import 'package:job_finder/features/recruiter/presentation/screen/post_job_screen.dart';
 import 'package:job_finder/features/notifications/presentation/screen/notification_screen.dart';
+import 'package:job_finder/features/job_seeker/presentation/screen/setup_edit_profile_page.dart';
+import 'package:job_finder/features/job_seeker/presentation/screen/tip_detail_screen.dart';
+import 'package:job_finder/features/job_seeker/presentation/screen/see_all_jobs_page.dart';
+import 'package:job_finder/features/job_seeker/presentation/screen/search_page.dart';
+import 'package:job_finder/features/job_seeker/presentation/screen/job_detail_page.dart';
 
 // Global navigator key for accessing navigation from outside widget tree (e.g., 401 interceptor)
 final GlobalKey<NavigatorState> rootNavigatorKey = GlobalKey<NavigatorState>();
@@ -88,13 +93,63 @@ class AppRouter {
       GoRoute(
         path: AppPath.viewApplicants,
         builder: (context, state) {
-          final jobId = state.pathParameters['jobId'];
+          final jobId = state.extra as String?;
           return RecruiterAppliedPage(jobId: jobId);
         },
       ),
       GoRoute(
         path: AppPath.notifications,
         builder: (context, state) => const NotificationScreen(),
+      ),
+      GoRoute(
+        path: AppPath.editProfile,
+        builder: (context, state) => const EditProfilePage(),
+      ),
+      GoRoute(
+        path: AppPath.setupProfile,
+        pageBuilder: (context, state) => CustomTransitionPage(
+          key: state.pageKey,
+          child: const EditProfilePage(),
+          transitionsBuilder: (context, animation, secondaryAnimation, child) {
+            return SlideTransition(
+              position: animation.drive(
+                Tween(
+                  begin: const Offset(0, 1),
+                  end: Offset.zero,
+                ).chain(CurveTween(curve: Curves.easeOutCubic)),
+              ),
+              child: child,
+            );
+          },
+        ),
+      ),
+      GoRoute(
+        path: AppPath.tipDetail,
+        builder: (context, state) {
+          final tipId = state.extra as String?;
+          return TipDetailScreen(tipId: tipId ?? '');
+        },
+      ),
+      GoRoute(
+        path: AppPath.seeAllRecommended,
+        builder: (context, state) =>
+            const SeeAllJobsPage(type: SeeAllType.recommended),
+      ),
+      GoRoute(
+        path: AppPath.seeAllRecent,
+        builder: (context, state) =>
+            const SeeAllJobsPage(type: SeeAllType.recent),
+      ),
+      GoRoute(
+        path: AppPath.search,
+        builder: (context, state) => const SearchPage(),
+      ),
+      GoRoute(
+        path: AppPath.jobDetail,
+        builder: (context, state) {
+          final jobId = state.extra as String?;
+          return JobDetailPage(jobId: jobId ?? '');
+        },
       ),
     ],
   );

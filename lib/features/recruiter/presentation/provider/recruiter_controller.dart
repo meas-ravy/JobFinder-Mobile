@@ -27,11 +27,78 @@ class RecruiterController extends StateNotifier<RecruiterState> {
        _deleteJobUseCase = deleteJobUseCase,
        _getJobApplicationsUseCase = getJobApplicationsUseCase,
        super(const RecruiterState()) {
-    getCompanyProfile();
-    getJobs(status: 'Active');
-    getJobs(status: 'Draft');
-    getJobs(status: 'Rejected');
-    getJobs(status: 'Closed');
+    _loadInitialData();
+  }
+
+  int _pendingInitialLoads = 0;
+
+  Future<void> _loadInitialData() async {
+    _pendingInitialLoads = 6; // company + 5 job statuses
+    state = state.copyWith(isLoading: true);
+
+    // Fire all requests concurrently, each one decrements the counter
+    await Future.wait([
+      _loadCompanyProfile(),
+      _loadJobs(status: 'Active'),
+      _loadJobs(status: 'Pending'),
+      _loadJobs(status: 'Paused'),
+      _loadJobs(status: 'Rejected'),
+      _loadJobs(status: 'Closed'),
+    ]);
+  }
+
+  void _decrementInitialLoads() {
+    _pendingInitialLoads--;
+    if (_pendingInitialLoads <= 0) {
+      state = state.copyWith(isLoading: false);
+    }
+  }
+
+  Future<void> _loadCompanyProfile() async {
+    final result = await _getCompanyProfileUseCase();
+    result.fold(
+      (failure) {
+        // Don't overwrite other state on failure
+      },
+      (data) {
+        final parsed = _parseCompany(data);
+        state = state.copyWith(data: data, company: parsed);
+      },
+    );
+    _decrementInitialLoads();
+  }
+
+  Future<void> _loadJobs({String? status}) async {
+    final result = await _getJobsUseCase(GetJobsParams(status: status));
+    result.fold(
+      (failure) {
+        // Don't overwrite isLoading on failure during initial load
+      },
+      (data) {
+        final List<dynamic> jobsList =
+            data['jobs'] ?? data['data']?['jobs'] ?? data['data'] ?? [];
+        _updateJobsListByStatus(status, jobsList, data);
+      },
+    );
+    _decrementInitialLoads();
+  }
+
+  void _updateJobsListByStatus(
+    String? status,
+    List<dynamic> jobsList,
+    DataMap data,
+  ) {
+    if (status == 'Pending') {
+      state = state.copyWith(data: data, pendingJobs: jobsList);
+    } else if (status == 'Paused') {
+      state = state.copyWith(data: data, pausedJobs: jobsList);
+    } else if (status == 'Rejected') {
+      state = state.copyWith(data: data, rejectedJobs: jobsList);
+    } else if (status == 'Closed') {
+      state = state.copyWith(data: data, previousJobs: jobsList);
+    } else {
+      state = state.copyWith(data: data, jobs: jobsList);
+    }
   }
 
   final CreateCompanyUseCase _createCompanyUseCase;
@@ -80,14 +147,13 @@ class RecruiterController extends StateNotifier<RecruiterState> {
       },
       (data) {
         state = state.copyWith(isLoading: false, data: data);
-        getJobs(status: 'Draft');
+        _refreshAllJobs();
       },
     );
   }
 
   Future<void> submitJob(String jobId) async {
     state = state.copyWith(
-      isLoading: true,
       errorMessage: null,
       lastAction: RecruiterAction.submitJob,
       activeJobId: jobId,
@@ -96,17 +162,13 @@ class RecruiterController extends StateNotifier<RecruiterState> {
     result.fold(
       (failure) {
         state = state.copyWith(
-          isLoading: false,
           errorMessage: failure.message,
           activeJobId: null,
         );
       },
       (data) {
-        state = state.copyWith(isLoading: false, data: data, activeJobId: null);
-        getJobs(status: 'Active');
-        getJobs(status: 'Draft');
-        getJobs(status: 'Rejected');
-        getJobs(status: 'Closed');
+        state = state.copyWith(data: data, activeJobId: null);
+        _refreshAllJobs();
       },
     );
   }
@@ -170,47 +232,32 @@ class RecruiterController extends StateNotifier<RecruiterState> {
   }
 
   Future<void> getJobs({String? status}) async {
-    state = state.copyWith(
-      isLoading: true,
-      errorMessage: null,
-      lastAction: RecruiterAction.getJobs,
-    );
     final result = await _getJobsUseCase(GetJobsParams(status: status));
     result.fold(
       (failure) {
-        state = state.copyWith(isLoading: false, errorMessage: failure.message);
+        // Silent failure for background refresh
       },
       (data) {
         final List<dynamic> jobsList =
             data['jobs'] ?? data['data']?['jobs'] ?? data['data'] ?? [];
-        if (status == 'Draft') {
-          state = state.copyWith(
-            isLoading: false,
-            data: data,
-            draftJobs: jobsList,
-          );
-        } else if (status == 'Rejected') {
-          state = state.copyWith(
-            isLoading: false,
-            data: data,
-            rejectedJobs: jobsList,
-          );
-        } else if (status == 'Closed') {
-          state = state.copyWith(
-            isLoading: false,
-            data: data,
-            previousJobs: jobsList,
-          );
-        } else {
-          state = state.copyWith(isLoading: false, data: data, jobs: jobsList);
-        }
+        _updateJobsListByStatus(status, jobsList, data);
       },
     );
   }
 
+  /// Silently refresh all job tabs without flipping isLoading
+  Future<void> _refreshAllJobs() async {
+    await Future.wait([
+      getJobs(status: 'Active'),
+      getJobs(status: 'Pending'),
+      getJobs(status: 'Paused'),
+      getJobs(status: 'Rejected'),
+      getJobs(status: 'Closed'),
+    ]);
+  }
+
   Future<void> updateJobStatus(String jobId, String status) async {
     state = state.copyWith(
-      isLoading: true,
       errorMessage: null,
       lastAction: RecruiterAction.updateJobStatus,
       activeJobId: jobId,
@@ -221,17 +268,13 @@ class RecruiterController extends StateNotifier<RecruiterState> {
     result.fold(
       (failure) {
         state = state.copyWith(
-          isLoading: false,
           errorMessage: failure.message,
           activeJobId: null,
         );
       },
       (data) {
-        state = state.copyWith(isLoading: false, data: data, activeJobId: null);
-        getJobs(status: 'Active');
-        getJobs(status: 'Draft');
-        getJobs(status: 'Rejected');
-        getJobs(status: 'Closed');
+        state = state.copyWith(data: data, activeJobId: null);
+        _refreshAllJobs();
       },
     );
   }
@@ -251,17 +294,13 @@ class RecruiterController extends StateNotifier<RecruiterState> {
       },
       (data) {
         state = state.copyWith(isLoading: false, data: data);
-        getJobs(status: 'Active');
-        getJobs(status: 'Draft');
-        getJobs(status: 'Rejected');
-        getJobs(status: 'Closed');
+        _refreshAllJobs();
       },
     );
   }
 
   Future<void> deleteJob(String jobId) async {
     state = state.copyWith(
-      isLoading: true,
       errorMessage: null,
       lastAction: RecruiterAction.deleteJob,
       activeJobId: jobId,
@@ -270,17 +309,13 @@ class RecruiterController extends StateNotifier<RecruiterState> {
     result.fold(
       (failure) {
         state = state.copyWith(
-          isLoading: false,
           errorMessage: failure.message,
           activeJobId: null,
         );
       },
       (data) {
-        state = state.copyWith(isLoading: false, data: data, activeJobId: null);
-        getJobs(status: 'Active');
-        getJobs(status: 'Draft');
-        getJobs(status: 'Rejected');
-        getJobs(status: 'Closed');
+        state = state.copyWith(data: data, activeJobId: null);
+        _refreshAllJobs();
       },
     );
   }

@@ -8,6 +8,7 @@ import 'package:job_finder/core/constants/assets.dart';
 import 'package:job_finder/core/enum/role.dart';
 import 'package:job_finder/core/routes/app_path.dart';
 import 'package:job_finder/features/auth/presentation/provider/auth_provider.dart';
+import 'package:job_finder/features/job_seeker/presentation/provider/profile_provider.dart';
 import 'package:job_finder/shared/widget/role_select_widget.dart';
 import 'package:job_finder/shared/widget/svg_icon.dart';
 
@@ -93,7 +94,22 @@ class AppRoleScreen extends HookConsumerWidget {
                       }
 
                       if (selectRole.value == UserRole.jobSeeker) {
-                        context.go(AppPath.jobSeekerHome);
+                        // Check if profile is empty
+                        final profileController = ref.read(
+                          profileControllerProvider.notifier,
+                        );
+                        await profileController.fetchProfile();
+                        final profile = ref
+                            .read(profileControllerProvider)
+                            .profile;
+
+                        if (profile == null ||
+                            profile.fullName == null ||
+                            profile.fullName!.isEmpty) {
+                          context.go(AppPath.setupProfile);
+                        } else {
+                          context.go(AppPath.jobSeekerHome);
+                        }
                       } else {
                         context.go(AppPath.recruiterHome);
                       }

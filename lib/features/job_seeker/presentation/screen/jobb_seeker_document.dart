@@ -7,7 +7,7 @@ import 'package:job_finder/features/job_seeker/data/model/template_model.dart';
 import 'package:job_finder/features/job_seeker/presentation/widget/action_button.dart';
 import 'package:job_finder/features/job_seeker/presentation/widget/resume_card.dart';
 import 'package:job_finder/features/job_seeker/presentation/screen/cv_pdf_preview_screen.dart';
-import 'package:job_finder/features/job_seeker/presentation/providers/cv_provider.dart';
+import 'package:job_finder/features/job_seeker/presentation/provider/cv_provider.dart';
 import 'package:intl/intl.dart';
 import 'package:job_finder/l10n/app_localizations.dart';
 import 'package:job_finder/shared/widget/svg_icon.dart';

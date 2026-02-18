@@ -161,6 +161,61 @@ class JobCard extends StatelessWidget {
                       ];
                     }
 
+                    if (data.status == 'Paused') {
+                      return [
+                        const PopupMenuItem(
+                          value: 'Active',
+                          child: Row(
+                            children: [
+                              Icon(
+                                Icons.play_circle_outline_rounded,
+                                size: 20,
+                                color: Colors.green,
+                              ),
+                              SizedBox(width: 12),
+                              Text('Resume Job'),
+                            ],
+                          ),
+                        ),
+                        PopupMenuItem(
+                          value: 'Closed',
+                          child: Row(
+                            children: [
+                              Icon(
+                                Icons.cancel_outlined,
+                                size: 20,
+                                color: colorScheme.error,
+                              ),
+                              const SizedBox(width: 12),
+                              const Text('Close Job'),
+                            ],
+                          ),
+                        ),
+                      ];
+                    }
+
+                    if (data.status == 'Pending') {
+                      return [
+                        PopupMenuItem(
+                          enabled: false,
+                          child: Row(
+                            children: [
+                              Icon(
+                                Icons.hourglass_top_rounded,
+                                size: 20,
+                                color: colorScheme.primary,
+                              ),
+                              const SizedBox(width: 12),
+                              Text(
+                                'Pending Review',
+                                style: TextStyle(color: colorScheme.primary),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ];
+                    }
+
                     if (data.status == 'Closed') {
                       return [
                         PopupMenuItem(
@@ -202,20 +257,6 @@ class JobCard extends StatelessWidget {
                             ),
                             const SizedBox(width: 12),
                             const Text('Close Job'),
-                          ],
-                        ),
-                      ),
-                      PopupMenuItem(
-                        value: 'Filled',
-                        child: Row(
-                          children: [
-                            const Icon(
-                              Icons.check_circle_outline,
-                              size: 20,
-                              color: AppColor.findJob,
-                            ),
-                            const SizedBox(width: 12),
-                            const Text('Mark as Filled'),
                           ],
                         ),
                       ),
@@ -321,7 +362,82 @@ class JobCard extends StatelessWidget {
               ),
             ),
 
-            if (data.status == 'Draft') ...[
+            if (data.status == 'Pending') ...[
+              const SizedBox(height: 16),
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: colorScheme.primary.withValues(alpha: 0.05),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(
+                    color: colorScheme.primary.withValues(alpha: 0.1),
+                  ),
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(
+                      Icons.hourglass_top_rounded,
+                      color: colorScheme.primary,
+                      size: 16,
+                    ),
+                    const SizedBox(width: 8),
+                    Text(
+                      'Pending Review',
+                      style: textTheme.labelMedium?.copyWith(
+                        color: colorScheme.primary,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+
+            // Loading indicator for cards that don't have a bottom action button
+            if (isLoading &&
+                data.status != 'Draft' &&
+                data.status != 'Paused' &&
+                data.status != 'Rejected') ...[
+              const SizedBox(height: 16),
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: colorScheme.primary.withValues(alpha: 0.05),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(
+                    color: colorScheme.primary.withValues(alpha: 0.1),
+                  ),
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    SizedBox(
+                      width: 16,
+                      height: 16,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: colorScheme.primary,
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Text(
+                      'Processing...',
+                      style: textTheme.labelMedium?.copyWith(
+                        color: colorScheme.primary,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+
+            if (data.status == 'Draft' ||
+                data.status == 'Paused' ||
+                data.status == 'Rejected') ...[
               const SizedBox(height: 24),
               SizedBox(
                 width: double.infinity,
@@ -330,7 +446,11 @@ class JobCard extends StatelessWidget {
                       ? null
                       : () {
                           if (onStatusUpdate != null) {
-                            onStatusUpdate!('submit');
+                            if (data.status == 'Paused') {
+                              onStatusUpdate!('Active');
+                            } else {
+                              onStatusUpdate!('submit');
+                            }
                           }
                         },
                   icon: isLoading
@@ -342,12 +462,29 @@ class JobCard extends StatelessWidget {
                             color: Colors.white,
                           ),
                         )
-                      : const Icon(Icons.send_rounded, size: 18),
+                      : Icon(
+                          data.status == 'Paused'
+                              ? Icons.play_circle_outline_rounded
+                              : Icons.send_rounded,
+                          size: 18,
+                        ),
                   label: Text(
-                    isLoading ? 'Submitting...' : 'Submit for Review',
+                    isLoading
+                        ? (data.status == 'Paused'
+                              ? 'Resuming...'
+                              : (data.status == 'Rejected'
+                                    ? 'Resubmitting...'
+                                    : 'Submitting...'))
+                        : (data.status == 'Paused'
+                              ? 'Resume Job'
+                              : (data.status == 'Rejected'
+                                    ? 'Resubmit for Review'
+                                    : 'Submit for Review')),
                   ),
                   style: FilledButton.styleFrom(
-                    backgroundColor: colorScheme.primary,
+                    backgroundColor: data.status == 'Paused'
+                        ? Colors.green
+                        : colorScheme.primary,
                     foregroundColor: Colors.white,
                     padding: const EdgeInsets.symmetric(vertical: 14),
                     shape: RoundedRectangleBorder(

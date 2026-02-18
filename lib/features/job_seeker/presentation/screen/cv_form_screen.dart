@@ -13,7 +13,7 @@ import 'package:job_finder/features/job_seeker/presentation/widget/dialogs/refer
 import 'package:job_finder/features/job_seeker/presentation/widget/education_card.dart';
 import 'package:job_finder/features/job_seeker/presentation/widget/experience_card.dart';
 import 'package:job_finder/features/job_seeker/presentation/widget/reference_card.dart';
-import 'package:job_finder/features/job_seeker/presentation/providers/cv_provider.dart';
+import 'package:job_finder/features/job_seeker/presentation/provider/cv_provider.dart';
 import 'package:job_finder/shared/components/primary_button.dart';
 import 'package:job_finder/l10n/app_localizations.dart';
 

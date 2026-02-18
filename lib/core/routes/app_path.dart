@@ -13,4 +13,11 @@ class AppPath {
   static const String postJob = '/post-job';
   static const String viewApplicants = '/view-applicants';
   static const String notifications = '/notifications';
+  static const String editProfile = '/edit-profile';
+  static const String setupProfile = '/setup-profile';
+  static const String tipDetail = '/tip-detail';
+  static const String seeAllRecommended = '/see-all-recommended';
+  static const String seeAllRecent = '/see-all-recent';
+  static const String search = '/search';
+  static const String jobDetail = '/job-detail';
 }
