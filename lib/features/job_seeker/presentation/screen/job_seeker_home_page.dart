@@ -9,11 +9,11 @@ import 'package:job_finder/features/job_seeker/presentation/widget/home_header.d
 import 'package:job_finder/features/job_seeker/presentation/widget/job_seeker_card.dart';
 import 'package:job_finder/features/job_seeker/presentation/widget/search_bar_widget.dart';
 import 'package:job_finder/features/job_seeker/presentation/widget/section_header.dart';
-import 'package:shimmer/shimmer.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:job_finder/features/job_seeker/presentation/provider/profile_provider.dart';
 import 'package:job_finder/features/job_seeker/presentation/provider/tip_provider.dart';
 import 'package:job_finder/features/job_seeker/presentation/provider/job_provider.dart';
+import 'package:job_finder/features/job_seeker/presentation/widget/job_seeker_home_shimmer.dart';
 
 class JobSeekerHomePage extends HookConsumerWidget {
   const JobSeekerHomePage({super.key});
@@ -137,93 +137,7 @@ class JobSeekerHomePage extends HookConsumerWidget {
               // 3. Featured Banner
               SliverToBoxAdapter(
                 child: tipState.isLoading
-                    ? Padding(
-                        padding: const EdgeInsets.fromLTRB(20, 0, 20, 24),
-                        child: Shimmer.fromColors(
-                          baseColor: isDark
-                              ? Colors.grey[900]!
-                              : Colors.grey[100]!,
-                          highlightColor: isDark
-                              ? Colors.grey[800]!
-                              : Colors.grey[200]!,
-                          child: Container(
-                            height: 180,
-                            decoration: BoxDecoration(
-                              color: isDark
-                                  ? Colors.grey[900]!
-                                  : Colors.grey[100]!,
-                              borderRadius: BorderRadius.circular(26),
-                            ),
-                            child: Padding(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 28,
-                                vertical: 24,
-                              ),
-                              child: Row(
-                                children: [
-                                  Expanded(
-                                    child: Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
-                                      children: [
-                                        Container(
-                                          width: double.infinity,
-                                          height: 22,
-                                          decoration: BoxDecoration(
-                                            color: isDark
-                                                ? Colors.grey[900]!
-                                                : Colors.grey[100]!,
-                                            borderRadius: BorderRadius.circular(
-                                              4,
-                                            ),
-                                          ),
-                                        ),
-                                        const SizedBox(height: 10),
-                                        Container(
-                                          width: 140,
-                                          height: 22,
-                                          decoration: BoxDecoration(
-                                            color: isDark
-                                                ? Colors.grey[900]!
-                                                : Colors.grey[100]!,
-                                            borderRadius: BorderRadius.circular(
-                                              4,
-                                            ),
-                                          ),
-                                        ),
-                                        const Spacer(),
-                                        Container(
-                                          width: 110,
-                                          height: 44,
-                                          decoration: BoxDecoration(
-                                            color: isDark
-                                                ? Colors.grey[900]!
-                                                : Colors.grey[100]!,
-                                            borderRadius: BorderRadius.circular(
-                                              22,
-                                            ),
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                  const SizedBox(width: 20),
-                                  Container(
-                                    width: 100,
-                                    height: 100,
-                                    decoration: BoxDecoration(
-                                      color: isDark
-                                          ? Colors.grey[900]!
-                                          : Colors.grey[100]!,
-                                      borderRadius: BorderRadius.circular(16),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ),
-                        ),
-                      )
+                    ? HomeBannerShimmer(isDark: isDark)
                     : tipState.tips.isEmpty
                     ? FeaturedBanner(
                         title: 'See how you can',
@@ -317,7 +231,7 @@ class JobSeekerHomePage extends HookConsumerWidget {
                 child: SizedBox(
                   height: 250,
                   child: jobState.isLoading
-                      ? _buildRecommendedShimmer(isDark)
+                      ? RecommendedJobShimmer(isDark: isDark)
                       : jobState.recommendedJobs.isEmpty
                       ? const Center(child: Text('No recommendations found'))
                       : ListView.builder(
@@ -392,7 +306,9 @@ class JobSeekerHomePage extends HookConsumerWidget {
               SliverPadding(
                 padding: const EdgeInsets.symmetric(horizontal: 20),
                 sliver: jobState.isRecentLoading
-                    ? SliverToBoxAdapter(child: _buildRecentJobsShimmer(isDark))
+                    ? SliverToBoxAdapter(
+                        child: RecentJobShimmer(isDark: isDark),
+                      )
                     : jobState.recentJobs.isEmpty
                     ? const SliverToBoxAdapter(
                         child: Padding(
@@ -419,52 +335,6 @@ class JobSeekerHomePage extends HookConsumerWidget {
           ),
         ),
       ),
-    );
-  }
-
-  Widget _buildRecommendedShimmer(bool isDark) {
-    return ListView.builder(
-      padding: const EdgeInsets.symmetric(horizontal: 20),
-      scrollDirection: Axis.horizontal,
-      physics: const NeverScrollableScrollPhysics(),
-      itemCount: 3,
-      itemBuilder: (context, index) {
-        return Padding(
-          padding: const EdgeInsets.only(right: 16, bottom: 4),
-          child: Shimmer.fromColors(
-            baseColor: isDark ? Colors.grey[900]! : Colors.grey[100]!,
-            highlightColor: isDark ? Colors.grey[800]! : Colors.grey[200]!,
-            child: Container(
-              width: 360,
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(30),
-              ),
-            ),
-          ),
-        );
-      },
-    );
-  }
-
-  Widget _buildRecentJobsShimmer(bool isDark) {
-    return Column(
-      children: List.generate(3, (index) {
-        return Padding(
-          padding: const EdgeInsets.only(bottom: 16),
-          child: Shimmer.fromColors(
-            baseColor: isDark ? Colors.grey[900]! : Colors.grey[100]!,
-            highlightColor: isDark ? Colors.grey[800]! : Colors.grey[200]!,
-            child: Container(
-              height: 100,
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(20),
-              ),
-            ),
-          ),
-        );
-      }),
     );
   }
 }

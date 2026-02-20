@@ -20,4 +20,5 @@ class AppPath {
   static const String seeAllRecent = '/see-all-recent';
   static const String search = '/search';
   static const String jobDetail = '/job-detail';
+  static const String applyJob = '/apply-job';
 }

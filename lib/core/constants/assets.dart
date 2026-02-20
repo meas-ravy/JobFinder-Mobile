@@ -55,6 +55,7 @@ class AppIcon {
   static const String flagJapan = "assets/icon/flag_japen.svg";
   static const String flagLaos = "assets/icon/flag_laov.svg";
   static const String flagKorean = "assets/icon/flag_korean.svg";
+  static const String pdf = 'assets/icon/pdf.png';
 
   // --- SVG Icon Strings ---
   static const String phoneSvg =

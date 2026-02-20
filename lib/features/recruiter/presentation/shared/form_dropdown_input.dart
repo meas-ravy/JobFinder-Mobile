@@ -8,6 +8,7 @@ class FormDropdownInput extends StatelessWidget {
   final List<String> items;
   final IconData? icon;
   final List<String? Function(dynamic)>? validators;
+  final ValueChanged<String?>? onChanged;
 
   const FormDropdownInput({
     super.key,
@@ -16,6 +17,7 @@ class FormDropdownInput extends StatelessWidget {
     required this.items,
     this.icon,
     this.validators,
+    this.onChanged,
   });
 
   @override
@@ -25,6 +27,7 @@ class FormDropdownInput extends StatelessWidget {
 
     return FormBuilderDropdown<String>(
       name: name,
+      onChanged: onChanged,
       validator: validators != null
           ? FormBuilderValidators.compose(validators!)
           : null,

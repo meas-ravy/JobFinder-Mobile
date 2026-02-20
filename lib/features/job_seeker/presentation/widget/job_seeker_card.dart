@@ -7,6 +7,7 @@ import 'package:job_finder/shared/widget/svg_icon.dart';
 import 'package:job_finder/features/job_seeker/domain/entities/job_entity.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:job_finder/features/job_seeker/presentation/provider/job_provider.dart';
+import 'package:job_finder/features/job_seeker/presentation/widget/unsave_confirmation_bottom_sheet.dart';
 
 class JobSeekerCard extends StatelessWidget {
   final JobEntity job;
@@ -150,45 +151,20 @@ class JobSeekerCard extends StatelessWidget {
                     final isSaved = savedOverride ?? job.isSaved ?? false;
 
                     return IconButton(
-                      onPressed: () async {
-                        try {
-                          // Optimistic update
-                          ref
-                                  .read(jobSavedStatusProvider(job.id).notifier)
-                                  .state =
-                              !isSaved;
-
-                          final result = await ref
-                              .read(saveJobUseCaseProvider)
-                              .call(job.id);
-
-                          // Sync with result
-                          ref
-                                  .read(jobSavedStatusProvider(job.id).notifier)
-                                  .state =
-                              result;
-
-                          if (context.mounted) {
-                            _showSavedNotification(
-                              context,
-                              Theme.of(context).brightness == Brightness.dark,
-                              result,
-                            );
-                          }
-
-                          // Refresh saved jobs list only
-                          ref.invalidate(savedJobsProvider);
-                        } catch (e) {
-                          // Rollback
-                          ref
-                                  .read(jobSavedStatusProvider(job.id).notifier)
-                                  .state =
-                              isSaved;
-                          if (context.mounted) {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(content: Text('Error: $e')),
-                            );
-                          }
+                      onPressed: () {
+                        if (isSaved) {
+                          showModalBottomSheet(
+                            context: context,
+                            backgroundColor: Colors.transparent,
+                            isScrollControlled: true,
+                            builder: (context) => UnsaveConfirmationBottomSheet(
+                              job: job,
+                              onConfirm: () =>
+                                  _handleSaveToggle(ref, context, isSaved),
+                            ),
+                          );
+                        } else {
+                          _handleSaveToggle(ref, context, isSaved);
                         }
                       },
                       icon: AppSvgIcon(
@@ -258,59 +234,86 @@ class JobSeekerCard extends StatelessWidget {
     );
   }
 
-  void _showSavedNotification(BuildContext context, bool isDark, bool isSaved) {
-    final overlay = Overlay.of(context);
-    final overlayEntry = OverlayEntry(
-      builder: (context) => Center(
-        child: Material(
-          color: Colors.transparent,
-          child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-            margin: const EdgeInsets.symmetric(horizontal: 20),
-            decoration: BoxDecoration(
-              color: isDark ? const Color(0xFF1E293B) : const Color(0xFFF0F7FF),
-              borderRadius: BorderRadius.circular(18),
-              border: Border.all(
-                color: AppColor.primaryDark.withValues(alpha: 0.5),
-                width: 1.5,
-              ),
-            ),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: isSaved ? AppColor.primaryDark : Colors.redAccent,
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Icon(
-                    isSaved ? Icons.check : Icons.close,
-                    color: Colors.white,
-                    size: 18,
-                  ),
-                ),
-                const SizedBox(width: 20),
-                Text(
-                  isSaved ? 'Job Saved!' : 'Job Unsaved',
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                    color: isDark ? Colors.white : const Color(0xFF1E293B),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
+  Future<void> _handleSaveToggle(
+    WidgetRef ref,
+    BuildContext context,
+    bool isSaved,
+  ) async {
+    try {
+      // Optimistic update
+      ref.read(jobSavedStatusProvider(job.id).notifier).state = !isSaved;
 
-    overlay.insert(overlayEntry);
-    Future.delayed(const Duration(seconds: 2), () {
-      overlayEntry.remove();
-    });
+      final result = await ref.read(saveJobUseCaseProvider).call(job.id);
+
+      // Sync with result
+      ref.read(jobSavedStatusProvider(job.id).notifier).state = result;
+
+      // Refresh saved jobs list only
+      ref.invalidate(savedJobsProvider);
+    } catch (e) {
+      // Rollback
+      ref.read(jobSavedStatusProvider(job.id).notifier).state = isSaved;
+      if (context.mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Error: $e')));
+      }
+    }
   }
+
+  // void _showSavedNotification(BuildContext context, bool isDark, bool isSaved) {
+  //   final overlay = Overlay.of(context);
+  //   final overlayEntry = OverlayEntry(
+  //     builder: (context) => Center(
+  //       child: Material(
+  //         color: Colors.transparent,
+  //         child: Container(
+  //           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+  //           margin: const EdgeInsets.symmetric(horizontal: 20),
+  //           decoration: BoxDecoration(
+  //             color: isDark ? const Color(0xFF1E293B) : const Color(0xFFF0F7FF),
+  //             borderRadius: BorderRadius.circular(18),
+  //             border: Border.all(
+  //               color: AppColor.primaryDark.withValues(alpha: 0.5),
+  //               width: 1.5,
+  //             ),
+  //           ),
+  //           child: Row(
+  //             mainAxisSize: MainAxisSize.min,
+  //             children: [
+  //               Container(
+  //                 padding: const EdgeInsets.all(8),
+  //                 decoration: BoxDecoration(
+  //                   color: isSaved ? AppColor.primaryDark : Colors.redAccent,
+  //                   borderRadius: BorderRadius.circular(12),
+  //                 ),
+  //                 child: Icon(
+  //                   isSaved ? Icons.check : Icons.close,
+  //                   color: Colors.white,
+  //                   size: 18,
+  //                 ),
+  //               ),
+  //               const SizedBox(width: 20),
+  //               Text(
+  //                 isSaved ? 'Job Saved!' : 'Job Unsaved',
+  //                 style: TextStyle(
+  //                   fontSize: 16,
+  //                   fontWeight: FontWeight.bold,
+  //                   color: isDark ? Colors.white : const Color(0xFF1E293B),
+  //                 ),
+  //               ),
+  //             ],
+  //           ),
+  //         ),
+  //       ),
+  //     ),
+  //   );
+
+  //   overlay.insert(overlayEntry);
+  //   Future.delayed(const Duration(seconds: 2), () {
+  //     overlayEntry.remove();
+  //   });
+  // }
 
   Widget _buildLogoFallback(bool isDark) {
     return Icon(

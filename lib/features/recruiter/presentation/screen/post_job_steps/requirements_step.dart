@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_form_builder/flutter_form_builder.dart';
-import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:form_builder_validators/form_builder_validators.dart';
 import 'package:job_finder/features/recruiter/presentation/shared/form_date_picker.dart';
 import 'package:job_finder/features/recruiter/presentation/shared/form_dropdown_input.dart';
@@ -8,12 +7,24 @@ import 'package:job_finder/features/recruiter/presentation/shared/form_field_lab
 import 'package:job_finder/features/recruiter/presentation/shared/form_list_input.dart';
 import 'package:job_finder/features/recruiter/presentation/shared/form_text_input.dart';
 
-class RequirementsStep extends StatelessWidget {
+class RequirementsStep extends StatefulWidget {
   const RequirementsStep({super.key});
 
   @override
+  State<RequirementsStep> createState() => _RequirementsStepState();
+}
+
+class _RequirementsStepState extends State<RequirementsStep> {
+  @override
   Widget build(BuildContext context) {
     final textTheme = Theme.of(context).textTheme;
+    final formState = FormBuilder.of(context);
+    final salaryType =
+        formState?.fields['salaryType']?.value ??
+        formState?.initialValue['salaryType'];
+    final isFixed = salaryType == 'Fixed';
+    final isRange = salaryType == 'Range';
+    final isNegotiable = salaryType == 'Negotiable';
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -33,31 +44,46 @@ class RequirementsStep extends StatelessWidget {
           hint: 'Select Salary Type',
           items: const ['Range', 'Fixed', 'Negotiable'],
           validators: [FormBuilderValidators.required()],
+          onChanged: (val) {
+            setState(() {});
+          },
         ),
-        const SizedBox(height: 20),
-        Consumer(
-          builder: (context, ref, child) {
-            final salaryType = FormBuilder.of(
-              context,
-            )?.fields['salaryType']?.value;
-            final isFixed = salaryType == 'Fixed';
-            final isRange = salaryType == 'Range';
 
-            if (!isFixed && !isRange) return const SizedBox.shrink();
-
-            return Row(
-              children: [
+        if (!isNegotiable && salaryType != null) ...[
+          const SizedBox(height: 20),
+          Row(
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    FormFieldLabel(
+                      label: isFixed ? 'Salary Amount' : 'Min Salary',
+                    ),
+                    const SizedBox(height: 8),
+                    FormTextInput(
+                      name: 'salaryMin',
+                      hint: 'e.g. 500',
+                      keyboardType: TextInputType.number,
+                      validators: [
+                        FormBuilderValidators.required(),
+                        FormBuilderValidators.numeric(),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+              if (isRange) ...[
+                const SizedBox(width: 16),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      FormFieldLabel(
-                        label: isFixed ? 'Salary Amount' : 'Min Salary',
-                      ),
+                      const FormFieldLabel(label: 'Max Salary'),
                       const SizedBox(height: 8),
                       FormTextInput(
-                        name: 'salaryMin',
-                        hint: 'e.g. 1000',
+                        name: 'salaryMax',
+                        hint: 'e.g 700',
                         keyboardType: TextInputType.number,
                         validators: [
                           FormBuilderValidators.required(),
@@ -67,67 +93,47 @@ class RequirementsStep extends StatelessWidget {
                     ],
                   ),
                 ),
-                if (isRange) ...[
-                  const SizedBox(width: 16),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const FormFieldLabel(label: 'Max Salary'),
-                        const SizedBox(height: 8),
-                        FormTextInput(
-                          name: 'salaryMax',
-                          hint: 'e.g. 2000',
-                          keyboardType: TextInputType.number,
-                          validators: [
-                            FormBuilderValidators.required(),
-                            FormBuilderValidators.numeric(),
-                          ],
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
               ],
-            );
-          },
-        ),
-        const SizedBox(height: 20),
-        Row(
-          children: [
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const FormFieldLabel(label: 'Currency'),
-                  const SizedBox(height: 8),
-                  FormDropdownInput(
-                    name: 'salaryCurrency',
-                    hint: 'Select',
-                    items: const ['USD', 'KHR'],
-                    validators: [FormBuilderValidators.required()],
-                  ),
-                ],
+            ],
+          ),
+          const SizedBox(height: 20),
+          Row(
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const FormFieldLabel(label: 'Currency'),
+                    const SizedBox(height: 8),
+                    FormDropdownInput(
+                      name: 'salaryCurrency',
+                      hint: 'Select',
+                      items: const ['USD', 'KHR'],
+                      validators: [FormBuilderValidators.required()],
+                    ),
+                  ],
+                ),
               ),
-            ),
-            const SizedBox(width: 16),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const FormFieldLabel(label: 'Period'),
-                  const SizedBox(height: 8),
-                  FormDropdownInput(
-                    name: 'salaryPeriod',
-                    hint: 'Select',
-                    items: const ['Month', 'Year', 'Week', 'Day', 'Hour'],
-                    validators: [FormBuilderValidators.required()],
-                  ),
-                ],
+              const SizedBox(width: 16),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const FormFieldLabel(label: 'Period'),
+                    const SizedBox(height: 8),
+                    FormDropdownInput(
+                      name: 'salaryPeriod',
+                      hint: 'Select',
+                      items: const ['Month', 'Year', 'Week', 'Day', 'Hour'],
+                      validators: [FormBuilderValidators.required()],
+                    ),
+                  ],
+                ),
               ),
-            ),
-          ],
-        ),
+            ],
+          ),
+        ],
+
         const SizedBox(height: 20),
         FormListInput(
           name: 'benefits',

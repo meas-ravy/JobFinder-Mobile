@@ -23,7 +23,7 @@ class RecruiterState {
     this.activeJobId,
     this.company,
     this.jobs = const [],
-    this.pendingJobs = const [],
+    this.draftJobs = const [],
     this.pausedJobs = const [],
     this.rejectedJobs = const [],
     this.previousJobs = const [],
@@ -37,7 +37,7 @@ class RecruiterState {
   final String? activeJobId;
   final CompanyModel? company;
   final List<dynamic> jobs;
-  final List<dynamic> pendingJobs;
+  final List<dynamic> draftJobs;
   final List<dynamic> pausedJobs;
   final List<dynamic> rejectedJobs;
   final List<dynamic> previousJobs;
@@ -53,7 +53,7 @@ class RecruiterState {
     Object? activeJobId = _sentinel,
     CompanyModel? company,
     List<dynamic>? jobs,
-    List<dynamic>? pendingJobs,
+    List<dynamic>? draftJobs,
     List<dynamic>? pausedJobs,
     List<dynamic>? rejectedJobs,
     List<dynamic>? previousJobs,
@@ -69,7 +69,7 @@ class RecruiterState {
           : activeJobId as String?,
       company: company ?? this.company,
       jobs: jobs ?? this.jobs,
-      pendingJobs: pendingJobs ?? this.pendingJobs,
+      draftJobs: draftJobs ?? this.draftJobs,
       pausedJobs: pausedJobs ?? this.pausedJobs,
       rejectedJobs: rejectedJobs ?? this.rejectedJobs,
       previousJobs: previousJobs ?? this.previousJobs,

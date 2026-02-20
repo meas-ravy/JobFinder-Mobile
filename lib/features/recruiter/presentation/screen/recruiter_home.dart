@@ -81,11 +81,11 @@ class RecruiterHomePage extends HookConsumerWidget {
                 ),
                 labelPadding: const EdgeInsets.symmetric(horizontal: 20),
                 tabs: const [
-                  Tab(text: 'Active Post'),
-                  Tab(text: 'Upcoming'),
-                  Tab(text: 'Paused'),
-                  Tab(text: 'Rejected'),
-                  Tab(text: 'Previous'),
+                  Tab(text: 'Active Job'),
+                  Tab(text: 'Draft Job'),
+                  Tab(text: 'Paused Job'),
+                  Tab(text: 'Rejected Job'),
+                  Tab(text: 'Expired Job'),
                 ],
               ),
               Padding(
@@ -111,8 +111,8 @@ class RecruiterHomePage extends HookConsumerWidget {
                 ),
                 _buildJobsList(
                   ref,
-                  recruiterState.pendingJobs,
-                  'No upcoming jobs found',
+                  recruiterState.draftJobs,
+                  'No draft jobs found',
                 ),
                 _buildJobsList(
                   ref,

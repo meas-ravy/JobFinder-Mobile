@@ -22,5 +22,6 @@ class ApiEnpoint {
   static const String profile = "api/profile";
   static const String tips = "api/tips";
   static String tipDetail(String tipId) => "api/tips/$tipId";
+  static String applyJob(String jobId) => "api/jobs/$jobId/apply";
   static const String categories = "api/jobs/categories";
 }

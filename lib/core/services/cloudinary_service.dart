@@ -31,10 +31,11 @@ class CloudinaryService {
   Future<String> uploadToCloudinary({
     required File file,
     required CloudinarySignatureModel signatureData,
+    String resourceType = 'image', // 'image', 'raw', 'video', 'auto'
   }) async {
     try {
       final String uploadUrl =
-          'https://api.cloudinary.com/v1_1/${signatureData.cloudName}/image/upload';
+          'https://api.cloudinary.com/v1_1/${signatureData.cloudName}/$resourceType/upload';
 
       final Map<String, dynamic> params = {
         'timestamp': signatureData.timestamp.toString(),
@@ -63,10 +64,35 @@ class CloudinaryService {
     }
   }
 
-  /// Combined method for convenience
+  /// Combined method for image convenience
   Future<String> uploadImage(File file, String imageType) async {
     final signature = await getUploadSignature(imageType);
-    return await uploadToCloudinary(file: file, signatureData: signature);
+    return await uploadToCloudinary(
+      file: file,
+      signatureData: signature,
+      resourceType: 'image',
+    );
+  }
+
+  /// Combined method for raw files (like PDF)
+  Future<String> uploadRawFile(File file, String fileType) async {
+    final signature = await getUploadSignature(fileType);
+    return await uploadToCloudinary(
+      file: file,
+      signatureData: signature,
+      resourceType: 'raw',
+    );
+  }
+
+  /// Specific method for resumes following user instructions:
+  /// Uses imageType: "resume" and /image/upload endpoint
+  Future<String> uploadResume(File file) async {
+    final signature = await getUploadSignature('resume');
+    return await uploadToCloudinary(
+      file: file,
+      signatureData: signature,
+      resourceType: 'image',
+    );
   }
 }
 

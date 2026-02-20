@@ -40,7 +40,7 @@ class RecruiterController extends StateNotifier<RecruiterState> {
     await Future.wait([
       _loadCompanyProfile(),
       _loadJobs(status: 'Active'),
-      _loadJobs(status: 'Pending'),
+      _loadJobs(status: 'Draft'),
       _loadJobs(status: 'Paused'),
       _loadJobs(status: 'Rejected'),
       _loadJobs(status: 'Closed'),
@@ -88,8 +88,8 @@ class RecruiterController extends StateNotifier<RecruiterState> {
     List<dynamic> jobsList,
     DataMap data,
   ) {
-    if (status == 'Pending') {
-      state = state.copyWith(data: data, pendingJobs: jobsList);
+    if (status == 'Draft') {
+      state = state.copyWith(data: data, draftJobs: jobsList);
     } else if (status == 'Paused') {
       state = state.copyWith(data: data, pausedJobs: jobsList);
     } else if (status == 'Rejected') {
@@ -249,7 +249,7 @@ class RecruiterController extends StateNotifier<RecruiterState> {
   Future<void> _refreshAllJobs() async {
     await Future.wait([
       getJobs(status: 'Active'),
-      getJobs(status: 'Pending'),
+      getJobs(status: 'Draft'),
       getJobs(status: 'Paused'),
       getJobs(status: 'Rejected'),
       getJobs(status: 'Closed'),

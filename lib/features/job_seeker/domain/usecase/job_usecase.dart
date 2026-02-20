@@ -50,3 +50,25 @@ class GetSavedJobsUseCase {
     return _repository.getSavedJobs();
   }
 }
+
+class ApplyJobUseCase {
+  final JobRepository _repository;
+
+  ApplyJobUseCase(this._repository);
+
+  Future<void> call({
+    required String jobId,
+    required String fullName,
+    required String email,
+    required String resumeUrl,
+    String? coverLetter,
+  }) {
+    return _repository.applyJob(
+      jobId: jobId,
+      fullName: fullName,
+      email: email,
+      resumeUrl: resumeUrl,
+      coverLetter: coverLetter,
+    );
+  }
+}

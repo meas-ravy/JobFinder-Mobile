@@ -58,7 +58,7 @@ class JobDescriptionStep extends StatelessWidget {
         const SizedBox(height: 8),
         FormTextInput(
           name: 'skills',
-          hint: 'e.g. Flutter, Dart, Firebase',
+          hint: 'Enter skills',
           maxLines: 2,
           validators: [FormBuilderValidators.required()],
         ),

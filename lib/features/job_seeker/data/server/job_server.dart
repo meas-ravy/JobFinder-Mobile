@@ -9,6 +9,13 @@ abstract class JobServer {
   Future<JobEntity> getJobById(String id);
   Future<bool> saveJob(String id);
   Future<List<JobEntity>> getSavedJobs();
+  Future<void> applyJob({
+    required String jobId,
+    required String fullName,
+    required String email,
+    required String resumeUrl,
+    String? coverLetter,
+  });
 }
 
 class JobServerImpl implements JobServer {
@@ -76,6 +83,29 @@ class JobServerImpl implements JobServer {
       final response = await dio.get('${ApiEnpoint.jobs}/saved');
       final List<dynamic> jobsJson = response.data['jobs'] ?? [];
       return jobsJson.map((json) => JobModel.fromJson(json)).toList();
+    } catch (e) {
+      rethrow;
+    }
+  }
+
+  @override
+  Future<void> applyJob({
+    required String jobId,
+    required String fullName,
+    required String email,
+    required String resumeUrl,
+    String? coverLetter,
+  }) async {
+    try {
+      await dio.post(
+        ApiEnpoint.applyJob(jobId),
+        data: {
+          'fullName': fullName,
+          'email': email,
+          'resumeUrl': resumeUrl,
+          'coverLetter': coverLetter,
+        },
+      );
     } catch (e) {
       rethrow;
     }

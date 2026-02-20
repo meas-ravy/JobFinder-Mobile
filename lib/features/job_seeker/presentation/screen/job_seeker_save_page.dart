@@ -129,11 +129,19 @@ class JobSeekerSavePage extends HookConsumerWidget {
           // Job List
           Expanded(
             child: savedJobsAsync.when(
+              skipLoadingOnRefresh: true,
               data: (jobs) {
                 final query = searchController.text.toLowerCase();
                 final filters = selectedFilters.value;
 
                 final filteredJobs = jobs.where((job) {
+                  // Optimistic check: hide instantly if unsaved
+                  final isCurrentlySaved =
+                      ref.watch(jobSavedStatusProvider(job.id)) ??
+                      job.isSaved ??
+                      true;
+                  if (!isCurrentlySaved) return false;
+
                   // Text Search
                   final matchesQuery =
                       job.title.toLowerCase().contains(query) ||
@@ -181,7 +189,10 @@ class JobSeekerSavePage extends HookConsumerWidget {
                   return true;
                 }).toList();
 
-                if (jobs.isEmpty) {
+                if (jobs.isEmpty ||
+                    (filteredJobs.isEmpty &&
+                        searchController.text.isEmpty &&
+                        !selectedFilters.value.hasActiveFilters)) {
                   return _buildEmptyState(isDark, theme);
                 }
 
@@ -200,8 +211,10 @@ class JobSeekerSavePage extends HookConsumerWidget {
                     itemCount: filteredJobs.length,
                     separatorBuilder: (context, index) =>
                         const SizedBox(height: 20),
-                    itemBuilder: (context, index) =>
-                        JobSeekerCard(job: filteredJobs[index]),
+                    itemBuilder: (context, index) => JobSeekerCard(
+                      key: ValueKey(filteredJobs[index].id),
+                      job: filteredJobs[index],
+                    ),
                   ),
                 );
               },

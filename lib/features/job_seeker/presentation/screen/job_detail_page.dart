@@ -8,7 +8,7 @@ import 'package:share_plus/share_plus.dart';
 import 'package:job_finder/features/job_seeker/presentation/widget/job_detail/job_detail_tabs.dart';
 import 'package:job_finder/features/job_seeker/presentation/widget/job_detail/apply_bottom_sheet.dart';
 import 'package:job_finder/features/job_seeker/presentation/widget/job_detail/job_detail_shimmer.dart';
-import 'package:job_finder/features/job_seeker/presentation/widget/job_detail/saved_notification_overlay.dart';
+import 'package:job_finder/features/job_seeker/presentation/widget/unsave_confirmation_bottom_sheet.dart';
 
 class JobDetailPage extends ConsumerWidget {
   final String jobId;
@@ -46,35 +46,25 @@ class JobDetailPage extends ConsumerWidget {
                       : theme.colorScheme.onSurface,
                   size: 26,
                 ),
-                onPressed: () async {
-                  try {
-                    // Optimistic update
-                    ref.read(jobSavedStatusProvider(jobId).notifier).state =
-                        !isSaved;
-
-                    final result = await ref
-                        .read(saveJobUseCaseProvider)
-                        .call(job.id);
-
-                    // Sync with actual result
-                    ref.read(jobSavedStatusProvider(jobId).notifier).state =
-                        result;
-
-                    if (context.mounted) {
-                      SavedNotificationOverlay.show(context, isDark, result);
-                    }
-
-                    // Refresh in background
-                    ref.invalidate(savedJobsProvider);
-                  } catch (e) {
-                    // Rollback
-                    ref.read(jobSavedStatusProvider(jobId).notifier).state =
-                        isSaved;
-                    if (context.mounted) {
-                      ScaffoldMessenger.of(
-                        context,
-                      ).showSnackBar(SnackBar(content: Text('Error: $e')));
-                    }
+                onPressed: () {
+                  if (isSaved) {
+                    showModalBottomSheet(
+                      context: context,
+                      backgroundColor: Colors.transparent,
+                      isScrollControlled: true,
+                      builder: (context) => UnsaveConfirmationBottomSheet(
+                        job: job,
+                        onConfirm: () => _handleSaveToggle(
+                          ref,
+                          context,
+                          job,
+                          isSaved,
+                          isDark,
+                        ),
+                      ),
+                    );
+                  } else {
+                    _handleSaveToggle(ref, context, job, isSaved, isDark);
                   }
                 },
               );
@@ -132,6 +122,35 @@ class JobDetailPage extends ConsumerWidget {
     );
   }
 
+  Future<void> _handleSaveToggle(
+    WidgetRef ref,
+    BuildContext context,
+    dynamic job,
+    bool isSaved,
+    bool isDark,
+  ) async {
+    try {
+      // Optimistic update
+      ref.read(jobSavedStatusProvider(jobId).notifier).state = !isSaved;
+
+      final result = await ref.read(saveJobUseCaseProvider).call(job.id);
+
+      // Sync with actual result
+      ref.read(jobSavedStatusProvider(jobId).notifier).state = result;
+
+      // Refresh in background
+      ref.invalidate(savedJobsProvider);
+    } catch (e) {
+      // Rollback
+      ref.read(jobSavedStatusProvider(jobId).notifier).state = isSaved;
+      if (context.mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Error: $e')));
+      }
+    }
+  }
+
   Widget _buildBottomButton(BuildContext context, bool isDark) {
     return Container(
       padding: const EdgeInsets.fromLTRB(24, 12, 24, 32),
@@ -144,7 +163,8 @@ class JobDetailPage extends ConsumerWidget {
             context: context,
             backgroundColor: Colors.transparent,
             isScrollControlled: true,
-            builder: (context) => ApplyBottomSheet(isDark: isDark),
+            builder: (context) =>
+                ApplyBottomSheet(isDark: isDark, jobId: jobId),
           );
         },
         style: ElevatedButton.styleFrom(

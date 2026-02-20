@@ -6,4 +6,11 @@ abstract class JobRepository {
   Future<JobEntity> getJobById(String id);
   Future<bool> saveJob(String id);
   Future<List<JobEntity>> getSavedJobs();
+  Future<void> applyJob({
+    required String jobId,
+    required String fullName,
+    required String email,
+    required String resumeUrl,
+    String? coverLetter,
+  });
 }

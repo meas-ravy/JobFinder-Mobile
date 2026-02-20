@@ -31,4 +31,21 @@ class JobRepositoryImpl implements JobRepository {
   Future<List<JobEntity>> getSavedJobs() {
     return _server.getSavedJobs();
   }
+
+  @override
+  Future<void> applyJob({
+    required String jobId,
+    required String fullName,
+    required String email,
+    required String resumeUrl,
+    String? coverLetter,
+  }) {
+    return _server.applyJob(
+      jobId: jobId,
+      fullName: fullName,
+      email: email,
+      resumeUrl: resumeUrl,
+      coverLetter: coverLetter,
+    );
+  }
 }

@@ -34,6 +34,10 @@ final getSavedJobsUseCaseProvider = Provider((ref) {
   return GetSavedJobsUseCase(ref.watch(jobRepositoryProvider));
 });
 
+final applyJobUseCaseProvider = Provider((ref) {
+  return ApplyJobUseCase(ref.watch(jobRepositoryProvider));
+});
+
 final jobDetailProvider = FutureProvider.family<JobEntity, String>((ref, id) {
   return ref.watch(getJobByIdUseCaseProvider).call(id);
 });

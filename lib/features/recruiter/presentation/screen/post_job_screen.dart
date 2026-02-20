@@ -24,6 +24,66 @@ class _PostJobScreenState extends ConsumerState<PostJobScreen> {
   late final bool _isEditing;
   late final Map<String, dynamic> _normalizedInitialData;
 
+  void _showErrorDialog(String title, String message) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: Row(
+          children: [
+            const Icon(
+              Icons.error_outline_rounded,
+              color: Colors.red,
+              size: 28,
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Text(
+                title,
+                style: const TextStyle(
+                  fontWeight: FontWeight.w900,
+                  fontSize: 18,
+                ),
+              ),
+            ),
+          ],
+        ),
+        content: Text(
+          message,
+          style: TextStyle(
+            color: Theme.of(context).colorScheme.onSurfaceVariant,
+            height: 1.5,
+          ),
+        ),
+        actions: [
+          Padding(
+            padding: const EdgeInsets.only(bottom: 8, right: 8),
+            child: SizedBox(
+              width: 100,
+              height: 48,
+              child: FilledButton(
+                onPressed: () => Navigator.pop(context),
+                style: FilledButton.styleFrom(
+                  backgroundColor: Colors.red,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+                child: const Text(
+                  'OK',
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   void initState() {
     super.initState();
@@ -69,20 +129,6 @@ class _PostJobScreenState extends ConsumerState<PostJobScreen> {
       final positionsAvailable =
           int.tryParse(values['positionsAvailable']?.toString() ?? '1') ?? 1;
 
-      if (values['salaryType'] == 'Range' &&
-          minSalary > maxSalary &&
-          maxSalary != 0) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text(
-              'Minimum salary cannot be higher than maximum salary',
-            ),
-            backgroundColor: Colors.red,
-          ),
-        );
-        return;
-      }
-
       values['salaryMin'] = minSalary;
       values['salaryMax'] = maxSalary;
       values['positionsAvailable'] = positionsAvailable;
@@ -116,25 +162,10 @@ class _PostJobScreenState extends ConsumerState<PostJobScreen> {
         final state = ref.read(recruiterControllerProvider);
         if (state.errorMessage != null) {
           if (mounted) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text(state.errorMessage!),
-                backgroundColor: Colors.red,
-              ),
-            );
+            _showErrorDialog('Post Failed', state.errorMessage!);
           }
         } else {
           if (mounted) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text(
-                  _isEditing
-                      ? 'Job updated successfully!'
-                      : 'Job posted successfully!',
-                ),
-                backgroundColor: Colors.green,
-              ),
-            );
             if (!_isEditing) {
               ref.read(recruiterHomeTabProvider.notifier).state = 1;
             }
@@ -144,9 +175,7 @@ class _PostJobScreenState extends ConsumerState<PostJobScreen> {
       } catch (e) {
         if (mounted) {
           LoadingDialog.hide(context);
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Error: $e'), backgroundColor: Colors.red),
-          );
+          _showErrorDialog('Technical Error', e.toString());
         }
       }
     }
