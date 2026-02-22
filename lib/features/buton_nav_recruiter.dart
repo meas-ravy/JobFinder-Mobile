@@ -13,11 +13,12 @@ import 'package:job_finder/features/recruiter/presentation/screen/recruiter_stat
 import 'package:job_finder/l10n/app_localizations.dart';
 
 class ButonNavRecruiter extends HookWidget {
-  const ButonNavRecruiter({super.key});
+  final int? initialIndex;
+  const ButonNavRecruiter({super.key, this.initialIndex});
 
   @override
   Widget build(BuildContext context) {
-    final currentIndex = useState(0);
+    final currentIndex = useState(initialIndex ?? 0);
     final pressedIndex = useState(-1);
 
     void animateTap(int index) {

@@ -7,7 +7,7 @@ import 'package:job_finder/core/helper/typedef.dart';
 import 'package:job_finder/core/networks/dio_client.dart';
 
 abstract class NotificationServer {
-  ResultFuture<DataMap> getNotifications();
+  ResultFuture<DataMap> getNotifications({String? role});
   ResultFuture<DataMap> markAsRead(String id);
 }
 
@@ -15,9 +15,12 @@ class NotificationServerImpl implements NotificationServer {
   final dio = setupAuthenticatedDio(ApiEnpoint.baseUrl);
 
   @override
-  ResultFuture<DataMap> getNotifications() async {
+  ResultFuture<DataMap> getNotifications({String? role}) async {
     try {
-      final response = await dio.get(ApiEnpoint.notifications);
+      final response = await dio.get(
+        ApiEnpoint.notifications,
+        queryParameters: role != null ? {'role': role} : null,
+      );
       final data = response.data;
       if (data is DataMap) {
         return Right(data);

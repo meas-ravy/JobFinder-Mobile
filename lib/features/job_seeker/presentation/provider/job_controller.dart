@@ -5,12 +5,15 @@ import 'package:job_finder/features/job_seeker/presentation/provider/job_state.d
 class JobController extends StateNotifier<JobState> {
   final GetRecommendedJobsUseCase _getRecommendedJobsUseCase;
   final GetRecentJobsUseCase _getRecentJobsUseCase;
+  final GetSavedJobsUseCase _getSavedJobsUseCase;
 
   JobController({
     required GetRecommendedJobsUseCase getRecommendedJobsUseCase,
     required GetRecentJobsUseCase getRecentJobsUseCase,
+    required GetSavedJobsUseCase getSavedJobsUseCase,
   }) : _getRecommendedJobsUseCase = getRecommendedJobsUseCase,
        _getRecentJobsUseCase = getRecentJobsUseCase,
+       _getSavedJobsUseCase = getSavedJobsUseCase,
        super(JobState());
 
   Future<void> fetchRecommendedJobs() async {
@@ -39,10 +42,13 @@ class JobController extends StateNotifier<JobState> {
   Future<void> fetchAll() async {
     state = state.copyWith(isLoading: true, errorMessage: null);
     try {
+      // Fetch all required data in parallel including saved jobs
       final results = await Future.wait([
         _getRecommendedJobsUseCase(),
         _getRecentJobsUseCase(),
+        _getSavedJobsUseCase(),
       ]);
+
       state = state.copyWith(
         isLoading: false,
         recommendedJobs: results[0],

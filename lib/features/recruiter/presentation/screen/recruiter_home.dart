@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
-import 'package:job_finder/core/helper/typedef.dart';
 import 'package:job_finder/core/routes/app_path.dart';
 import 'package:job_finder/core/theme/app_color.dart';
 import 'package:job_finder/features/recruiter/data/models/job_card_data.dart';
@@ -170,49 +169,97 @@ class RecruiterHomePage extends HookConsumerWidget {
   ) {
     final recruiterState = ref.watch(recruiterControllerProvider);
 
-    if (jobs.isEmpty) {
-      return Center(
-        child: Text(
-          emptyMessage,
-          style: TextStyle(
-            color: Theme.of(ref.context).colorScheme.onSurfaceVariant,
-          ),
-        ),
-      );
-    }
-
-    return ListView.separated(
-      padding: const EdgeInsets.all(20),
-      itemCount: jobs.length,
-      separatorBuilder: (context, index) => const SizedBox(height: 16),
-      itemBuilder: (context, index) {
-        final job = jobs[index] as DataMap;
-        final jobId = job['_id'] ?? job['id'];
-        return JobCard(
-          data: JobCardData.fromJson(
-            job,
-            fallbackCompany: recruiterState.company,
-          ),
-          isLoading: recruiterState.activeJobId == jobId,
-          onStatusUpdate: (status) {
-            if (status == 'edit') {
-              context.push(AppPath.postJob, extra: job);
-            } else if (status == 'delete') {
-              _showDeleteConfirmation(context, ref, job['_id'] ?? job['id']);
-            } else if (status == 'submit' || status == 'resubmit') {
-              ref
-                  .read(recruiterControllerProvider.notifier)
-                  .submitJob(job['_id'] ?? job['id']);
-            } else if (status == 'view_candidates') {
-              context.push(AppPath.viewApplicants, extra: jobId);
-            } else {
-              ref
-                  .read(recruiterControllerProvider.notifier)
-                  .updateJobStatus(job['_id'] ?? job['id'], status);
-            }
-          },
-        );
-      },
+    return RefreshIndicator(
+      onRefresh: () =>
+          ref.read(recruiterControllerProvider.notifier).refreshAllJobs(),
+      child: jobs.isEmpty
+          ? SingleChildScrollView(
+              physics: const AlwaysScrollableScrollPhysics(),
+              child: SizedBox(
+                height: MediaQuery.of(ref.context).size.height * 0.5,
+                child: Center(
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 40),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(
+                          Icons.assignment_outlined,
+                          size: 64,
+                          color: Theme.of(
+                            ref.context,
+                          ).colorScheme.primary.withValues(alpha: 0.5),
+                        ),
+                        const SizedBox(height: 16),
+                        Text(
+                          emptyMessage,
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            color: Theme.of(
+                              ref.context,
+                            ).colorScheme.onSurfaceVariant,
+                            fontSize: 16,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          'Pull down to refresh',
+                          style: TextStyle(
+                            color: Theme.of(ref.context)
+                                .colorScheme
+                                .onSurfaceVariant
+                                .withValues(alpha: 0.6),
+                            fontSize: 12,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            )
+          : ListView.separated(
+              physics: const AlwaysScrollableScrollPhysics(),
+              padding: const EdgeInsets.fromLTRB(20, 16, 20, 100),
+              itemCount: jobs.length,
+              separatorBuilder: (context, index) => const SizedBox(height: 16),
+              itemBuilder: (context, index) {
+                final jobItem = jobs[index];
+                final job = (jobItem is Map)
+                    ? Map<String, dynamic>.from(jobItem)
+                    : <String, dynamic>{};
+                final jobId = job['_id'] ?? job['id'];
+                return JobCard(
+                  data: JobCardData.fromJson(
+                    job,
+                    fallbackCompany: recruiterState.company,
+                  ),
+                  isLoading: recruiterState.activeJobId == jobId,
+                  onStatusUpdate: (status) {
+                    if (status == 'edit') {
+                      context.push(AppPath.postJob, extra: job);
+                    } else if (status == 'delete') {
+                      _showDeleteConfirmation(
+                        context,
+                        ref,
+                        job['_id'] ?? job['id'],
+                      );
+                    } else if (status == 'submit' || status == 'resubmit') {
+                      ref
+                          .read(recruiterControllerProvider.notifier)
+                          .submitJob(job['_id'] ?? job['id']);
+                    } else if (status == 'view_candidates') {
+                      context.push('${AppPath.viewApplicants}/$jobId');
+                    } else {
+                      ref
+                          .read(recruiterControllerProvider.notifier)
+                          .updateJobStatus(job['_id'] ?? job['id'], status);
+                    }
+                  },
+                );
+              },
+            ),
     );
   }
 

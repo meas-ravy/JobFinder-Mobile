@@ -16,6 +16,14 @@ class RecruiterController extends StateNotifier<RecruiterState> {
     required UpdateJobUseCase updateJobUseCase,
     required DeleteJobUseCase deleteJobUseCase,
     required GetJobApplicationsUseCase getJobApplicationsUseCase,
+    required GetAllApplicationsUseCase getAllApplicationsUseCase,
+    required GetApplicationDetailsUseCase getApplicationDetailsUseCase,
+    required UpdateApplicationStatusUseCase updateApplicationStatusUseCase,
+    required GetRecruiterDashboardUseCase getRecruiterDashboardUseCase,
+    required GetConversationsUseCase getConversationsUseCase,
+    required UpdateConversationUseCase updateConversationUseCase,
+    required GetAgoraTokenUseCase getAgoraTokenUseCase,
+    required SignalCallUseCase signalCallUseCase,
   }) : _createCompanyUseCase = createCompanyUseCase,
        _getCompanyProfileUseCase = getCompanyProfileUseCase,
        _updateCompanyUseCase = updateCompanyUseCase,
@@ -26,6 +34,14 @@ class RecruiterController extends StateNotifier<RecruiterState> {
        _updateJobUseCase = updateJobUseCase,
        _deleteJobUseCase = deleteJobUseCase,
        _getJobApplicationsUseCase = getJobApplicationsUseCase,
+       _getAllApplicationsUseCase = getAllApplicationsUseCase,
+       _getApplicationDetailsUseCase = getApplicationDetailsUseCase,
+       _updateApplicationStatusUseCase = updateApplicationStatusUseCase,
+       _getRecruiterDashboardUseCase = getRecruiterDashboardUseCase,
+       _getConversationsUseCase = getConversationsUseCase,
+       _updateConversationUseCase = updateConversationUseCase,
+       _getAgoraTokenUseCase = getAgoraTokenUseCase,
+       _signalCallUseCase = signalCallUseCase,
        super(const RecruiterState()) {
     _loadInitialData();
   }
@@ -111,24 +127,41 @@ class RecruiterController extends StateNotifier<RecruiterState> {
   final UpdateJobUseCase _updateJobUseCase;
   final DeleteJobUseCase _deleteJobUseCase;
   final GetJobApplicationsUseCase _getJobApplicationsUseCase;
+  final GetAllApplicationsUseCase _getAllApplicationsUseCase;
+  final GetApplicationDetailsUseCase _getApplicationDetailsUseCase;
+  final UpdateApplicationStatusUseCase _updateApplicationStatusUseCase;
+  final GetRecruiterDashboardUseCase _getRecruiterDashboardUseCase;
+  final GetConversationsUseCase _getConversationsUseCase;
+  final UpdateConversationUseCase _updateConversationUseCase;
+  final GetAgoraTokenUseCase _getAgoraTokenUseCase;
+  final SignalCallUseCase _signalCallUseCase;
 
   CompanyModel? _parseCompany(DataMap data) {
-    // Check for 'company' key (from some API responses)
+    // 1. Check if the top level has company-like fields
+    if (data.containsKey('name') && data.containsKey('contactEmail')) {
+      return CompanyModel.fromJson(data);
+    }
+
+    // 2. Check for 'company' key (from some API responses)
     if (data['company'] is Map<String, dynamic>) {
       return CompanyModel.fromJson(data['company'] as Map<String, dynamic>);
     }
 
-    // Check for 'data' key (standard project wrapper)
+    // 3. Check for 'data' key (standard project wrapper)
     if (data['data'] is Map<String, dynamic>) {
       final innerData = data['data'] as Map<String, dynamic>;
+
+      // Check if 'company' is inside 'data'
+      if (innerData['company'] is Map<String, dynamic>) {
+        return CompanyModel.fromJson(
+          innerData['company'] as Map<String, dynamic>,
+        );
+      }
+
+      // Check if 'data' is the company itself
       if (innerData.containsKey('name')) {
         return CompanyModel.fromJson(innerData);
       }
-    }
-
-    // Fallback: check if the top level has company-like fields
-    if (data.containsKey('name') && data.containsKey('contactEmail')) {
-      return CompanyModel.fromJson(data);
     }
 
     return null;
@@ -147,7 +180,7 @@ class RecruiterController extends StateNotifier<RecruiterState> {
       },
       (data) {
         state = state.copyWith(isLoading: false, data: data);
-        _refreshAllJobs();
+        refreshAllJobs();
       },
     );
   }
@@ -168,7 +201,7 @@ class RecruiterController extends StateNotifier<RecruiterState> {
       },
       (data) {
         state = state.copyWith(data: data, activeJobId: null);
-        _refreshAllJobs();
+        refreshAllJobs();
       },
     );
   }
@@ -245,8 +278,7 @@ class RecruiterController extends StateNotifier<RecruiterState> {
     );
   }
 
-  /// Silently refresh all job tabs without flipping isLoading
-  Future<void> _refreshAllJobs() async {
+  Future<void> refreshAllJobs() async {
     await Future.wait([
       getJobs(status: 'Active'),
       getJobs(status: 'Draft'),
@@ -274,7 +306,7 @@ class RecruiterController extends StateNotifier<RecruiterState> {
       },
       (data) {
         state = state.copyWith(data: data, activeJobId: null);
-        _refreshAllJobs();
+        refreshAllJobs();
       },
     );
   }
@@ -294,7 +326,7 @@ class RecruiterController extends StateNotifier<RecruiterState> {
       },
       (data) {
         state = state.copyWith(isLoading: false, data: data);
-        _refreshAllJobs();
+        refreshAllJobs();
       },
     );
   }
@@ -315,33 +347,203 @@ class RecruiterController extends StateNotifier<RecruiterState> {
       },
       (data) {
         state = state.copyWith(data: data, activeJobId: null);
-        _refreshAllJobs();
+        refreshAllJobs();
       },
     );
   }
 
-  Future<void> getJobApplications(String jobId) async {
-    state = state.copyWith(
-      isLoading: true,
-      errorMessage: null,
-      lastAction: RecruiterAction.getJobApplications,
-    );
+  void clearApplicants() {
+    state = state.copyWith(applicants: []);
+  }
+
+  Future<void> getJobApplications(String jobId, {bool refresh = false}) async {
+    if (!refresh) {
+      state = state.copyWith(
+        isLoading: true,
+        errorMessage: null,
+        lastAction: RecruiterAction.getJobApplications,
+      );
+    }
     final result = await _getJobApplicationsUseCase(jobId);
     result.fold(
       (failure) {
         state = state.copyWith(isLoading: false, errorMessage: failure.message);
       },
       (data) {
-        final List<dynamic> applicants =
-            data['applicants'] ??
-            data['data']?['applicants'] ??
-            data['data'] ??
-            [];
+        final List<dynamic> applicants = _parseApplicants(data);
         state = state.copyWith(
           isLoading: false,
           data: data,
           applicants: applicants,
         );
+      },
+    );
+  }
+
+  List<dynamic> _parseApplicants(DataMap data) {
+    return data['applicants'] ??
+        data['applications'] ??
+        data['data']?['applicants'] ??
+        data['data']?['applications'] ??
+        data['data'] ??
+        [];
+  }
+
+  Future<void> getAllApplications({bool refresh = false}) async {
+    if (!refresh) {
+      state = state.copyWith(
+        isLoading: true,
+        errorMessage: null,
+        lastAction: RecruiterAction.getAllApplications,
+      );
+    }
+    final result = await _getAllApplicationsUseCase();
+    result.fold(
+      (failure) {
+        state = state.copyWith(isLoading: false, errorMessage: failure.message);
+      },
+      (data) {
+        final List<dynamic> applicants = _parseApplicants(data);
+        state = state.copyWith(
+          isLoading: false,
+          data: data,
+          applicants: applicants,
+        );
+      },
+    );
+  }
+
+  Future<void> getApplicationDetails(String id, {bool refresh = false}) async {
+    state = state.copyWith(
+      isLoading: !refresh,
+      errorMessage: null,
+      lastAction: RecruiterAction.getApplicationDetails,
+      applicationDetails: refresh ? state.applicationDetails : null,
+    );
+    final result = await _getApplicationDetailsUseCase(id);
+    result.fold(
+      (failure) {
+        state = state.copyWith(isLoading: false, errorMessage: failure.message);
+      },
+      (data) {
+        final application = data['application'] ?? data['data'] ?? data;
+        DataMap? typedApplication;
+        if (application is Map) {
+          typedApplication = Map<String, dynamic>.from(application);
+        }
+
+        state = state.copyWith(
+          isLoading: false,
+          applicationDetails: typedApplication,
+          data: data,
+        );
+      },
+    );
+  }
+
+  Future<void> updateApplicationStatus(String id, String status) async {
+    state = state.copyWith(
+      isLoading: true,
+      errorMessage: null,
+      lastAction: RecruiterAction.updateApplicationStatus,
+    );
+    final result = await _updateApplicationStatusUseCase(
+      UpdateApplicationStatusParams(id, status),
+    );
+    result.fold(
+      (failure) {
+        state = state.copyWith(isLoading: false, errorMessage: failure.message);
+      },
+      (data) {
+        state = state.copyWith(isLoading: false, data: data);
+        // Refresh application details to get updated status
+        getApplicationDetails(id, refresh: true);
+      },
+    );
+  }
+
+  Future<void> getRecruiterDashboard() async {
+    state = state.copyWith(
+      isLoading: true,
+      errorMessage: null,
+      lastAction: RecruiterAction.getRecruiterDashboard,
+    );
+    final result = await _getRecruiterDashboardUseCase();
+    result.fold(
+      (failure) {
+        state = state.copyWith(isLoading: false, errorMessage: failure.message);
+      },
+      (data) {
+        state = state.copyWith(isLoading: false, dashboardData: data);
+      },
+    );
+  }
+
+  Future<void> getConversations() async {
+    state = state.copyWith(
+      isLoading: true,
+      errorMessage: null,
+      lastAction: RecruiterAction.getConversations,
+    );
+    final result = await _getConversationsUseCase();
+    result.fold(
+      (failure) {
+        state = state.copyWith(isLoading: false, errorMessage: failure.message);
+      },
+      (data) {
+        final List<dynamic> conversations =
+            data['conversations'] ?? data['data'] ?? [];
+        state = state.copyWith(
+          isLoading: false,
+          conversations: conversations,
+          data: data,
+        );
+      },
+    );
+  }
+
+  Future<void> updateConversation(String id, DataMap body) async {
+    state = state.copyWith(lastAction: RecruiterAction.updateConversation);
+    final result = await _updateConversationUseCase(
+      UpdateConversationParams(id: id, body: body),
+    );
+    result.fold(
+      (failure) {
+        // Silent update failure
+      },
+      (data) {
+        // Conversation updated on server
+      },
+    );
+  }
+
+  Future<void> getAgoraToken(String channelName) async {
+    state = state.copyWith(
+      isLoading: true,
+      errorMessage: null,
+      lastAction: RecruiterAction.getAgoraToken,
+    );
+    final result = await _getAgoraTokenUseCase(channelName);
+    result.fold(
+      (failure) {
+        state = state.copyWith(isLoading: false, errorMessage: failure.message);
+      },
+      (data) {
+        final token = data['token'] ?? data['data']?['token'];
+        state = state.copyWith(isLoading: false, agoraToken: token, data: data);
+      },
+    );
+  }
+
+  Future<void> signalCall(DataMap body) async {
+    state = state.copyWith(lastAction: RecruiterAction.signalCall);
+    final result = await _signalCallUseCase(body);
+    result.fold(
+      (failure) {
+        state = state.copyWith(errorMessage: failure.message);
+      },
+      (data) {
+        // Call signaled
       },
     );
   }

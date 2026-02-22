@@ -7,7 +7,6 @@ import 'package:form_builder_validators/form_builder_validators.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:job_finder/core/helper/typedef.dart';
 import 'package:job_finder/core/services/cloudinary_service.dart';
 import 'package:job_finder/features/recruiter/presentation/provider/recruiter_provider.dart';
 import 'package:job_finder/features/recruiter/presentation/provider/recruiter_state.dart';
@@ -167,7 +166,11 @@ class EditCompanyScreen extends HookConsumerWidget {
               child: FilledButton(
                 onPressed: () async {
                   if (formKey.currentState?.saveAndValidate() ?? false) {
-                    final values = DataMap.from(formKey.currentState!.value);
+                    final values = Map<String, dynamic>.from(
+                      formKey.currentState!.value,
+                    );
+                    values['logoUrl'] =
+                        company.logoUrl; // Preserve current logo by default
                     LoadingDialog.show(context, message: 'Updating profile...');
 
                     try {
@@ -283,11 +286,19 @@ class _ImageUploadPicker extends StatelessWidget {
               ? DecorationImage(
                   image: FileImage(selectedFile!),
                   fit: BoxFit.cover,
+                  colorFilter: ColorFilter.mode(
+                    Colors.black.withValues(alpha: 0.2),
+                    BlendMode.darken,
+                  ),
                 )
               : (networkUrl != null && networkUrl!.isNotEmpty)
               ? DecorationImage(
                   image: NetworkImage(networkUrl!),
                   fit: BoxFit.cover,
+                  colorFilter: ColorFilter.mode(
+                    Colors.black.withValues(alpha: 0.2),
+                    BlendMode.darken,
+                  ),
                 )
               : null,
         ),
@@ -335,7 +346,6 @@ class _ImageUploadPicker extends StatelessWidget {
                         borderRadius: BorderRadius.circular(16),
                         border: Border.all(
                           color: Colors.white.withValues(alpha: 0.2),
-                          
                         ),
                       ),
                       child: ClipRRect(
@@ -364,20 +374,41 @@ class _ImageUploadPicker extends StatelessWidget {
                                   fontWeight: FontWeight.w700,
                                 ),
                               ),
-                              const SizedBox(width: 12),
-                              Container(
-                                width: 1,
-                                height: 20,
-                                color: Colors.white.withValues(alpha: 0.2),
-                              ),
-                              const SizedBox(width: 8),
-                              Text(
-                                'Change',
-                                style: textTheme.labelLarge?.copyWith(
-                                  color: Colors.white,
-                                  fontWeight: FontWeight.w700,
+                              if (selectedFile != null) ...[
+                                const SizedBox(width: 12),
+                                Container(
+                                  width: 1,
+                                  height: 20,
+                                  color: Colors.white.withValues(alpha: 0.2),
                                 ),
-                              ),
+                                const SizedBox(width: 4),
+                                IconButton(
+                                  onPressed: () => onPicked(null),
+                                  icon: const Icon(
+                                    Icons.delete_outline_rounded,
+                                    color: Colors.white,
+                                    size: 20,
+                                  ),
+                                  padding: EdgeInsets.zero,
+                                  constraints: const BoxConstraints(),
+                                  tooltip: 'Cancel new selection',
+                                ),
+                              ] else ...[
+                                const SizedBox(width: 12),
+                                Container(
+                                  width: 1,
+                                  height: 20,
+                                  color: Colors.white.withValues(alpha: 0.2),
+                                ),
+                                const SizedBox(width: 8),
+                                Text(
+                                  'Change',
+                                  style: textTheme.labelLarge?.copyWith(
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.w700,
+                                  ),
+                                ),
+                              ],
                             ],
                           ),
                         ),

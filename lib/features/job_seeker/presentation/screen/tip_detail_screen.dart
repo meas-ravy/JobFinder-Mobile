@@ -18,7 +18,9 @@ class TipDetailScreen extends HookConsumerWidget {
 
     useEffect(() {
       Future.microtask(() {
-        ref.read(tipControllerProvider.notifier).fetchTipDetail(tipId);
+        if (context.mounted) {
+          ref.read(tipControllerProvider.notifier).fetchTipDetail(tipId);
+        }
       });
       return null;
     }, [tipId]);

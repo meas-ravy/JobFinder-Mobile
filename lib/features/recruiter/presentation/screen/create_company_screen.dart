@@ -8,7 +8,6 @@ import 'package:go_router/go_router.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:job_finder/core/services/cloudinary_service.dart';
-import 'package:job_finder/features/recruiter/data/models/company_model.dart';
 import 'package:job_finder/features/recruiter/presentation/provider/recruiter_provider.dart';
 import 'package:job_finder/features/recruiter/presentation/provider/recruiter_state.dart';
 import 'package:job_finder/features/recruiter/presentation/shared/dashed_rectpainter.dart';
@@ -151,7 +150,9 @@ class CreateCompanyScreen extends HookConsumerWidget {
                       return;
                     }
 
-                    final values = formKey.currentState!.value;
+                    final values = Map<String, dynamic>.from(
+                      formKey.currentState!.value,
+                    );
                     LoadingDialog.show(context, message: 'Processing...');
 
                     try {
@@ -159,39 +160,30 @@ class CreateCompanyScreen extends HookConsumerWidget {
                           .read(cloudinaryServiceProvider)
                           .uploadImage(selectedImage.value!, 'company-logo');
 
-                      final company = CompanyModel(
-                        name: values['name'],
-                        contactEmail: values['contactEmail'],
-                        contactPhone: values['contactPhone'],
-                        location: values['location'],
-                        description: values['description'],
-                        logoUrl: logoUrl,
-                      );
-
                       await ref
                           .read(recruiterControllerProvider.notifier)
-                          .createCompany(company.toJson());
+                          .createCompany({...values, 'logoUrl': logoUrl});
 
                       if (!context.mounted) return;
                       LoadingDialog.hide(context);
 
-                      final recruiterState = ref.read(
+                      final updatedState = ref.read(
                         recruiterControllerProvider,
                       );
 
-                      if (recruiterState.errorMessage == null &&
-                          recruiterState.lastAction ==
+                      if (updatedState.errorMessage == null &&
+                          updatedState.lastAction ==
                               RecruiterAction.createCompany) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                            content: Text(
-                              'Company profile created successfully!',
-                            ),
-                          ),
-                        );
+                        // ScaffoldMessenger.of(context).showSnackBar(
+                        //   const SnackBar(
+                        //     content: Text(
+                        //       'Company profile created successfully!',
+                        //     ),
+                        //   ),
+                        // );
                         context.pop();
                       } else {
-                        final error = recruiterState.errorMessage;
+                        final error = updatedState.errorMessage;
                         ScaffoldMessenger.of(context).showSnackBar(
                           SnackBar(
                             content: Text(error ?? 'Failed to create profile'),

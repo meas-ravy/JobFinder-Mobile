@@ -18,6 +18,14 @@ abstract class RecruiterServer {
   ResultFuture<DataMap> updateJob(String jobId, DataMap job);
   ResultFuture<DataMap> deleteJob(String jobId);
   ResultFuture<DataMap> getJobApplications(String jobId);
+  ResultFuture<DataMap> getAllApplications();
+  ResultFuture<DataMap> getApplicationDetails(String id);
+  ResultFuture<DataMap> updateApplicationStatus(String id, String status);
+  ResultFuture<DataMap> getRecruiterDashboard();
+  ResultFuture<DataMap> getConversations();
+  ResultFuture<DataMap> updateConversation(String id, DataMap body);
+  ResultFuture<DataMap> getAgoraToken(String channelName);
+  ResultFuture<DataMap> signalCall(DataMap body);
 }
 
 class RecruiterServerImpl implements RecruiterServer {
@@ -180,6 +188,143 @@ class RecruiterServerImpl implements RecruiterServer {
   ResultFuture<DataMap> getJobApplications(String jobId) async {
     try {
       final response = await dio.get(ApiEnpoint.jobApplications(jobId));
+      final data = response.data;
+      if (data is DataMap) {
+        return Right(data);
+      }
+      return Right(<String, dynamic>{'data': data});
+    } on DioException catch (e) {
+      final statusCode = e.response?.statusCode ?? -1;
+      final message = errorMessage(statusCode, e);
+      return Left(ApiFailure(message: message, statusCode: statusCode));
+    }
+  }
+
+  @override
+  ResultFuture<DataMap> getAllApplications() async {
+    try {
+      final response = await dio.get(ApiEnpoint.recruiterApplications);
+      final data = response.data;
+      if (data is DataMap) {
+        return Right(data);
+      }
+      return Right(<String, dynamic>{'data': data});
+    } on DioException catch (e) {
+      final statusCode = e.response?.statusCode ?? -1;
+      final message = errorMessage(statusCode, e);
+      return Left(ApiFailure(message: message, statusCode: statusCode));
+    }
+  }
+
+  @override
+  ResultFuture<DataMap> getApplicationDetails(String id) async {
+    try {
+      final response = await dio.get(ApiEnpoint.applicationDetails(id));
+      final data = response.data;
+      if (data is DataMap) {
+        return Right(data);
+      }
+      return Right(<String, dynamic>{'data': data});
+    } on DioException catch (e) {
+      final statusCode = e.response?.statusCode ?? -1;
+      final message = errorMessage(statusCode, e);
+      return Left(ApiFailure(message: message, statusCode: statusCode));
+    }
+  }
+
+  @override
+  ResultFuture<DataMap> updateApplicationStatus(
+    String id,
+    String status,
+  ) async {
+    try {
+      final response = await dio.patch(
+        ApiEnpoint.updateApplicationStatus(id),
+        data: {'status': status},
+      );
+      final data = response.data;
+      if (data is DataMap) {
+        return Right(data);
+      }
+      return Right(<String, dynamic>{'data': data});
+    } on DioException catch (e) {
+      final statusCode = e.response?.statusCode ?? -1;
+      final message = errorMessage(statusCode, e);
+      return Left(ApiFailure(message: message, statusCode: statusCode));
+    }
+  }
+
+  @override
+  ResultFuture<DataMap> getRecruiterDashboard() async {
+    try {
+      final response = await dio.get(ApiEnpoint.recruiterDashboard);
+      final data = response.data;
+      if (data is DataMap) {
+        return Right(data);
+      }
+      return Right(<String, dynamic>{'data': data});
+    } on DioException catch (e) {
+      final statusCode = e.response?.statusCode ?? -1;
+      final message = errorMessage(statusCode, e);
+      return Left(ApiFailure(message: message, statusCode: statusCode));
+    }
+  }
+
+  @override
+  ResultFuture<DataMap> getConversations() async {
+    try {
+      final response = await dio.get(ApiEnpoint.conversations);
+      final data = response.data;
+      if (data is DataMap) {
+        return Right(data);
+      }
+      return Right(<String, dynamic>{'data': data});
+    } on DioException catch (e) {
+      final statusCode = e.response?.statusCode ?? -1;
+      final message = errorMessage(statusCode, e);
+      return Left(ApiFailure(message: message, statusCode: statusCode));
+    }
+  }
+
+  @override
+  ResultFuture<DataMap> updateConversation(String id, DataMap body) async {
+    try {
+      final response = await dio.patch(
+        ApiEnpoint.updateConversation(id),
+        data: body,
+      );
+      final data = response.data;
+      if (data is DataMap) {
+        return Right(data);
+      }
+      return Right(<String, dynamic>{'data': data});
+    } on DioException catch (e) {
+      final statusCode = e.response?.statusCode ?? -1;
+      final message = errorMessage(statusCode, e);
+      return Left(ApiFailure(message: message, statusCode: statusCode));
+    }
+  }
+
+  @override
+  ResultFuture<DataMap> getAgoraToken(String channelName) async {
+    try {
+      final response = await dio.get(ApiEnpoint.getAgoraToken(channelName));
+      final data = response.data;
+      if (data is DataMap) {
+        return Right(data);
+      }
+      return Right(<String, dynamic>{'data': data});
+    } on DioException catch (e) {
+      final statusCode = e.response?.statusCode ?? -1;
+      final message = errorMessage(statusCode, e);
+      return Left(ApiFailure(message: message, statusCode: statusCode));
+    }
+  }
+
+  @override
+  ResultFuture<DataMap> signalCall(DataMap body) async {
+    try {
+      final response = await dio.post(ApiEnpoint.agoraCallSignal, data: body);
       final data = response.data;
       if (data is DataMap) {
         return Right(data);

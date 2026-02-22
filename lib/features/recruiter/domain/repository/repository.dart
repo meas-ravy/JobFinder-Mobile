@@ -11,4 +11,12 @@ abstract class RecruiterRepository {
   ResultFuture<DataMap> updateJob(String jobId, DataMap job);
   ResultFuture<DataMap> deleteJob(String jobId);
   ResultFuture<DataMap> getJobApplications(String jobId);
+  ResultFuture<DataMap> getAllApplications();
+  ResultFuture<DataMap> getApplicationDetails(String id);
+  ResultFuture<DataMap> updateApplicationStatus(String id, String status);
+  ResultFuture<DataMap> getRecruiterDashboard();
+  ResultFuture<DataMap> getConversations();
+  ResultFuture<DataMap> updateConversation(String id, DataMap body);
+  ResultFuture<DataMap> getAgoraToken(String channelName);
+  ResultFuture<DataMap> signalCall(DataMap body);
 }

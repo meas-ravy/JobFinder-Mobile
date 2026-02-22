@@ -18,7 +18,9 @@ import 'package:job_finder/shared/widget/loading_dialog.dart';
 import 'package:job_finder/shared/widget/section_title.dart';
 import 'package:job_finder/shared/widget/shimmer_loading.dart';
 import 'package:job_finder/shared/widget/svg_icon.dart';
+import 'package:job_finder/features/job_seeker/presentation/widget/dialogs/switch_role_dialog.dart';
 import 'package:job_finder/features/recruiter/presentation/provider/recruiter_provider.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class RecruiterProfilePage extends HookConsumerWidget {
   const RecruiterProfilePage({super.key});
@@ -38,7 +40,10 @@ class RecruiterProfilePage extends HookConsumerWidget {
         elevation: 0,
         scrolledUnderElevation: 0,
         toolbarHeight: 80,
-        title: const _HeaderSection(),
+        title: Text(
+          "Profile",
+          style: textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
+        ),
       ),
       body: SafeArea(
         child: recruiterState.isLoading
@@ -67,24 +72,12 @@ class RecruiterProfilePage extends HookConsumerWidget {
                       // Show confirmation dialog
                       final confirmed = await showDialog<bool>(
                         context: context,
-                        builder: (context) => AlertDialog(
-                          title: const Text('Switch Role'),
-                          content: const Text(
-                            'Switch to Job Finder mode? You can switch back anytime.',
-                          ),
-                          actions: [
-                            TextButton(
-                              onPressed: () => Navigator.pop(context, false),
-                              child: const Text('Cancel'),
-                            ),
-                            FilledButton(
-                              onPressed: () => Navigator.pop(context, true),
-                              child: const Text(
-                                'Switch',
-                                style: TextStyle(color: Colors.white),
-                              ),
-                            ),
-                          ],
+                        builder: (context) => SwitchRoleDialog(
+                          avatarUrl: company?.logoUrl,
+                          targetRole: 'Job Seeker',
+                          title: 'Switch Role',
+                          content:
+                              'Switch to Job Finder mode? You can switch back anytime.',
                         ),
                       );
 
@@ -126,11 +119,11 @@ class RecruiterProfilePage extends HookConsumerWidget {
 
                   const SizedBox(height: 18),
                   _SectionTitle(title: 'General', textTheme: textTheme),
-                  _SettingsTile(
-                    icon: AppIcon.notification,
-                    title: 'Notification',
-                    onTap: () {},
-                  ),
+                  // _SettingsTile(
+                  //   icon: AppIcon.notification,
+                  //   title: 'Notification',
+                  //   onTap: () {},
+                  // ),
                   // _SettingsTile(
                   //   icon: AppIcon.timeSquare,
                   //   title: 'Timezone',
@@ -231,11 +224,14 @@ class RecruiterProfilePage extends HookConsumerWidget {
                   SettingsTile(
                     icon: AppIcon.star,
                     title: 'About us',
-                    onTap: () => ShowDoc.showLegalDocument(
-                      context,
-                      'About Us',
-                      PolicyServices.aboutUsContent,
-                    ),
+                    onTap: () async {
+                      final url = Uri.parse(
+                        'https://measravy-site.vercel.app/',
+                      );
+                      if (await canLaunchUrl(url)) {
+                        await launchUrl(url, mode: LaunchMode.inAppBrowserView);
+                      }
+                    },
                   ),
 
                   const SizedBox(height: 18),
@@ -648,43 +644,6 @@ class _SettingsTile extends StatelessWidget {
         ],
       ),
       onTap: onTap,
-    );
-  }
-}
-
-class _HeaderSection extends StatelessWidget {
-  const _HeaderSection();
-
-  @override
-  Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
-    final textTheme = Theme.of(context).textTheme;
-
-    return Row(
-      children: [
-        Text(
-          'Profile',
-          style: textTheme.bodyLarge?.copyWith(
-            fontWeight: FontWeight.w700,
-            fontSize: 24,
-            color: colorScheme.onSurface,
-          ),
-        ),
-        const Spacer(),
-        Container(
-          width: 48,
-          height: 48,
-          decoration: BoxDecoration(
-            color: colorScheme.onSurface.withValues(alpha: 0.05),
-            shape: BoxShape.circle,
-          ),
-          padding: const EdgeInsets.all(10),
-          child: AppSvgIcon(
-            assetName: AppIcon.notification,
-            color: colorScheme.onSurface,
-          ),
-        ),
-      ],
     );
   }
 }

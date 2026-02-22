@@ -146,3 +146,97 @@ class GetJobApplicationsUseCase extends UseCaseWithParams<DataMap, String> {
     return _repository.getJobApplications(params);
   }
 }
+
+class GetAllApplicationsUseCase extends UseCaseWithOutParams<DataMap> {
+  const GetAllApplicationsUseCase(this._repository);
+  final RecruiterRepository _repository;
+
+  @override
+  ResultFuture<DataMap> call() {
+    return _repository.getAllApplications();
+  }
+}
+
+class GetApplicationDetailsUseCase extends UseCaseWithParams<DataMap, String> {
+  const GetApplicationDetailsUseCase(this._repository);
+  final RecruiterRepository _repository;
+
+  @override
+  ResultFuture<DataMap> call(String params) {
+    return _repository.getApplicationDetails(params);
+  }
+}
+
+class UpdateApplicationStatusParams {
+  const UpdateApplicationStatusParams(this.id, this.status);
+  final String id;
+  final String status;
+}
+
+class UpdateApplicationStatusUseCase
+    extends UseCaseWithParams<DataMap, UpdateApplicationStatusParams> {
+  const UpdateApplicationStatusUseCase(this._repository);
+  final RecruiterRepository _repository;
+
+  @override
+  ResultFuture<DataMap> call(UpdateApplicationStatusParams params) {
+    return _repository.updateApplicationStatus(params.id, params.status);
+  }
+}
+
+class GetRecruiterDashboardUseCase extends UseCaseWithOutParams<DataMap> {
+  const GetRecruiterDashboardUseCase(this._repository);
+  final RecruiterRepository _repository;
+
+  @override
+  ResultFuture<DataMap> call() {
+    return _repository.getRecruiterDashboard();
+  }
+}
+
+class GetConversationsUseCase extends UseCaseWithOutParams<DataMap> {
+  const GetConversationsUseCase(this._repository);
+  final RecruiterRepository _repository;
+
+  @override
+  ResultFuture<DataMap> call() {
+    return _repository.getConversations();
+  }
+}
+
+class UpdateConversationParams {
+  const UpdateConversationParams({required this.id, required this.body});
+  final String id;
+  final DataMap body;
+}
+
+class UpdateConversationUseCase
+    extends UseCaseWithParams<DataMap, UpdateConversationParams> {
+  const UpdateConversationUseCase(this._repository);
+  final RecruiterRepository _repository;
+
+  @override
+  ResultFuture<DataMap> call(UpdateConversationParams params) {
+    return _repository.updateConversation(params.id, params.body);
+  }
+}
+
+class GetAgoraTokenUseCase extends UseCaseWithParams<DataMap, String> {
+  const GetAgoraTokenUseCase(this._repository);
+  final RecruiterRepository _repository;
+
+  @override
+  ResultFuture<DataMap> call(String params) {
+    return _repository.getAgoraToken(params);
+  }
+}
+
+class SignalCallUseCase extends UseCaseWithParams<DataMap, DataMap> {
+  const SignalCallUseCase(this._repository);
+  final RecruiterRepository _repository;
+
+  @override
+  ResultFuture<DataMap> call(DataMap params) {
+    return _repository.signalCall(params);
+  }
+}

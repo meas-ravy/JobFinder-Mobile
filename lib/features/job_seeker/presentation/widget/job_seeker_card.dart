@@ -57,7 +57,7 @@ class JobSeekerCard extends StatelessWidget {
     final isDark = theme.brightness == Brightness.dark;
 
     return InkWell(
-      onTap: () => context.push(AppPath.jobDetail, extra: job.id),
+      onTap: () => context.push('${AppPath.jobDetail}/${job.id}'),
       borderRadius: BorderRadius.circular(30),
       child: Container(
         padding: const EdgeInsets.all(16),
@@ -241,18 +241,18 @@ class JobSeekerCard extends StatelessWidget {
   ) async {
     try {
       // Optimistic update
-      ref.read(jobSavedStatusProvider(job.id).notifier).state = !isSaved;
+      ref.read(jobLocalSaveStatusProvider(job.id).notifier).state = !isSaved;
 
       final result = await ref.read(saveJobUseCaseProvider).call(job.id);
 
       // Sync with result
-      ref.read(jobSavedStatusProvider(job.id).notifier).state = result;
+      ref.read(jobLocalSaveStatusProvider(job.id).notifier).state = result;
 
       // Refresh saved jobs list only
       ref.invalidate(savedJobsProvider);
     } catch (e) {
       // Rollback
-      ref.read(jobSavedStatusProvider(job.id).notifier).state = isSaved;
+      ref.read(jobLocalSaveStatusProvider(job.id).notifier).state = isSaved;
       if (context.mounted) {
         ScaffoldMessenger.of(
           context,

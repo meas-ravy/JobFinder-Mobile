@@ -1,7 +1,8 @@
+import 'dart:math';
 import 'package:dotted_line/dotted_line.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
-import 'package:job_finder/features/recruiter/data/models/candidate_stat.dart';
 import 'package:job_finder/features/recruiter/presentation/provider/recruiter_provider.dart';
 import 'package:job_finder/features/recruiter/presentation/widget/header_section.dart';
 import 'package:job_finder/features/recruiter/presentation/widget/radar_chart.dart';
@@ -11,136 +12,150 @@ import 'package:job_finder/shared/widget/shimmer_loading.dart';
 class RecruiterStatsPage extends HookConsumerWidget {
   const RecruiterStatsPage({super.key});
 
-  final List<CandidateStat> _candidates = const [
-    CandidateStat(
-      role: 'Product designer',
-      name: 'Akbar Rahman',
-      percent: 78,
-      color: Color(0xFF22D38A),
-      count: 120,
-    ),
-    CandidateStat(
-      role: 'Web designer',
-      name: 'Erman Ermin',
-      percent: 85,
-      color: Color(0xFF22D38A),
-      count: 230,
-    ),
-    CandidateStat(
-      role: 'Marketing Manager',
-      name: 'Arfata Nayeem',
-      percent: 70,
-      color: Color(0xFF22D38A),
-      count: 85,
-    ),
-    CandidateStat(
-      role: 'Graphic Design',
-      name: 'Wasmihy Chy',
-      percent: 60,
-      color: Color(0xFF22D38A),
-      count: 45,
-    ),
-  ];
-
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final colorScheme = Theme.of(context).colorScheme;
     final textTheme = Theme.of(context).textTheme;
     final recruiterState = ref.watch(recruiterControllerProvider);
+    final dashboardData = recruiterState.dashboardData;
+    final summary = dashboardData?['summary'] as Map<String, dynamic>? ?? {};
+    final chartData =
+        dashboardData?['chart'] as List<dynamic>? ??
+        List.generate(
+          12,
+          (index) => {'month': '', 'applied': 0, 'interview': 0, 'confirm': 0},
+        );
+    final jobs = dashboardData?['jobs'] as List<dynamic>? ?? [];
 
-    return DefaultTabController(
-      length: 3,
-      child: Scaffold(
-        appBar: AppBar(
-          elevation: 0,
-          scrolledUnderElevation: 0,
-          toolbarHeight: 80,
-          title: const HeaderSection(),
-        ),
-        body: recruiterState.isLoading
-            ? const _StatsShimmer()
-            : SingleChildScrollView(
-                padding: const EdgeInsets.fromLTRB(20, 16, 20, 24),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Text(
-                          'Last 1 Years',
-                          style: textTheme.titleLarge?.copyWith(
-                            fontWeight: FontWeight.w800,
-                            fontSize: 18,
-                            color: colorScheme.onSurface,
-                          ),
+    useEffect(() {
+      Future.delayed(Duration.zero, () {
+        if (context.mounted) {
+          ref
+              .read(recruiterControllerProvider.notifier)
+              .getRecruiterDashboard();
+        }
+      });
+      return null;
+    }, []);
+
+    final tabController = useTabController(initialLength: 3);
+    final tabIndex = useListenableSelector(
+      tabController,
+      () => tabController.index,
+    );
+
+    return Scaffold(
+      appBar: AppBar(
+        elevation: 0,
+        scrolledUnderElevation: 0,
+        toolbarHeight: 80,
+        title: const HeaderSection(),
+      ),
+      body: recruiterState.isLoading && dashboardData == null
+          ? const _StatsShimmer()
+          : SingleChildScrollView(
+              padding: const EdgeInsets.fromLTRB(20, 16, 20, 24),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        'Last 1 Year',
+                        style: textTheme.titleLarge?.copyWith(
+                          fontWeight: FontWeight.w800,
+                          fontSize: 18,
+                          color: colorScheme.onSurface,
                         ),
-                        InkWell(
-                          onTap: () {},
-                          child: Row(
-                            children: [
-                              Text(
-                                '1 Years',
-                                style: textTheme.bodyMedium?.copyWith(
-                                  fontWeight: FontWeight.bold,
-                                  color: colorScheme.primary,
-                                ),
-                              ),
-                              const SizedBox(width: 4),
-                              Icon(
-                                Icons.keyboard_arrow_down_rounded,
+                      ),
+                      InkWell(
+                        onTap: () {},
+                        child: Row(
+                          children: [
+                            Text(
+                              'Select Year',
+                              style: textTheme.bodyMedium?.copyWith(
+                                fontWeight: FontWeight.bold,
                                 color: colorScheme.primary,
-                                size: 20,
                               ),
-                            ],
-                          ),
+                            ),
+                            const SizedBox(width: 4),
+                            Icon(
+                              Icons.keyboard_arrow_down_rounded,
+                              color: colorScheme.primary,
+                              size: 20,
+                            ),
+                          ],
                         ),
-                      ],
-                    ),
-                    const SizedBox(height: 20),
-                    _buildRadarCard(colorScheme, textTheme),
-                    const SizedBox(height: 16),
-                    _buildLegend(colorScheme),
-                    const SizedBox(height: 20),
-                    TabBar(
-                      dividerColor: colorScheme.outline.withValues(alpha: 0.05),
-                      indicatorColor: colorScheme.primary,
-                      indicatorSize: TabBarIndicatorSize.tab,
-                      labelColor: colorScheme.primary,
-                      unselectedLabelColor: colorScheme.onSurfaceVariant,
-                      labelStyle: textTheme.bodyMedium?.copyWith(
-                        fontWeight: FontWeight.w700,
                       ),
-                      unselectedLabelStyle: textTheme.bodyMedium?.copyWith(
-                        fontWeight: FontWeight.w600,
-                      ),
-                      tabs: const [
-                        Tab(text: 'Applied'),
-                        Tab(text: 'Interview'),
-                        Tab(text: 'Confirm'),
-                      ],
+                    ],
+                  ),
+                  const SizedBox(height: 20),
+                  _buildRadarCard(colorScheme, textTheme, chartData),
+                  const SizedBox(height: 16),
+                  _buildLegend(colorScheme, summary),
+                  const SizedBox(height: 20),
+                  TabBar(
+                    controller: tabController,
+                    dividerColor: colorScheme.outline.withValues(alpha: 0.05),
+                    indicatorColor: colorScheme.primary,
+                    indicatorSize: TabBarIndicatorSize.tab,
+                    labelColor: colorScheme.primary,
+                    unselectedLabelColor: colorScheme.onSurfaceVariant,
+                    labelStyle: textTheme.bodyMedium?.copyWith(
+                      fontWeight: FontWeight.w700,
                     ),
-                    const SizedBox(height: 16),
-                    ..._candidates.map(
-                      (item) => Padding(
+                    unselectedLabelStyle: textTheme.bodyMedium?.copyWith(
+                      fontWeight: FontWeight.w600,
+                    ),
+                    tabs: const [
+                      Tab(text: 'Applied'),
+                      Tab(text: 'Interview'),
+                      Tab(text: 'Confirm'),
+                    ],
+                  ),
+                  const SizedBox(height: 16),
+                  if (jobs.isEmpty)
+                    const Center(
+                      child: Padding(
+                        padding: EdgeInsets.symmetric(vertical: 24),
+                        child: Text('No job statistics available'),
+                      ),
+                    )
+                  else
+                    ...jobs.map((item) {
+                      final type = tabIndex == 0
+                          ? 'applied'
+                          : (tabIndex == 1 ? 'interview' : 'confirm');
+                      final count = (item[type] as num? ?? 0).toInt();
+                      if (count == 0 && jobs.length > 3) {
+                        return const SizedBox.shrink();
+                      }
+                      // Hide zero stats if too many entries
+
+                      return Padding(
                         padding: const EdgeInsets.only(bottom: 12),
-                        child: _buildCandidateTile(
-                          item,
+                        child: _buildJobStatTile(
+                          item['title']?.toString() ?? 'Unknown Job',
+                          count,
+                          type.capitalize(),
                           colorScheme,
                           textTheme,
                           context,
                         ),
-                      ),
-                    ),
-                  ],
-                ),
+                      );
+                    }),
+                ],
               ),
-      ),
+            ),
     );
   }
 
-  Widget _buildCandidateTile(
-    CandidateStat item,
+  Widget _buildJobStatTile(
+    String title,
+    int count,
+    String label,
     ColorScheme colorScheme,
     TextTheme textTheme,
     BuildContext context,
@@ -161,7 +176,7 @@ class RecruiterStatsPage extends HookConsumerWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  item.role,
+                  title,
                   style: textTheme.titleMedium?.copyWith(
                     fontWeight: FontWeight.w700,
                     color: colorScheme.onSurface,
@@ -169,7 +184,7 @@ class RecruiterStatsPage extends HookConsumerWidget {
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  'Applied',
+                  label,
                   style: textTheme.bodySmall?.copyWith(
                     color: colorScheme.onSurfaceVariant,
                   ),
@@ -178,34 +193,64 @@ class RecruiterStatsPage extends HookConsumerWidget {
             ),
           ),
           ProgressRing(
-            percent: item.percent,
+            percent: 100, // Static for now as count is absolute
             color: colorScheme.primary,
-            count: '+${item.count}',
+            count: '+$count',
           ),
         ],
       ),
     );
   }
 
-  Widget _buildRadarCard(ColorScheme colorScheme, TextTheme textTheme) {
-    final labels = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul'];
+  Widget _buildRadarCard(
+    ColorScheme colorScheme,
+    TextTheme textTheme,
+    List<dynamic> chartData,
+  ) {
+    if (chartData.isEmpty) return const SizedBox.shrink();
+
+    final labels = chartData.map((e) => e['month']?.toString() ?? '').toList();
+    final appliedValues = chartData
+        .map((e) => (e['applied'] as num? ?? 0).toDouble())
+        .toList();
+    final interviewValues = chartData
+        .map((e) => (e['interview'] as num? ?? 0).toDouble())
+        .toList();
+    final confirmValues = chartData
+        .map((e) => (e['confirm'] as num? ?? 0).toDouble())
+        .toList();
+
     final dataSets = [
       RadarDataSet(
-        values: const [88, 92, 70, 68, 76, 80, 90],
+        values: appliedValues,
+        strokeColor: const Color(0xFF22D38A),
+        fillColor: const Color(0xFF22D38A).withValues(alpha: 0.16),
+      ),
+      RadarDataSet(
+        values: interviewValues,
         strokeColor: colorScheme.primary,
         fillColor: colorScheme.primary.withValues(alpha: 0.16),
       ),
       RadarDataSet(
-        values: const [62, 68, 50, 48, 55, 60, 65],
-        strokeColor: colorScheme.secondary,
-        fillColor: colorScheme.secondary.withValues(alpha: 0.16),
-      ),
-      RadarDataSet(
-        values: const [40, 46, 30, 28, 35, 38, 42],
+        values: confirmValues,
         strokeColor: colorScheme.tertiary,
         fillColor: colorScheme.tertiary.withValues(alpha: 0.16),
       ),
     ];
+
+    double maxValue = 10;
+    for (var e in chartData) {
+      maxValue = max(
+        maxValue,
+        max(
+          (e['applied'] as num? ?? 0).toDouble(),
+          max(
+            (e['interview'] as num? ?? 0).toDouble(),
+            (e['confirm'] as num? ?? 0).toDouble(),
+          ),
+        ),
+      );
+    }
 
     return SizedBox(
       height: 260,
@@ -217,7 +262,7 @@ class RecruiterStatsPage extends HookConsumerWidget {
           return RadarChart(
             labels: labels,
             dataSets: dataSets,
-            maxValue: 100,
+            maxValue: maxValue,
             animationValue: value,
             labelStyle: textTheme.labelSmall?.copyWith(
               fontWeight: FontWeight.w600,
@@ -230,20 +275,24 @@ class RecruiterStatsPage extends HookConsumerWidget {
     );
   }
 
-  Widget _buildLegend(ColorScheme colorScheme) {
+  Widget _buildLegend(ColorScheme colorScheme, Map<String, dynamic> summary) {
     return Column(
       children: [
         LegendRow(
           color: const Color(0xFF22D38A),
           label: 'Applied',
-          value: '1500',
+          value: summary['applied']?.toString() ?? '0',
         ),
         const SizedBox(height: 16),
         DottedLine(
           dashColor: colorScheme.outlineVariant.withValues(alpha: 0.2),
         ),
         const SizedBox(height: 16),
-        LegendRow(color: colorScheme.primary, label: 'Interview', value: '750'),
+        LegendRow(
+          color: colorScheme.primary,
+          label: 'Interview',
+          value: summary['interview']?.toString() ?? '0',
+        ),
         const SizedBox(height: 16),
         DottedLine(
           dashColor: colorScheme.outlineVariant.withValues(alpha: 0.2),
@@ -251,11 +300,18 @@ class RecruiterStatsPage extends HookConsumerWidget {
         const SizedBox(height: 16),
         LegendRow(
           color: colorScheme.tertiary,
-          label: 'Job Confirm',
-          value: '180',
+          label: 'Confirm',
+          value: summary['confirm']?.toString() ?? '0',
         ),
       ],
     );
+  }
+}
+
+extension on String {
+  String capitalize() {
+    if (isEmpty) return this;
+    return '${this[0].toUpperCase()}${substring(1).toLowerCase()}';
   }
 }
 

@@ -1,3 +1,4 @@
+import 'package:job_finder/core/helper/secure_storage.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:job_finder/features/notifications/data/models/notification_model.dart';
 import 'package:job_finder/features/notifications/data/repository_imp/notification_repository_imp.dart';
@@ -33,25 +34,32 @@ final notificationControllerProvider =
       return NotificationController(
         getNotificationsUseCase: ref.watch(getNotificationsUseCaseProvider),
         markAsReadUseCase: ref.watch(markAsReadUseCaseProvider),
+        ref: ref,
       );
     });
 
 class NotificationController extends StateNotifier<NotificationState> {
   final GetNotificationsUseCase _getNotificationsUseCase;
   final MarkNotificationAsReadUseCase _markAsReadUseCase;
+  final Ref _ref;
 
   NotificationController({
     required GetNotificationsUseCase getNotificationsUseCase,
     required MarkNotificationAsReadUseCase markAsReadUseCase,
+    required Ref ref,
   }) : _getNotificationsUseCase = getNotificationsUseCase,
        _markAsReadUseCase = markAsReadUseCase,
+       _ref = ref,
        super(NotificationState.initial()) {
     getNotifications();
   }
 
   Future<void> getNotifications() async {
     state = state.copyWith(isLoading: true, errorMessage: null);
-    final result = await _getNotificationsUseCase();
+
+    final role = await _ref.read(tokenStorageProvider).readRole();
+
+    final result = await _getNotificationsUseCase(role);
     result.fold(
       (failure) {
         state = state.copyWith(isLoading: false, errorMessage: failure.message);

@@ -52,7 +52,7 @@ class ApplyBottomSheet extends StatelessWidget {
                 child: ElevatedButton(
                   onPressed: () {
                     context.pop();
-                    context.push(AppPath.applyJob, extra: jobId);
+                    context.push('${AppPath.applyJob}/$jobId');
                   },
                   style: ElevatedButton.styleFrom(
                     backgroundColor: isDark

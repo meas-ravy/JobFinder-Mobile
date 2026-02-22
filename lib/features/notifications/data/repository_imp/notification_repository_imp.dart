@@ -8,8 +8,8 @@ class NotificationRepositoryImpl implements NotificationRepository {
   NotificationRepositoryImpl(this._server);
 
   @override
-  ResultFuture<DataMap> getNotifications() {
-    return _server.getNotifications();
+  ResultFuture<DataMap> getNotifications({String? role}) {
+    return _server.getNotifications(role: role);
   }
 
   @override

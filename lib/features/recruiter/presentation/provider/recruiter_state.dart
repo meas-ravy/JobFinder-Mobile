@@ -12,6 +12,14 @@ enum RecruiterAction {
   updateJob,
   deleteJob,
   getJobApplications,
+  getAllApplications,
+  getApplicationDetails,
+  updateApplicationStatus,
+  getRecruiterDashboard,
+  getConversations,
+  updateConversation,
+  getAgoraToken,
+  signalCall,
 }
 
 class RecruiterState {
@@ -28,6 +36,10 @@ class RecruiterState {
     this.rejectedJobs = const [],
     this.previousJobs = const [],
     this.applicants = const [],
+    this.applicationDetails,
+    this.dashboardData,
+    this.conversations = const [],
+    this.agoraToken,
   });
 
   final bool isLoading;
@@ -42,6 +54,10 @@ class RecruiterState {
   final List<dynamic> rejectedJobs;
   final List<dynamic> previousJobs;
   final List<dynamic> applicants;
+  final DataMap? applicationDetails;
+  final DataMap? dashboardData;
+  final List<dynamic> conversations;
+  final String? agoraToken;
 
   static const _sentinel = Object();
 
@@ -58,6 +74,10 @@ class RecruiterState {
     List<dynamic>? rejectedJobs,
     List<dynamic>? previousJobs,
     List<dynamic>? applicants,
+    DataMap? applicationDetails,
+    DataMap? dashboardData,
+    List<dynamic>? conversations,
+    String? agoraToken,
   }) {
     return RecruiterState(
       isLoading: isLoading ?? this.isLoading,
@@ -74,6 +94,10 @@ class RecruiterState {
       rejectedJobs: rejectedJobs ?? this.rejectedJobs,
       previousJobs: previousJobs ?? this.previousJobs,
       applicants: applicants ?? this.applicants,
+      applicationDetails: applicationDetails ?? this.applicationDetails,
+      dashboardData: dashboardData ?? this.dashboardData,
+      conversations: conversations ?? this.conversations,
+      agoraToken: agoraToken ?? this.agoraToken,
     );
   }
 }

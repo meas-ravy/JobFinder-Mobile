@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:job_finder/core/helper/typedef.dart';
 import 'package:job_finder/core/routes/app_path.dart';
 import 'package:job_finder/features/auth/presentation/screen/app_role_screen.dart';
 import 'package:job_finder/features/auth/presentation/screen/send_otp.dart';
@@ -12,8 +13,10 @@ import 'package:job_finder/features/job_seeker/presentation/screen/language_scre
 import 'package:job_finder/features/onboarding_screen.dart';
 import 'package:job_finder/features/recruiter/presentation/screen/create_company_screen.dart';
 import 'package:job_finder/features/recruiter/presentation/screen/recruiter_applied.dart';
+import 'package:job_finder/features/recruiter/presentation/screen/recruiter_application_detail.dart';
 import 'package:job_finder/features/recruiter/presentation/screen/edit_company_screen.dart';
 import 'package:job_finder/features/recruiter/presentation/screen/post_job_screen.dart';
+import 'package:job_finder/features/recruiter/presentation/screen/recruiter_chat_detail.dart';
 import 'package:job_finder/features/notifications/presentation/screen/notification_screen.dart';
 import 'package:job_finder/features/job_seeker/presentation/screen/setup_edit_profile_page.dart';
 import 'package:job_finder/features/job_seeker/presentation/screen/tip_detail_screen.dart';
@@ -21,6 +24,7 @@ import 'package:job_finder/features/job_seeker/presentation/screen/see_all_jobs_
 import 'package:job_finder/features/job_seeker/presentation/screen/search_page.dart';
 import 'package:job_finder/features/job_seeker/presentation/screen/job_detail_page.dart';
 import 'package:job_finder/features/job_seeker/presentation/screen/apply_job_page.dart';
+import 'package:job_finder/features/job_seeker/presentation/screen/message_detail_screen.dart';
 
 // Global navigator key for accessing navigation from outside widget tree (e.g., 401 interceptor)
 final GlobalKey<NavigatorState> rootNavigatorKey = GlobalKey<NavigatorState>();
@@ -62,11 +66,19 @@ class AppRouter {
       ),
       GoRoute(
         path: AppPath.jobSeekerHome,
-        builder: (context, state) => const MainWrapper(),
+        builder: (context, state) {
+          final tabStr = state.uri.queryParameters['tab'];
+          final initialIndex = int.tryParse(tabStr ?? '');
+          return MainWrapper(initialIndex: initialIndex);
+        },
       ),
       GoRoute(
         path: AppPath.recruiterHome,
-        builder: (context, state) => const ButonNavRecruiter(),
+        builder: (context, state) {
+          final tabStr = state.uri.queryParameters['tab'];
+          final initialIndex = int.tryParse(tabStr ?? '');
+          return ButonNavRecruiter(initialIndex: initialIndex);
+        },
       ),
       GoRoute(
         path: AppPath.buildTemplate,
@@ -87,7 +99,10 @@ class AppRouter {
       GoRoute(
         path: AppPath.postJob,
         builder: (context, state) {
-          final jobData = state.extra as Map<String, dynamic>?;
+          final extra = state.extra;
+          final jobData = (extra is Map)
+              ? Map<String, dynamic>.from(extra)
+              : null;
           return PostJobScreen(initialJobData: jobData);
         },
       ),
@@ -96,6 +111,22 @@ class AppRouter {
         builder: (context, state) {
           final jobId = state.extra as String?;
           return RecruiterAppliedPage(jobId: jobId);
+        },
+        routes: [
+          GoRoute(
+            path: ':id',
+            builder: (context, state) {
+              final jobId = state.pathParameters['id'];
+              return RecruiterAppliedPage(jobId: jobId);
+            },
+          ),
+        ],
+      ),
+      GoRoute(
+        path: '${AppPath.applicationDetail}/:id',
+        builder: (context, state) {
+          final applicationId = state.pathParameters['id'];
+          return RecruiterApplicationDetailPage(id: applicationId ?? '');
         },
       ),
       GoRoute(
@@ -125,9 +156,9 @@ class AppRouter {
         ),
       ),
       GoRoute(
-        path: AppPath.tipDetail,
+        path: '${AppPath.tipDetail}/:id',
         builder: (context, state) {
-          final tipId = state.extra as String?;
+          final tipId = state.pathParameters['id'];
           return TipDetailScreen(tipId: tipId ?? '');
         },
       ),
@@ -146,17 +177,43 @@ class AppRouter {
         builder: (context, state) => const SearchPage(),
       ),
       GoRoute(
-        path: AppPath.jobDetail,
+        path: '${AppPath.jobDetail}/:id',
         builder: (context, state) {
-          final jobId = state.extra as String?;
+          final jobId = state.pathParameters['id'];
           return JobDetailPage(jobId: jobId ?? '');
         },
       ),
       GoRoute(
-        path: AppPath.applyJob,
+        path: '${AppPath.applyJob}/:id',
         builder: (context, state) {
-          final jobId = state.extra as String?;
+          final jobId = state.pathParameters['id'];
           return ApplyJobPage(jobId: jobId ?? '');
+        },
+      ),
+      GoRoute(
+        path: '${AppPath.chatDetail}/:id',
+        builder: (context, state) {
+          final conversationId = state.pathParameters['id'] ?? '';
+          final extraData = state.extra;
+          final extra = (extraData is Map) ? DataMap.from(extraData) : null;
+          return RecruiterChatDetailScreen(
+            conversationId: conversationId,
+            candidateName: extra?['candidateName'] ?? 'Chat',
+            candidateAvatar: extra?['candidateAvatar'],
+          );
+        },
+      ),
+      GoRoute(
+        path: '${AppPath.jobSeekerChatDetail}/:id',
+        builder: (context, state) {
+          final conversationId = state.pathParameters['id'] ?? '';
+          final extraData = state.extra;
+          final extra = (extraData is Map) ? DataMap.from(extraData) : null;
+          return JobSeekerChatDetailScreen(
+            conversationId: conversationId,
+            name: extra?['name'] ?? 'Chat',
+            avatar: extra?['avatar'],
+          );
         },
       ),
     ],

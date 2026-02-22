@@ -24,4 +24,15 @@ class ApiEnpoint {
   static String tipDetail(String tipId) => "api/tips/$tipId";
   static String applyJob(String jobId) => "api/jobs/$jobId/apply";
   static const String categories = "api/jobs/categories";
+  static const String myApplications = "api/applications/my-applications";
+  static const String recruiterApplications = "api/recruiter/applications";
+  static String applicationDetails(String id) => "api/applications/$id";
+  static String updateApplicationStatus(String id) =>
+      "api/applications/$id/status";
+  static const String recruiterDashboard = "api/recruiter/dashboard";
+  static const String conversations = "api/conversations";
+  static String updateConversation(String id) => "api/conversations/$id";
+  static String getAgoraToken(String channelName) =>
+      "api/agora/token?channelName=$channelName";
+  static const String agoraCallSignal = "api/agora/call-signal";
 }

@@ -85,10 +85,7 @@ class EditProfilePage extends HookConsumerWidget {
         ),
         elevation: 0,
         leading: IconButton(
-          icon: Icon(
-            isSetup ? Icons.close : Icons.arrow_back_ios_new,
-            size: 20,
-          ),
+          icon: Icon(isSetup ? Icons.close : Icons.arrow_back, size: 26),
           onPressed: () {
             if (isSetup) {
               context.go(AppPath.jobSeekerHome);

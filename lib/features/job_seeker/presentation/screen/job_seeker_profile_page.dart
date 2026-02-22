@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:go_router/go_router.dart';
+import 'package:job_finder/features/job_seeker/presentation/widget/dialogs/switch_role_dialog.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:job_finder/shared/widget/shimmer_loading.dart';
 import 'package:job_finder/core/constants/assets.dart';
@@ -20,6 +21,7 @@ import 'package:job_finder/shared/widget/danger_tile.dart';
 import 'package:job_finder/shared/widget/section_title.dart';
 import 'package:job_finder/features/job_seeker/presentation/provider/profile_provider.dart';
 import 'package:job_finder/shared/widget/svg_icon.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class JobSeekerProfilePage extends HookConsumerWidget {
   const JobSeekerProfilePage({super.key});
@@ -34,7 +36,9 @@ class JobSeekerProfilePage extends HookConsumerWidget {
 
     useEffect(() {
       Future.microtask(() {
-        ref.read(profileControllerProvider.notifier).fetchProfile();
+        if (context.mounted) {
+          ref.read(profileControllerProvider.notifier).fetchProfile();
+        }
       });
       return null;
     }, []);
@@ -77,40 +81,17 @@ class JobSeekerProfilePage extends HookConsumerWidget {
                     //   onTap: () {},
                     // ),
                     SettingsTile(
-                      icon: AppIcon.documentBold,
-                      title: AppLocalizations.of(context).myResume,
-                      onTap: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => MyDocumentPage(),
-                          ),
-                        );
-                      },
-                    ),
-                    SettingsTile(
                       icon: AppIcon.switchRole,
                       title: AppLocalizations.of(context).switchToRecruiter,
                       onTap: () async {
                         // Show confirmation dialog
                         final confirmed = await showDialog<bool>(
                           context: context,
-                          builder: (context) => AlertDialog(
-                            title: Text(l10n.switchRoleTitle),
-                            content: Text(l10n.switchRoleContent),
-                            actions: [
-                              TextButton(
-                                onPressed: () => Navigator.pop(context, false),
-                                child: Text(l10n.cancel),
-                              ),
-                              FilledButton(
-                                onPressed: () => Navigator.pop(context, true),
-                                child: Text(
-                                  l10n.switchLabel,
-                                  style: const TextStyle(color: Colors.white),
-                                ),
-                              ),
-                            ],
+                          builder: (context) => SwitchRoleDialog(
+                            avatarUrl: profile?.avatarUrl,
+                            targetRole: 'Recruiter',
+                            title: l10n.switchRoleTitle,
+                            content: l10n.switchRoleContent,
                           ),
                         );
 
@@ -146,17 +127,29 @@ class JobSeekerProfilePage extends HookConsumerWidget {
                         }
                       },
                     ),
+                    SettingsTile(
+                      icon: AppIcon.documentBold,
+                      title: AppLocalizations.of(context).myResume,
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => MyDocumentPage(),
+                          ),
+                        );
+                      },
+                    ),
 
                     const SizedBox(height: 18),
                     SectionTitle(
                       title: AppLocalizations.of(context).generalSection,
                       textTheme: textTheme,
                     ),
-                    SettingsTile(
-                      icon: AppIcon.notification,
-                      title: AppLocalizations.of(context).notification,
-                      onTap: () {},
-                    ),
+                    // SettingsTile(
+                    //   icon: AppIcon.notification,
+                    //   title: AppLocalizations.of(context).notification,
+                    //   onTap: () => context.push(AppPath.notifications),
+                    // ),
                     // SettingsTile(
                     //   icon: AppIcon.application,
                     //   title: 'Application Issues',
@@ -258,16 +251,22 @@ class JobSeekerProfilePage extends HookConsumerWidget {
                         PolicyServices.termsOfServiceContent,
                       ),
                     ),
+
                     SettingsTile(
                       icon: AppIcon.star,
                       title: l10n.aboutUs,
-                      onTap: () => ShowDoc.showLegalDocument(
-                        context,
-                        l10n.aboutUs,
-                        PolicyServices.aboutUsContent,
-                      ),
+                      onTap: () async {
+                        final url = Uri.parse(
+                          'https://measravy-site.vercel.app/',
+                        );
+                        if (await canLaunchUrl(url)) {
+                          await launchUrl(
+                            url,
+                            mode: LaunchMode.inAppBrowserView,
+                          );
+                        }
+                      },
                     ),
-
                     const SizedBox(height: 18),
 
                     DangerTile(

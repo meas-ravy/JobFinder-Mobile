@@ -25,7 +25,11 @@ class SearchPage extends HookConsumerWidget {
 
     // Auto-focus the search field on open
     useEffect(() {
-      Future.microtask(() => focusNode.requestFocus());
+      Future.microtask(() {
+        if (context.mounted) {
+          focusNode.requestFocus();
+        }
+      });
       return () => debounceTimer.value?.cancel();
     }, []);
 

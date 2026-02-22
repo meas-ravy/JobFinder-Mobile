@@ -25,14 +25,11 @@ class CategoryChip extends StatelessWidget {
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 200),
           curve: Curves.easeInOut,
-          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
           decoration: BoxDecoration(
             color: isSelected ? AppColor.primaryDark : Colors.transparent,
             borderRadius: BorderRadius.circular(20),
-            border: Border.all(
-              color: AppColor.primaryDark,
-              width: 2, // Slightly thicker as per design
-            ),
+            border: Border.all(color: AppColor.primaryDark, width: 2),
           ),
           child: Text(
             label,

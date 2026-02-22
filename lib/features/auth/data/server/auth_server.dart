@@ -1,3 +1,5 @@
+import 'package:flutter/foundation.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:dartz/dartz.dart';
 import 'package:dio/dio.dart';
 import 'package:job_finder/core/constants/api_enpoint.dart';
@@ -83,8 +85,20 @@ class AuthServerImpl implements AuthServer {
       final data = response.data;
       if (data is DataMap) {
         final accessToken = data['accessToken'];
+        final firebaseToken = data['firebaseToken'];
+
         if (accessToken is String && accessToken.isNotEmpty) {
           await _tokenStorage.write(accessToken);
+        }
+
+        // Login to Firebase with Custom Token from Backend
+        if (firebaseToken is String && firebaseToken.isNotEmpty) {
+          try {
+            await FirebaseAuth.instance.signInWithCustomToken(firebaseToken);
+          } catch (e) {
+            // Silently fail or log if firebase auth fails; we still have our JWT
+            print("Firebase Login Error: $e");
+          }
         }
         return Right(data);
       }
@@ -113,8 +127,16 @@ class AuthServerImpl implements AuthServer {
       final data = response.data;
       if (data is DataMap) {
         final jwtAccess = data['accessToken'];
+        final firebaseToken = data['firebaseToken'];
         if (jwtAccess is String && jwtAccess.isNotEmpty) {
           await _tokenStorage.write(jwtAccess);
+        }
+        if (firebaseToken is String && firebaseToken.isNotEmpty) {
+          try {
+            await FirebaseAuth.instance.signInWithCustomToken(firebaseToken);
+          } catch (e) {
+            print("Firebase Login Error (Google OAuth): $e");
+          }
         }
         return Right(data);
       }
@@ -143,8 +165,16 @@ class AuthServerImpl implements AuthServer {
       final data = response.data;
       if (data is DataMap) {
         final jwtAccess = data['accessToken'];
+        final firebaseToken = data['firebaseToken'];
         if (jwtAccess is String && jwtAccess.isNotEmpty) {
           await _tokenStorage.write(jwtAccess);
+        }
+        if (firebaseToken is String && firebaseToken.isNotEmpty) {
+          try {
+            await FirebaseAuth.instance.signInWithCustomToken(firebaseToken);
+          } catch (e) {
+            print("Firebase Login Error (LinkedIn OAuth): $e");
+          }
         }
         return Right(data);
       }
@@ -196,6 +226,11 @@ class AuthServerImpl implements AuthServer {
       final response = await dio.post(ApiEnpoint.logout);
       final data = response.data;
       if (data is DataMap) {
+        try {
+          await FirebaseAuth.instance.signOut();
+        } catch (e) {
+          debugPrint("Firebase Logout Error: $e");
+        }
         return Right(data);
       }
       return Right(<String, dynamic>{'data': data});

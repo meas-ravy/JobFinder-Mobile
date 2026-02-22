@@ -1,4 +1,5 @@
 class ProfileEntity {
+  final String? id;
   final String? fullName;
   final String? email;
   final String? dateOfBirth;
@@ -6,6 +7,7 @@ class ProfileEntity {
   final String? avatarUrl;
 
   ProfileEntity({
+    this.id,
     this.fullName,
     this.email,
     this.dateOfBirth,

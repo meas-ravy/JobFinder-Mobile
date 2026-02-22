@@ -14,6 +14,7 @@ import 'package:job_finder/features/job_seeker/presentation/provider/profile_pro
 import 'package:job_finder/features/job_seeker/presentation/provider/tip_provider.dart';
 import 'package:job_finder/features/job_seeker/presentation/provider/job_provider.dart';
 import 'package:job_finder/features/job_seeker/presentation/widget/job_seeker_home_shimmer.dart';
+import 'package:job_finder/features/notifications/presentation/provider/notification_provider.dart';
 
 class JobSeekerHomePage extends HookConsumerWidget {
   const JobSeekerHomePage({super.key});
@@ -103,21 +104,27 @@ class JobSeekerHomePage extends HookConsumerWidget {
               ref.read(profileControllerProvider.notifier).fetchProfile(),
               ref.read(tipControllerProvider.notifier).fetchTips(),
               ref.read(jobControllerProvider.notifier).fetchAll(),
+              ref
+                  .read(notificationControllerProvider.notifier)
+                  .getNotifications(),
             ]);
           },
           child: CustomScrollView(
-            physics: const AlwaysScrollableScrollPhysics(
-              parent: BouncingScrollPhysics(),
-            ),
+            // physics: const AlwaysScrollableScrollPhysics(
+            //   parent: BouncingScrollPhysics(),
+            // ),
             slivers: [
               // 1. Header
               SliverToBoxAdapter(
                 child: HomeHeader(
                   userName: profile?.fullName ?? 'User',
                   userAvatarUrl: profile?.avatarUrl,
-                  hasUnreadNotifications: true,
+                  hasUnreadNotifications: ref
+                      .watch(notificationControllerProvider)
+                      .notifications
+                      .any((n) => !n.isRead),
                   isLoading: profileState.isLoading,
-                  onNotificationTap: () {},
+                  onNotificationTap: () => context.push(AppPath.notifications),
                 ),
               ),
 
@@ -166,8 +173,7 @@ class JobSeekerHomePage extends HookConsumerWidget {
                                         imageUrl: tip.imageUrl,
                                         onButtonPressed: () {
                                           context.push(
-                                            AppPath.tipDetail,
-                                            extra: tip.id,
+                                            '${AppPath.tipDetail}/${tip.id}',
                                           );
                                         },
                                       );
@@ -179,8 +185,7 @@ class JobSeekerHomePage extends HookConsumerWidget {
                                     imageUrl: tipState.tips.first.imageUrl,
                                     onButtonPressed: () {
                                       context.push(
-                                        AppPath.tipDetail,
-                                        extra: tipState.tips.first.id,
+                                        '${AppPath.tipDetail}/${tipState.tips.first.id}',
                                       );
                                     },
                                   ),

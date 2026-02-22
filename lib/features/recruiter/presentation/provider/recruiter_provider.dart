@@ -58,6 +58,53 @@ final getJobApplicationsUseCaseProvider = Provider<GetJobApplicationsUseCase>((
   return GetJobApplicationsUseCase(ref.watch(recruiterRepositoryProvider));
 });
 
+final getAllApplicationsUseCaseProvider = Provider<GetAllApplicationsUseCase>((
+  ref,
+) {
+  return GetAllApplicationsUseCase(ref.watch(recruiterRepositoryProvider));
+});
+
+final getApplicationDetailsUseCaseProvider =
+    Provider<GetApplicationDetailsUseCase>((ref) {
+      return GetApplicationDetailsUseCase(
+        ref.watch(recruiterRepositoryProvider),
+      );
+    });
+
+final updateApplicationStatusUseCaseProvider =
+    Provider<UpdateApplicationStatusUseCase>((ref) {
+      return UpdateApplicationStatusUseCase(
+        ref.watch(recruiterRepositoryProvider),
+      );
+    });
+
+final getRecruiterDashboardUseCaseProvider =
+    Provider<GetRecruiterDashboardUseCase>((ref) {
+      return GetRecruiterDashboardUseCase(
+        ref.watch(recruiterRepositoryProvider),
+      );
+    });
+
+final getConversationsUseCaseProvider = Provider<GetConversationsUseCase>((
+  ref,
+) {
+  return GetConversationsUseCase(ref.watch(recruiterRepositoryProvider));
+});
+
+final updateConversationUseCaseProvider = Provider<UpdateConversationUseCase>((
+  ref,
+) {
+  return UpdateConversationUseCase(ref.watch(recruiterRepositoryProvider));
+});
+
+final getAgoraTokenUseCaseProvider = Provider<GetAgoraTokenUseCase>((ref) {
+  return GetAgoraTokenUseCase(ref.watch(recruiterRepositoryProvider));
+});
+
+final signalCallUseCaseProvider = Provider<SignalCallUseCase>((ref) {
+  return SignalCallUseCase(ref.watch(recruiterRepositoryProvider));
+});
+
 final recruiterControllerProvider =
     StateNotifierProvider<RecruiterController, RecruiterState>((ref) {
       return RecruiterController(
@@ -71,6 +118,20 @@ final recruiterControllerProvider =
         updateJobUseCase: ref.watch(updateJobUseCaseProvider),
         deleteJobUseCase: ref.watch(deleteJobUseCaseProvider),
         getJobApplicationsUseCase: ref.watch(getJobApplicationsUseCaseProvider),
+        getAllApplicationsUseCase: ref.watch(getAllApplicationsUseCaseProvider),
+        getApplicationDetailsUseCase: ref.watch(
+          getApplicationDetailsUseCaseProvider,
+        ),
+        updateApplicationStatusUseCase: ref.watch(
+          updateApplicationStatusUseCaseProvider,
+        ),
+        getRecruiterDashboardUseCase: ref.watch(
+          getRecruiterDashboardUseCaseProvider,
+        ),
+        getConversationsUseCase: ref.watch(getConversationsUseCaseProvider),
+        updateConversationUseCase: ref.watch(updateConversationUseCaseProvider),
+        getAgoraTokenUseCase: ref.watch(getAgoraTokenUseCaseProvider),
+        signalCallUseCase: ref.watch(signalCallUseCaseProvider),
       );
     });
 

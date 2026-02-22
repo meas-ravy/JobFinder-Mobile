@@ -131,18 +131,19 @@ class JobDetailPage extends ConsumerWidget {
   ) async {
     try {
       // Optimistic update
-      ref.read(jobSavedStatusProvider(jobId).notifier).state = !isSaved;
+      ref.read(jobLocalSaveStatusProvider(jobId).notifier).state = !isSaved;
 
       final result = await ref.read(saveJobUseCaseProvider).call(job.id);
 
       // Sync with actual result
-      ref.read(jobSavedStatusProvider(jobId).notifier).state = result;
+      ref.read(jobLocalSaveStatusProvider(jobId).notifier).state = result;
 
-      // Refresh in background
+      // Refresh both the list and the detail provider
       ref.invalidate(savedJobsProvider);
+      ref.invalidate(jobDetailProvider(jobId));
     } catch (e) {
       // Rollback
-      ref.read(jobSavedStatusProvider(jobId).notifier).state = isSaved;
+      ref.read(jobLocalSaveStatusProvider(jobId).notifier).state = isSaved;
       if (context.mounted) {
         ScaffoldMessenger.of(
           context,

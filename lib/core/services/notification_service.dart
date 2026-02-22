@@ -6,6 +6,8 @@ import 'package:job_finder/core/constants/api_enpoint.dart';
 import 'package:job_finder/core/helper/secure_storage.dart';
 import 'package:job_finder/core/networks/dio_client.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:go_router/go_router.dart';
+import 'package:job_finder/core/routes/app_route.dart';
 import 'package:logger/logger.dart';
 
 @pragma('vm:entry-point')
@@ -52,12 +54,32 @@ class NotificationService {
     await _localNotifications.initialize(
       settings: initializationSettings,
       onDidReceiveNotificationResponse: (details) {
-        // Handle notification tap
+        if (details.payload != null) {
+          handleLink(details.payload!);
+        }
       },
     );
 
     // 2.5 Setup Background Handling
     FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
+
+    // Handle initial message (when app is opened from terminated state)
+    FirebaseMessaging.instance.getInitialMessage().then((message) {
+      if (message != null) {
+        final link = message.data['link'];
+        if (link != null && link.toString().isNotEmpty) {
+          handleLink(link.toString());
+        }
+      }
+    });
+
+    // Handle background messages tapped while app is in background
+    FirebaseMessaging.onMessageOpenedApp.listen((message) {
+      final link = message.data['link'];
+      if (link != null && link.toString().isNotEmpty) {
+        handleLink(link.toString());
+      }
+    });
 
     // 3. Setup Android Channel
     if (Platform.isAndroid) {
@@ -76,7 +98,23 @@ class NotificationService {
     }
 
     // 4. Handle Foreground Messages
-    FirebaseMessaging.onMessage.listen((RemoteMessage message) {
+    FirebaseMessaging.onMessage.listen((RemoteMessage message) async {
+      final storage = TokenStorageImpl(const FlutterSecureStorage());
+      final activeRole = await storage.readRole();
+
+      final data = message.data;
+      final targetRole = data['targetRole'] ?? 'Both';
+
+      // Filtering Logic
+      if (targetRole != 'Both' &&
+          activeRole != null &&
+          targetRole != activeRole) {
+        _logger.i(
+          'Skipping foreground notification: Target role ($targetRole) does not match active role ($activeRole)',
+        );
+        return;
+      }
+
       RemoteNotification? notification = message.notification;
       AndroidNotification? android = message.notification?.android;
 
@@ -85,6 +123,7 @@ class NotificationService {
           id: notification.hashCode,
           title: notification.title,
           body: notification.body,
+          payload: data['link'], // Pass link as payload
           notificationDetails: const NotificationDetails(
             android: AndroidNotificationDetails(
               'high_importance_channel',
@@ -107,6 +146,32 @@ class NotificationService {
     });
   }
 
+  Future<void> handleLink(String link) async {
+    _logger.i('Handling link: $link');
+
+    // Wait for context to be available (useful for cold starts)
+    int retryCount = 0;
+    while (rootNavigatorKey.currentContext == null && retryCount < 10) {
+      await Future.delayed(const Duration(milliseconds: 200));
+      retryCount++;
+    }
+
+    final context = rootNavigatorKey.currentContext;
+    if (context == null) {
+      _logger.e('Navigator context is null after retries, cannot navigate');
+      return;
+    }
+
+    // Use push to keep the back stack
+    try {
+      final String targetPath = link.startsWith('/') ? link : '/$link';
+      _logger.i('Navigating to: $targetPath');
+      context.push(targetPath);
+    } catch (e) {
+      _logger.e('Failed to navigate to link $link: $e');
+    }
+  }
+
   Future<void> registerDeviceToken({String? token}) async {
     try {
       // Only register if the user is authenticated
@@ -120,7 +185,9 @@ class NotificationService {
       final fcmToken = token ?? await _fcm.getToken();
       if (fcmToken == null) return;
 
-      _logger.i('FCM Token: $fcmToken');
+      final role = await storage.readRole();
+
+      _logger.i('FCM Token: $fcmToken, Role: $role');
 
       final dio = setupAuthenticatedDio(ApiEnpoint.baseUrl);
 
@@ -130,6 +197,7 @@ class NotificationService {
         data: {
           'deviceToken': fcmToken,
           'platform': Platform.isAndroid ? 'android' : 'ios',
+          'role': role,
         },
       );
       _logger.i('Device token registered successfully');

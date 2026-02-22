@@ -25,7 +25,7 @@ class NotificationModel {
       isRead: json['isRead'] ?? false,
       link: json['link'],
       createdAt: json['createdAt'] != null
-          ? DateTime.parse(json['createdAt'])
+          ? DateTime.parse(json['createdAt']).toLocal()
           : DateTime.now(),
     );
   }

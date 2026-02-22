@@ -70,8 +70,12 @@ class JobServerImpl implements JobServer {
   Future<bool> saveJob(String id) async {
     try {
       final response = await dio.post('${ApiEnpoint.jobs}/$id/save');
-      // Backend returns { isSaved: true/false }
-      return response.data['isSaved'] ?? false;
+      // Backend returns { isSaved: true/false } or { is_saved: true/false }
+      final data = response.data;
+      if (data != null && data['success'] == true) {
+        return data['isSaved'] ?? data['is_saved'] ?? false;
+      }
+      return data['isSaved'] ?? data['is_saved'] ?? false;
     } catch (e) {
       rethrow;
     }

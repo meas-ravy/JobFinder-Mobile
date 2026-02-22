@@ -53,6 +53,14 @@ class ExperienceDialog {
                         initialValue: existingExp?.jobTitle,
                         validator: FormBuilderValidators.required(),
                         maxLines: 1,
+                        suggestions: const [
+                          'Software Engineer',
+                          'Marketing Executive',
+                          'Sales Manager',
+                          'Graphic Designer',
+                          'Project Coordinator',
+                          'Accountant',
+                        ],
                       ),
                       const SizedBox(height: 12),
                       CvForm(
@@ -71,6 +79,13 @@ class ExperienceDialog {
                         initialValue: existingExp?.description,
                         validator: FormBuilderValidators.required(),
                         maxLines: 5,
+                        suggestions: const [
+                          'Developed and maintained cross-platform web and mobile applications using Flutter, focusing on performance, scalability, and clean architecture.',
+                          'Led a team of five to plan, execute, and optimize marketing campaigns, achieving measurable improvements in brand awareness and engagement.',
+                          'Managed daily financial operations, including budgeting, reporting, and expense tracking, ensuring accuracy and compliance with company policies.',
+                          'Designed creative and visually engaging assets for social media, websites, and marketing materials while maintaining consistent brand identity.',
+                          'Coordinated project schedules, managed timelines and resources, and communicated effectively with stakeholders to ensure successful project delivery.',
+                        ],
                       ),
                       const SizedBox(height: 12),
                       FormDateTime(

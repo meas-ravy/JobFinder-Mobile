@@ -83,9 +83,17 @@ class JobModel extends JobEntity {
       createdAt: json['createdAt'],
       updatedAt: json['updatedAt'],
       shareUrl: json['shareUrl'],
-      isSaved: json['isSaved'] ?? json['is_saved'] ?? false,
-      companyProfile: json['companyProfile'] != null
-          ? CompanyProfileModel.fromJson(json['companyProfile'])
+      isSaved:
+          json['isSaved'] ??
+          json['is_saved'] ??
+          json['is_bookmarked'] ??
+          json['bookmarked'] ??
+          false,
+      companyProfile:
+          (json['companyProfile'] != null || json['company'] != null)
+          ? CompanyProfileModel.fromJson(
+              json['companyProfile'] ?? json['company'],
+            )
           : null,
       recruiter: json['recruiter'] != null
           ? RecruiterModel.fromJson(json['recruiter'])

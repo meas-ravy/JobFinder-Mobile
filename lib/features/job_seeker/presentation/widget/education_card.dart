@@ -21,60 +21,104 @@ class EducationCard extends StatelessWidget {
     final textTheme = Theme.of(context).textTheme;
 
     return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      padding: const EdgeInsets.all(16),
+      margin: const EdgeInsets.only(bottom: 16),
+      padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         color: colorScheme.surface,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(20),
         border: Border.all(
-          color: colorScheme.onSecondary.withValues(alpha: 0.3),
+          color: colorScheme.outlineVariant.withValues(alpha: 0.2),
         ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.02),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: colorScheme.secondary.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: AppSvgIcon(
+                  assetName: AppIcon.document,
+                  size: 24,
+                  color: colorScheme.secondary,
+                ),
+              ),
+              const SizedBox(width: 16),
               Expanded(
-                child: Text(
-                  edu.degree,
-                  style: textTheme.titleSmall?.copyWith(
-                    fontWeight: FontWeight.w600,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      edu.degree,
+                      style: textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.w800,
+                        color: colorScheme.onSurface,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      edu.institution,
+                      style: textTheme.bodyMedium?.copyWith(
+                        color: colorScheme.onSurface.withValues(alpha: 0.7),
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 10,
+                        vertical: 4,
+                      ),
+                      decoration: BoxDecoration(
+                        color: colorScheme.secondary.withValues(alpha: 0.05),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Text(
+                        '${edu.startDate.year} - ${edu.endDate.year}',
+                        style: textTheme.labelSmall?.copyWith(
+                          color: colorScheme.secondary,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Column(
+                children: [
+                  IconButton(
+                    visualDensity: VisualDensity.compact,
+                    icon: AppSvgIcon(
+                      assetName: AppIcon.edit,
+                      size: 18,
+                      color: colorScheme.onSurface.withValues(alpha: 0.4),
+                    ),
+                    onPressed: onEdit,
                   ),
-                ),
-              ),
-              IconButton(
-                icon: AppSvgIcon(
-                  assetName: AppIcon.edit,
-                  size: 20,
-                  color: colorScheme.onSurface,
-                ),
-                onPressed: onEdit,
-              ),
-              IconButton(
-                icon: const AppSvgIcon(
-                  assetName: AppIcon.delete,
-                  size: 20,
-                  color: Colors.red,
-                ),
-                onPressed: onDelete,
+                  IconButton(
+                    visualDensity: VisualDensity.compact,
+                    icon: AppSvgIcon(
+                      assetName: AppIcon.delete,
+                      size: 18,
+                      color: colorScheme.error.withValues(alpha: 0.6),
+                    ),
+                    onPressed: onDelete,
+                  ),
+                ],
               ),
             ],
-          ),
-          const SizedBox(height: 4),
-          Text(
-            edu.institution,
-            style: textTheme.bodyMedium?.copyWith(
-              fontSize: 13,
-              color: colorScheme.onSurface.withValues(alpha: 0.8),
-            ),
-          ),
-          const SizedBox(height: 4),
-          Text(
-            '${edu.startDate.year} - ${edu.endDate.year}',
-            style: textTheme.bodySmall?.copyWith(
-              color: colorScheme.onSurface.withValues(alpha: 0.6),
-            ),
           ),
         ],
       ),

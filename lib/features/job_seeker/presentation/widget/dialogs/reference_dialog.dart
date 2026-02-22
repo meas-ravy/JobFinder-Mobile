@@ -60,6 +60,14 @@ class ReferenceDialog {
                         initialValue: existingRef?.position,
                         validator: FormBuilderValidators.required(),
                         maxLines: 1,
+                        suggestions: const [
+                          'CEO',
+                          'Manager',
+                          'HR Manager',
+                          'Senior Developer',
+                          'Director',
+                          'Supervisor',
+                        ],
                       ),
                       const SizedBox(height: 12),
                       CvForm(
@@ -68,6 +76,14 @@ class ReferenceDialog {
                         hint: l10n.companyHint,
                         initialValue: existingRef?.company,
                         maxLines: 1,
+                        suggestions: const [
+                          'Smart Axiata',
+                          'Cellcard',
+                          'ABA Bank',
+                          'Canadia Bank',
+                          'Chip Mong Group',
+                          'Grab Cambodia',
+                        ],
                       ),
                       const SizedBox(height: 12),
                       CvForm(

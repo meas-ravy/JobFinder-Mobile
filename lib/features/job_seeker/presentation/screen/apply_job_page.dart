@@ -5,9 +5,11 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:job_finder/core/theme/app_color.dart';
+import 'package:job_finder/core/routes/app_path.dart';
 import 'package:job_finder/core/constants/assets.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:job_finder/core/services/cloudinary_service.dart';
+import 'package:job_finder/features/job_seeker/presentation/provider/application_provider.dart';
 import 'package:job_finder/features/job_seeker/presentation/provider/job_provider.dart';
 import 'package:dio/dio.dart';
 import 'package:job_finder/core/helper/error_message.dart';
@@ -110,7 +112,10 @@ class ApplyJobPage extends HookConsumerWidget {
               actions: [
                 TextButton(
                   onPressed: () {
-                    context.pop();
+                    // Navigate to applications tab and refresh list
+                    ref.invalidate(myApplicationsProvider);
+                    ref.read(mainWrapperIndexProvider.notifier).state = 2;
+                    context.go(AppPath.jobSeekerHome);
                   },
                   child: const Text('OK'),
                 ),

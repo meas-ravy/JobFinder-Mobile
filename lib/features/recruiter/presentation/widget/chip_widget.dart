@@ -11,7 +11,7 @@ class AttachmentChip extends StatelessWidget {
   });
 
   final String label;
-  final IconData icon;
+  final Widget icon;
   final Color color;
   final Color textColor;
 
@@ -26,12 +26,7 @@ class AttachmentChip extends StatelessWidget {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Container(
-            width: 18,
-            height: 18,
-            decoration: BoxDecoration(color: color, shape: BoxShape.circle),
-            child: Icon(icon, size: 12, color: Colors.white),
-          ),
+          icon,
           const SizedBox(width: 6),
           Text(
             label,

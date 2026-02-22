@@ -57,4 +57,44 @@ class RecruiterRepositoryImpl implements RecruiterRepository {
   ResultFuture<DataMap> getJobApplications(String jobId) {
     return _server.getJobApplications(jobId);
   }
+
+  @override
+  ResultFuture<DataMap> getAllApplications() {
+    return _server.getAllApplications();
+  }
+
+  @override
+  ResultFuture<DataMap> getApplicationDetails(String id) {
+    return _server.getApplicationDetails(id);
+  }
+
+  @override
+  ResultFuture<DataMap> updateApplicationStatus(String id, String status) {
+    return _server.updateApplicationStatus(id, status);
+  }
+
+  @override
+  ResultFuture<DataMap> getRecruiterDashboard() {
+    return _server.getRecruiterDashboard();
+  }
+
+  @override
+  ResultFuture<DataMap> getConversations() {
+    return _server.getConversations();
+  }
+
+  @override
+  ResultFuture<DataMap> updateConversation(String id, DataMap body) {
+    return _server.updateConversation(id, body);
+  }
+
+  @override
+  ResultFuture<DataMap> getAgoraToken(String channelName) {
+    return _server.getAgoraToken(channelName);
+  }
+
+  @override
+  ResultFuture<DataMap> signalCall(DataMap body) {
+    return _server.signalCall(body);
+  }
 }

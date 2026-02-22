@@ -9,14 +9,17 @@ import 'package:job_finder/features/job_seeker/presentation/screen/job_seeker_ho
 import 'package:job_finder/features/job_seeker/presentation/screen/job_seeker_mesage_page.dart';
 import 'package:job_finder/features/job_seeker/presentation/screen/job_seeker_profile_page.dart';
 import 'package:job_finder/features/job_seeker/presentation/screen/job_seeker_save_page.dart';
+import 'package:hooks_riverpod/hooks_riverpod.dart';
+import 'package:job_finder/features/job_seeker/presentation/provider/job_provider.dart';
 import 'package:job_finder/l10n/app_localizations.dart';
 
-class MainWrapper extends HookWidget {
-  const MainWrapper({super.key});
+class MainWrapper extends HookConsumerWidget {
+  final int? initialIndex;
+  const MainWrapper({super.key, this.initialIndex});
 
   @override
-  Widget build(BuildContext context) {
-    final currentIndex = useState(0);
+  Widget build(BuildContext context, WidgetRef ref) {
+    final currentIndex = ref.watch(mainWrapperIndexProvider);
     final pressedIndex = useState(-1);
 
     void animateTap(int index) {
@@ -26,8 +29,17 @@ class MainWrapper extends HookWidget {
       });
     }
 
+    useEffect(() {
+      if (initialIndex != null) {
+        Future.microtask(() {
+          ref.read(mainWrapperIndexProvider.notifier).state = initialIndex!;
+        });
+      }
+      return null;
+    }, [initialIndex]);
+
     Widget buildBody() {
-      switch (currentIndex.value) {
+      switch (currentIndex) {
         case 0:
           return JobSeekerHomePage();
         case 1:
@@ -57,11 +69,11 @@ class MainWrapper extends HookWidget {
         child: BottomNavigationBar(
           type: BottomNavigationBarType.fixed,
           iconSize: 22,
-          currentIndex: currentIndex.value,
+          currentIndex: currentIndex,
           onTap: (index) {
             HapticFeedback.selectionClick();
             animateTap(index);
-            currentIndex.value = index;
+            ref.read(mainWrapperIndexProvider.notifier).state = index;
           },
           items: [
             BottomNavigationBarItem(

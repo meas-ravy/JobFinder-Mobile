@@ -50,6 +50,14 @@ class EducationDialog {
                         hint: l10n.degreeHint,
                         initialValue: existingEdu?.degree,
                         validator: FormBuilderValidators.required(),
+                        suggestions: const [
+                          'Bachelor of Computer Science',
+                          'Bachelor of Business Administration',
+                          'Bachelor of English Literature',
+                          'Bachelor of Finance and Banking',
+                          'Bachelor of Management',
+                          'Foundation Year',
+                        ],
                       ),
                       const SizedBox(height: 12),
                       CvForm(
@@ -58,6 +66,14 @@ class EducationDialog {
                         hint: l10n.institutionHint,
                         initialValue: existingEdu?.institution,
                         validator: FormBuilderValidators.required(),
+                        suggestions: const [
+                          'Royal University of Phnom Penh',
+                          'Institute of Technology of Cambodia',
+                          'National University of Management',
+                          'University of Cambodia',
+                          'Phnom Penh International University',
+                          'American University of Phnom Penh',
+                        ],
                       ),
                       const SizedBox(height: 12),
                       FormDateTime(

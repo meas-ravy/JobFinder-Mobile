@@ -12,6 +12,7 @@ class AppPath {
   static const String editCompany = '/edit-company';
   static const String postJob = '/post-job';
   static const String viewApplicants = '/view-applicants';
+  static const String applicationDetail = '/application-detail';
   static const String notifications = '/notifications';
   static const String editProfile = '/edit-profile';
   static const String setupProfile = '/setup-profile';
@@ -21,4 +22,6 @@ class AppPath {
   static const String search = '/search';
   static const String jobDetail = '/job-detail';
   static const String applyJob = '/apply-job';
+  static const String chatDetail = '/chat-detail';
+  static const String jobSeekerChatDetail = '/jobseeker-chat-detail';
 }
