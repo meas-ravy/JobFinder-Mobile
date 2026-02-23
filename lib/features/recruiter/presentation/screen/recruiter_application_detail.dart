@@ -171,6 +171,17 @@ class RecruiterApplicationDetailPage extends HookConsumerWidget {
         ? DataMap.from(profileMap)
         : <String, dynamic>{};
 
+    final name =
+        (profile['fullName'] ??
+                profile['name'] ??
+                jobSeeker['fullName'] ??
+                jobSeeker['name'])
+            ?.toString();
+
+    final avatarUrl = (profile['avatarUrl'] ?? jobSeeker['avatarUrl'])
+        ?.toString();
+    final email = (profile['email'] ?? jobSeeker['email'])?.toString();
+
     final jobMap = application['job'];
     final job = (jobMap is Map) ? DataMap.from(jobMap) : <String, dynamic>{};
 
@@ -191,16 +202,13 @@ class RecruiterApplicationDetailPage extends HookConsumerWidget {
               children: [
                 CircleAvatar(
                   radius: 40,
-                  backgroundImage: profile['avatarUrl'] != null
-                      ? NetworkImage(profile['avatarUrl'].toString())
+                  backgroundImage: avatarUrl != null
+                      ? NetworkImage(avatarUrl)
                       : null,
-                  child: profile['avatarUrl'] == null
+                  child: avatarUrl == null
                       ? Text(
-                          (profile['fullName']?.toString().isNotEmpty == true)
-                              ? profile['fullName']!
-                                    .toString()
-                                    .substring(0, 1)
-                                    .toUpperCase()
+                          (name?.isNotEmpty == true)
+                              ? name!.substring(0, 1).toUpperCase()
                               : 'U',
                           style: const TextStyle(fontSize: 32),
                         )
@@ -212,7 +220,7 @@ class RecruiterApplicationDetailPage extends HookConsumerWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        profile['fullName']?.toString() ?? 'Unknown Candidate',
+                        name ?? 'Unknown Candidate',
                         style: GoogleFonts.inter(
                           fontSize: 24,
                           fontWeight: FontWeight.bold,
@@ -221,7 +229,7 @@ class RecruiterApplicationDetailPage extends HookConsumerWidget {
                       ),
                       const SizedBox(height: 4),
                       Text(
-                        profile['email']?.toString() ?? 'No email provided',
+                        email ?? 'No email provided',
                         style: GoogleFonts.inter(
                           fontSize: 14,
                           color: colorScheme.onSurfaceVariant,

@@ -170,11 +170,23 @@ class RecruiterAppliedPage extends HookConsumerWidget {
               } catch (_) {}
             }
 
+            final profile = (user['profile'] is Map)
+                ? Map<String, dynamic>.from(user['profile'] as Map)
+                : <String, dynamic>{};
+
+            final name =
+                (profile['fullName'] ??
+                        profile['name'] ??
+                        user['fullName'] ??
+                        user['name'])
+                    ?.toString();
+
+            final avatarUrl = (profile['avatarUrl'] ?? user['avatarUrl'])
+                ?.toString();
+
             final displayData = ApplicantCardData(
-              name:
-                  (user['fullName'] ?? user['name'])?.toString() ??
-                  'Unknown Candidate',
-              avatarUrl: user['avatarUrl']?.toString(),
+              name: name ?? 'Unknown Candidate',
+              avatarUrl: avatarUrl,
               date: dateStr,
               role: job['title']?.toString() ?? 'Applying for Role',
               snippet:

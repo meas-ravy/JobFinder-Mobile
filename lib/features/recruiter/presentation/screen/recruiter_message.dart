@@ -120,7 +120,7 @@ class _RecruiterMessagePageState extends ConsumerState<RecruiterMessagePage> {
           Icon(
             Icons.message_outlined,
             size: 64,
-            color: colorScheme.onSurfaceVariant.withOpacity(0.3),
+            color: colorScheme.onSurfaceVariant.withValues(alpha: 0.3),
           ),
           const SizedBox(height: 16),
           Text(
@@ -207,7 +207,7 @@ class _ConversationTile extends StatelessWidget {
             _formatTimestamp(conversation.lastMessageTimestamp),
             style: GoogleFonts.outfit(
               fontSize: 12,
-              color: colorScheme.onSurfaceVariant.withOpacity(0.6),
+              color: colorScheme.onSurfaceVariant.withValues(alpha: 0.6),
             ),
           ),
           const SizedBox(height: 4),

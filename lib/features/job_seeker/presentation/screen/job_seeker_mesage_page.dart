@@ -79,7 +79,7 @@ class _JobSeekerMessagePageState extends ConsumerState<JobSeekerMessagePage> {
                   : ListView.separated(
                       itemCount: conversations.length,
                       separatorBuilder: (context, index) =>
-                          const Divider(height: 1, indent: 80),
+                          const SizedBox(height: 16),
                       itemBuilder: (context, index) {
                         final conversation = conversations[index];
                         return _ConversationTile(conversation: conversation);
