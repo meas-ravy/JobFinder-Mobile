@@ -530,7 +530,13 @@ class RecruiterController extends StateNotifier<RecruiterState> {
       },
       (data) {
         final token = data['token'] ?? data['data']?['token'];
-        state = state.copyWith(isLoading: false, agoraToken: token, data: data);
+        final appId = data['appId'] ?? data['data']?['appId'];
+        state = state.copyWith(
+          isLoading: false,
+          agoraToken: token,
+          agoraAppId: appId,
+          data: data,
+        );
       },
     );
   }

@@ -51,9 +51,11 @@ class JobSeekerChatController extends StateNotifier<ChatState> {
       },
       (data) {
         final token = data['token'] ?? data['data']?['token'];
+        final appId = data['appId'] ?? data['data']?['appId'];
         state = state.copyWith(
           isLoading: false,
           agoraToken: token,
+          agoraAppId: appId,
           lastAction: ChatAction.getAgoraToken,
         );
       },

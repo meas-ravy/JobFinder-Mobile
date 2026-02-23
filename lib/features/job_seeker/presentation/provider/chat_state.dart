@@ -12,6 +12,7 @@ class ChatState {
     this.conversations = const [],
     this.lastAction,
     this.agoraToken,
+    this.agoraAppId,
   });
 
   final bool isLoading;
@@ -19,6 +20,7 @@ class ChatState {
   final List<dynamic> conversations;
   final ChatAction? lastAction;
   final String? agoraToken;
+  final String? agoraAppId;
 
   ChatState copyWith({
     bool? isLoading,
@@ -26,6 +28,7 @@ class ChatState {
     List<dynamic>? conversations,
     ChatAction? lastAction,
     String? agoraToken,
+    String? agoraAppId,
   }) {
     return ChatState(
       isLoading: isLoading ?? this.isLoading,
@@ -33,6 +36,7 @@ class ChatState {
       conversations: conversations ?? this.conversations,
       lastAction: lastAction ?? this.lastAction,
       agoraToken: agoraToken ?? this.agoraToken,
+      agoraAppId: agoraAppId ?? this.agoraAppId,
     );
   }
 }

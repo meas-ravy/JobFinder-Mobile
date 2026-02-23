@@ -7,7 +7,9 @@ class ChatMessageModel {
   final String senderType;
   final dynamic timestamp;
   final String status;
+  final String? type; // 'text' or 'job_card'
   final String? jobId;
+  final Map<String, dynamic>? jobData;
 
   ChatMessageModel({
     this.id,
@@ -16,11 +18,20 @@ class ChatMessageModel {
     required this.senderType,
     this.timestamp,
     this.status = 'sent',
+    this.type = 'text',
     this.jobId,
+    this.jobData,
   });
 
   factory ChatMessageModel.fromMap(String id, Map<dynamic, dynamic> map) {
     final timestamp = map['timestamp'];
+
+    // Convert jobData if it exists
+    Map<String, dynamic>? parsedJobData;
+    if (map['jobData'] != null && map['jobData'] is Map) {
+      parsedJobData = Map<String, dynamic>.from(map['jobData']);
+    }
+
     return ChatMessageModel(
       id: id,
       content: (map['content'] ?? '').toString(),
@@ -28,7 +39,9 @@ class ChatMessageModel {
       senderType: (map['senderType'] ?? '').toString(),
       timestamp: timestamp,
       status: (map['status'] ?? 'sent').toString(),
+      type: (map['type'] ?? 'text').toString(),
       jobId: map['jobId']?.toString(),
+      jobData: parsedJobData,
     );
   }
 
@@ -39,7 +52,9 @@ class ChatMessageModel {
       'senderType': senderType,
       'timestamp': timestamp ?? ServerValue.timestamp,
       'status': status,
+      'type': type,
       if (jobId != null) 'jobId': jobId,
+      if (jobData != null) 'jobData': jobData,
     };
   }
 }

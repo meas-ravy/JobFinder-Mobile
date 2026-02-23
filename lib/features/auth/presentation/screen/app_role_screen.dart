@@ -106,6 +106,7 @@ class AppRoleScreen extends HookConsumerWidget {
                         if (profile == null ||
                             profile.fullName == null ||
                             profile.fullName!.isEmpty) {
+                          profileController.markSetupShown();
                           context.go(AppPath.setupProfile);
                         } else {
                           context.go(AppPath.jobSeekerHome);

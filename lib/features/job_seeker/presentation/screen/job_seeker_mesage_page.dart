@@ -29,9 +29,12 @@ class _JobSeekerMessagePageState extends ConsumerState<JobSeekerMessagePage> {
   Widget build(BuildContext context) {
     final state = ref.watch(jobSeekerChatControllerProvider);
     final colorScheme = Theme.of(context).colorScheme;
-    final conversations = state.conversations
-        .map((e) => ConversationListModel.fromJson(e as Map<String, dynamic>))
-        .toList();
+    final conversations = state.conversations.map((e) {
+      final mapData = (e is Map)
+          ? Map<String, dynamic>.from(e)
+          : <String, dynamic>{};
+      return ConversationListModel.fromJson(mapData);
+    }).toList();
 
     return Scaffold(
       appBar: AppBar(

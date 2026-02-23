@@ -92,13 +92,23 @@ class AuthServerImpl implements AuthServer {
         }
 
         // Login to Firebase with Custom Token from Backend
+        debugPrint("Backend Auth successful, checking for firebaseToken...");
         if (firebaseToken is String && firebaseToken.isNotEmpty) {
+          debugPrint(
+            "Firebase Token found (length: ${firebaseToken.length}). Saving and signing in...",
+          );
+          await _tokenStorage.writeFirebaseToken(firebaseToken);
           try {
-            await FirebaseAuth.instance.signInWithCustomToken(firebaseToken);
+            final userCredential = await FirebaseAuth.instance
+                .signInWithCustomToken(firebaseToken);
+            debugPrint(
+              "Firebase Login SUCCESS. UID: ${userCredential.user?.uid}",
+            );
           } catch (e) {
-            // Silently fail or log if firebase auth fails; we still have our JWT
-            print("Firebase Login Error: $e");
+            debugPrint("❌ Firebase Login Error: $e");
           }
+        } else {
+          debugPrint("⚠️ No firebaseToken received from backend.");
         }
         return Right(data);
       }
@@ -132,10 +142,11 @@ class AuthServerImpl implements AuthServer {
           await _tokenStorage.write(jwtAccess);
         }
         if (firebaseToken is String && firebaseToken.isNotEmpty) {
+          await _tokenStorage.writeFirebaseToken(firebaseToken);
           try {
             await FirebaseAuth.instance.signInWithCustomToken(firebaseToken);
           } catch (e) {
-            print("Firebase Login Error (Google OAuth): $e");
+            debugPrint("Firebase Login Error (Google OAuth): $e");
           }
         }
         return Right(data);
@@ -170,10 +181,11 @@ class AuthServerImpl implements AuthServer {
           await _tokenStorage.write(jwtAccess);
         }
         if (firebaseToken is String && firebaseToken.isNotEmpty) {
+          await _tokenStorage.writeFirebaseToken(firebaseToken);
           try {
             await FirebaseAuth.instance.signInWithCustomToken(firebaseToken);
           } catch (e) {
-            print("Firebase Login Error (LinkedIn OAuth): $e");
+            debugPrint("Firebase Login Error (LinkedIn OAuth): $e");
           }
         }
         return Right(data);

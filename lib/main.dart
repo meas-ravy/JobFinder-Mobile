@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_native_splash/flutter_native_splash.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:job_finder/core/constants/oauth_config.dart';
 import 'package:job_finder/core/helper/locale_controller.dart';
@@ -14,34 +15,68 @@ import 'package:job_finder/features/job_seeker/data/data_source/object_box.dart'
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:job_finder/firebase_options.dart';
 import 'package:job_finder/core/services/notification_service.dart';
 
 late ObjectBox objectBox;
 
 Future<void> main() async {
-  WidgetsFlutterBinding.ensureInitialized();
-  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+  final widgetsBinding = WidgetsFlutterBinding.ensureInitialized();
 
-  // Initialize Notification Service
-  await NotificationService.instance.initialize();
+  // Preserve native splash
+  FlutterNativeSplash.preserve(widgetsBinding: widgetsBinding);
 
+  // 1️⃣ Initialize Firebase
+  try {
+    if (Firebase.apps.isEmpty) {
+      await Firebase.initializeApp(
+        options: DefaultFirebaseOptions.currentPlatform,
+      );
+    }
+  } catch (e) {
+    if (e.toString().contains('duplicate-app')) {
+      debugPrint('Firebase already initialized, skipping...');
+    } else {
+      rethrow;
+    }
+  }
+
+  // 2️⃣ Local storage & services
   objectBox = await ObjectBox.create();
   await GoogleSignIn.instance.initialize(
     serverClientId: OAuthConfig.googleServerClientId,
   );
 
-  // Logic to determine initial route
   final storage = TokenStorageImpl(const FlutterSecureStorage());
   final token = await storage.read();
   final role = await storage.readRole();
   final hasSeenOnboarding = await storage.readHasSeenOnboarding();
 
-  String initialRoute = AppPath.splash; // Default (animations)
+  // 3️⃣ Firebase re-auth (VERY IMPORTANT before notifications)
+  if (token != null && token.isNotEmpty) {
+    try {
+      final firebaseToken = await storage.readFirebaseToken();
+      if (firebaseToken != null &&
+          firebaseToken.isNotEmpty &&
+          FirebaseAuth.instance.currentUser == null) {
+        await FirebaseAuth.instance.signInWithCustomToken(firebaseToken);
+        debugPrint('Firebase re-auth successful on startup');
+      }
+    } catch (e) {
+      debugPrint('Firebase re-auth failed on startup: $e');
+    }
+  }
+
+  // 4️⃣ Initialize Notifications (AFTER auth)
+  await NotificationService.instance.initialize();
+
+  // 5️⃣ Decide initial route
+  String initialRoute = AppPath.splash;
 
   if (hasSeenOnboarding) {
     if (token == null || token.isEmpty) {
-      initialRoute = AppPath.sendOtp; // Go straight to Login
+      initialRoute = AppPath.sendOtp;
     } else if (role == null || role.isEmpty) {
       initialRoute = AppPath.selectRole;
     } else {
@@ -50,6 +85,9 @@ Future<void> main() async {
           : AppPath.recruiterHome;
     }
   }
+
+  // 6️⃣ Remove splash only when app is ready
+  FlutterNativeSplash.remove();
 
   runApp(
     ProviderScope(

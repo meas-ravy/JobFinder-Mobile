@@ -54,6 +54,8 @@ class DefaultFirebaseOptions {
     appId: '1:418521148309:android:2d49b3405b99451015649c',
     messagingSenderId: '418521148309',
     projectId: 'push-notification-de8ac',
+    databaseURL:
+        'https://push-notification-de8ac-default-rtdb.asia-southeast1.firebasedatabase.app/',
     storageBucket: 'push-notification-de8ac.firebasestorage.app',
   );
 
@@ -62,6 +64,8 @@ class DefaultFirebaseOptions {
     appId: '1:418521148309:ios:f0833340bd4b544415649c',
     messagingSenderId: '418521148309',
     projectId: 'push-notification-de8ac',
+    databaseURL:
+        'https://push-notification-de8ac-default-rtdb.asia-southeast1.firebasedatabase.app/',
     storageBucket: 'push-notification-de8ac.firebasestorage.app',
     iosBundleId: 'com.example.jobFinder',
   );

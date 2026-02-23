@@ -1,13 +1,15 @@
 import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:job_finder/core/theme/app_color.dart';
 import 'package:job_finder/core/services/firebase_chat_service.dart';
 import 'package:job_finder/features/recruiter/data/models/chat_message_model.dart';
+import 'package:job_finder/features/recruiter/data/models/conversation_list_model.dart';
 import 'package:job_finder/features/job_seeker/presentation/provider/chat_provider.dart';
-import 'package:job_finder/features/job_seeker/presentation/provider/profile_provider.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:intl/intl.dart';
+import 'package:job_finder/features/chat/presentation/screen/call_screen.dart';
 
 class JobSeekerChatDetailScreen extends ConsumerStatefulWidget {
   final String conversationId;
@@ -38,6 +40,14 @@ class _JobSeekerChatDetailScreenState
     _messagesStream = FirebaseChatService.instance.getMessagesStream(
       widget.conversationId,
     );
+
+    // Initial fetch of conversations if empty, to recover name/avatar from notification navigation
+    Future.microtask(() {
+      final state = ref.read(jobSeekerChatControllerProvider);
+      if (state.conversations.isEmpty) {
+        ref.read(jobSeekerChatControllerProvider.notifier).getConversations();
+      }
+    });
   }
 
   @override
@@ -51,9 +61,7 @@ class _JobSeekerChatDetailScreenState
     final content = _messageController.text.trim();
     if (content.isEmpty) return;
 
-    final profileState = ref.read(profileControllerProvider);
-    final currentUserId = profileState.profile?.id ?? "";
-
+    final currentUserId = FirebaseAuth.instance.currentUser?.uid ?? "";
     if (currentUserId.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text("Error: User profile not loaded")),
@@ -108,10 +116,10 @@ class _JobSeekerChatDetailScreenState
         .getAgoraToken(widget.conversationId);
 
     final state = ref.read(jobSeekerChatControllerProvider);
-    if (state.agoraToken == null) {
+    if (state.agoraAppId == null) {
       ScaffoldMessenger.of(
         context,
-      ).showSnackBar(const SnackBar(content: Text("Failed to get call token")));
+      ).showSnackBar(const SnackBar(content: Text("Failed to get App ID")));
       return;
     }
 
@@ -121,67 +129,21 @@ class _JobSeekerChatDetailScreenState
       "callType": isVideo ? "VIDEO" : "VOICE",
     });
 
-    _showCallingOverlay(isVideo, state.agoraToken!);
-  }
+    // Try to get dynamic name and avatar
+    final displayName = widget.name;
+    final displayAvatar = widget.avatar;
 
-  void _showCallingOverlay(bool isVideo, String token) {
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.black,
-      builder: (context) => Container(
-        height: MediaQuery.of(context).size.height,
-        padding: const EdgeInsets.all(24),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            CircleAvatar(
-              radius: 60,
-              backgroundImage: widget.avatar != null
-                  ? NetworkImage(widget.avatar!)
-                  : null,
-              child: widget.avatar == null
-                  ? Text(widget.name[0], style: const TextStyle(fontSize: 40))
-                  : null,
-            ),
-            const SizedBox(height: 24),
-            Text(
-              widget.name,
-              style: GoogleFonts.outfit(
-                fontSize: 24,
-                fontWeight: FontWeight.bold,
-                color: Colors.white,
-              ),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              "Calling...",
-              style: GoogleFonts.outfit(fontSize: 16, color: Colors.white70),
-            ),
-            const Spacer(),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-              children: [
-                _CallActionButton(
-                  icon: Icons.call_end,
-                  color: Colors.red,
-                  onTap: () => Navigator.pop(context),
-                ),
-                if (isVideo)
-                  _CallActionButton(
-                    icon: Icons.videocam,
-                    color: Colors.blue,
-                    onTap: () {},
-                  ),
-                _CallActionButton(
-                  icon: Icons.mic,
-                  color: Colors.white24,
-                  onTap: () {},
-                ),
-              ],
-            ),
-            const SizedBox(height: 48),
-          ],
+    if (!context.mounted) return;
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => CallScreen(
+          channelName: widget.conversationId,
+          token: state.agoraToken!,
+          appId: state.agoraAppId!,
+          isVideoCall: isVideo,
+          remoteName: displayName,
+          remoteAvatar: displayAvatar,
         ),
       ),
     );
@@ -189,31 +151,58 @@ class _JobSeekerChatDetailScreenState
 
   @override
   Widget build(BuildContext context) {
-    final profileState = ref.watch(profileControllerProvider);
-    final currentUserId = profileState.profile?.id ?? "";
+    final colorScheme = Theme.of(context).colorScheme;
+    final currentUserId = FirebaseAuth.instance.currentUser?.uid ?? "";
+
+    // Try to find conversation in state to get name and avatar if missing (from notification)
+    final chatState = ref.watch(jobSeekerChatControllerProvider);
+    ConversationListModel? conversation;
+    try {
+      final convData = chatState.conversations.firstWhere(
+        (c) =>
+            (c is Map ? c['id'] : (c as dynamic).id) == widget.conversationId,
+        orElse: () => null,
+      );
+      if (convData != null) {
+        conversation = convData is Map
+            ? ConversationListModel.fromJson(
+                Map<String, dynamic>.from(convData),
+              )
+            : convData as ConversationListModel;
+      }
+    } catch (_) {}
+
+    final displayName = conversation?.otherParticipant.name ?? widget.name;
+    final displayAvatar =
+        conversation?.otherParticipant.avatar ?? widget.avatar;
 
     return Scaffold(
-      backgroundColor: AppColor.backgroundColorLight,
+      backgroundColor: colorScheme.surface,
       appBar: PreferredSize(
         preferredSize: const Size.fromHeight(70),
         child: AppBar(
-          backgroundColor: AppColor.backgroundColorLight,
+          backgroundColor: colorScheme.surface,
           elevation: 0,
           leading: IconButton(
-            icon: Icon(Icons.arrow_back, color: Colors.black, size: 24),
+            icon: Icon(
+              Icons.arrow_back,
+              color: colorScheme.onSurface,
+              size: 24,
+            ),
             onPressed: () => Navigator.pop(context),
           ),
           title: Row(
             children: [
               CircleAvatar(
-                radius: 18,
-                backgroundImage: widget.avatar != null
-                    ? NetworkImage(widget.avatar!)
+                radius: 20,
+                backgroundColor: colorScheme.surfaceContainerHighest,
+                backgroundImage: displayAvatar != null
+                    ? NetworkImage(displayAvatar)
                     : null,
-                child: widget.avatar == null
+                child: displayAvatar == null
                     ? Text(
-                        widget.name[0],
-                        style: TextStyle(fontSize: 14, color: Colors.black),
+                        displayName[0].toUpperCase(),
+                        style: TextStyle(color: colorScheme.primary),
                       )
                     : null,
               ),
@@ -221,13 +210,14 @@ class _JobSeekerChatDetailScreenState
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     Text(
-                      widget.name,
+                      displayName,
                       style: GoogleFonts.outfit(
                         fontSize: 18,
                         fontWeight: FontWeight.bold,
-                        color: Colors.black,
+                        color: colorScheme.onSurface,
                       ),
                     ),
                     Text(
@@ -244,15 +234,15 @@ class _JobSeekerChatDetailScreenState
           ),
           actions: [
             IconButton(
-              icon: const Icon(Icons.phone_outlined, color: Colors.black),
+              icon: Icon(Icons.phone_outlined, color: colorScheme.onSurface),
               onPressed: () => _startCall(false),
             ),
             IconButton(
-              icon: const Icon(Icons.videocam_outlined, color: Colors.black),
+              icon: Icon(Icons.videocam_outlined, color: colorScheme.onSurface),
               onPressed: () => _startCall(true),
             ),
             IconButton(
-              icon: const Icon(Icons.more_horiz, color: Colors.black),
+              icon: Icon(Icons.more_horiz, color: colorScheme.onSurface),
               onPressed: () {},
             ),
             const SizedBox(width: 8),
@@ -266,18 +256,60 @@ class _JobSeekerChatDetailScreenState
               stream: _messagesStream,
               builder: (context, snapshot) {
                 if (snapshot.hasError) {
-                  return Center(child: Text("Connection Error"));
+                  return Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(
+                          Icons.error_outline,
+                          color: colorScheme.error,
+                          size: 48,
+                        ),
+                        const SizedBox(height: 16),
+                        Text(
+                          "Connection Error",
+                          style: GoogleFonts.outfit(
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        Text(
+                          snapshot.error.toString(),
+                          style: GoogleFonts.outfit(
+                            color: colorScheme.onSurfaceVariant,
+                            fontSize: 12,
+                          ),
+                        ),
+                      ],
+                    ),
+                  );
                 }
                 if (snapshot.connectionState == ConnectionState.waiting) {
-                  return const Center(child: CircularProgressIndicator());
+                  return Center(
+                    child: CircularProgressIndicator(
+                      color: colorScheme.primary,
+                    ),
+                  );
                 }
 
                 final messages = snapshot.data ?? [];
                 if (messages.isEmpty) {
                   return Center(
-                    child: Text(
-                      "No messages yet",
-                      style: GoogleFonts.outfit(color: Colors.grey),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(
+                          Icons.chat_bubble_outline,
+                          size: 64,
+                          color: colorScheme.onSurfaceVariant.withOpacity(0.3),
+                        ),
+                        const SizedBox(height: 16),
+                        Text(
+                          "No messages yet",
+                          style: GoogleFonts.outfit(
+                            color: colorScheme.onSurfaceVariant,
+                          ),
+                        ),
+                      ],
                     ),
                   );
                 }
@@ -290,10 +322,10 @@ class _JobSeekerChatDetailScreenState
                   padding: const EdgeInsets.symmetric(horizontal: 16),
                   itemCount: displayMessages.length,
                   itemBuilder: (context, index) {
-                    final message = displayMessages[index];
+                    final message = messages[index];
                     final isMe = message.senderId == currentUserId;
 
-                    if (message.jobId != null) {
+                    if (message.type == 'job_card') {
                       return _JobPreviewCard(message: message);
                     }
 
@@ -303,42 +335,49 @@ class _JobSeekerChatDetailScreenState
               },
             ),
           ),
-          _buildInput(),
+          _buildInput(context),
         ],
       ),
     );
   }
 
-  Widget _buildInput() {
+  Widget _buildInput(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
     return Container(
-      padding: const EdgeInsets.fromLTRB(16, 16, 16, 32),
-      decoration: BoxDecoration(color: AppColor.backgroundColorLight),
+      padding: EdgeInsets.fromLTRB(
+        16,
+        16,
+        16,
+        MediaQuery.of(context).padding.bottom + 16,
+      ),
+      decoration: BoxDecoration(color: colorScheme.surface),
       child: Row(
         children: [
           Expanded(
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 16),
               decoration: BoxDecoration(
-                color: Colors.white,
+                color: colorScheme.surfaceContainerHighest,
                 borderRadius: BorderRadius.circular(30),
                 border: Border.all(
-                  color: AppColor.primaryLight.withOpacity(0.5),
+                  color: colorScheme.outlineVariant.withOpacity(0.5),
                 ),
               ),
               child: Row(
                 children: [
                   Icon(
                     Icons.sentiment_satisfied_alt_outlined,
-                    color: Colors.grey[600],
+                    color: colorScheme.onSurfaceVariant,
                   ),
                   const SizedBox(width: 12),
                   Expanded(
                     child: TextField(
                       controller: _messageController,
+                      style: TextStyle(color: colorScheme.onSurface),
                       decoration: InputDecoration(
                         hintText: "Type a message ...",
                         hintStyle: GoogleFonts.outfit(
-                          color: Colors.grey[400],
+                          color: colorScheme.onSurfaceVariant.withOpacity(0.5),
                           fontSize: 15,
                         ),
                         border: InputBorder.none,
@@ -346,9 +385,12 @@ class _JobSeekerChatDetailScreenState
                       onSubmitted: (_) => _sendMessage(),
                     ),
                   ),
-                  Icon(Icons.attach_file, color: Colors.grey[600]),
+                  Icon(Icons.attach_file, color: colorScheme.onSurfaceVariant),
                   const SizedBox(width: 12),
-                  Icon(Icons.camera_alt_outlined, color: Colors.grey[600]),
+                  Icon(
+                    Icons.camera_alt_outlined,
+                    color: colorScheme.onSurfaceVariant,
+                  ),
                 ],
               ),
             ),
@@ -359,11 +401,11 @@ class _JobSeekerChatDetailScreenState
             child: Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                color: AppColor.primaryLight,
+                color: colorScheme.primary,
                 shape: BoxShape.circle,
                 boxShadow: [
                   BoxShadow(
-                    color: AppColor.primaryLight.withOpacity(0.3),
+                    color: colorScheme.primary.withOpacity(0.3),
                     blurRadius: 10,
                     offset: const Offset(0, 4),
                   ),
@@ -386,76 +428,94 @@ class _MessageBubble extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    final bubbleColor = isMe
+        ? colorScheme.primary
+        : (isDark ? AppColor.leftMessageColorDark : const Color(0xffF2F2F2));
+
     return Align(
       alignment: isMe ? Alignment.centerRight : Alignment.centerLeft,
-      child: Container(
-        margin: const EdgeInsets.only(bottom: 16),
-        constraints: BoxConstraints(
-          maxWidth: MediaQuery.of(context).size.width * 0.75,
-        ),
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: isMe ? AppColor.primaryLight : const Color(0xffF2F2F2),
-          borderRadius: BorderRadius.only(
-            topLeft: const Radius.circular(20),
-            topRight: const Radius.circular(20),
-            bottomLeft: Radius.circular(isMe ? 20 : 0),
-            bottomRight: Radius.circular(isMe ? 0 : 20),
-          ),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.end,
-          children: [
-            Text(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          const SizedBox(height: 10),
+          Container(
+            margin: const EdgeInsets.only(bottom: 8),
+            padding: const EdgeInsets.symmetric(vertical: 7, horizontal: 16),
+            decoration: BoxDecoration(
+              color: bubbleColor,
+              borderRadius: BorderRadius.circular(30),
+              boxShadow: [
+                if (!isMe && !isDark)
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.05),
+                    blurRadius: 5,
+                    offset: const Offset(0, 2),
+                  ),
+              ],
+            ),
+            child: Text(
               message.content,
-              style: GoogleFonts.outfit(
+              style: GoogleFonts.inter(
                 fontSize: 15,
-                color: isMe ? Colors.white : Colors.black87,
-                height: 1.4,
+                color: Colors.white,
+                fontWeight: FontWeight.w500,
               ),
             ),
-            const SizedBox(height: 4),
-            Text(
-              _formatDate(message.timestamp),
-              style: GoogleFonts.outfit(
-                fontSize: 11,
-                color: isMe ? Colors.white70 : Colors.grey[500],
-              ),
-            ),
-          ],
-        ),
+          ),
+          Text(
+            _formatDate(message.timestamp),
+            style: GoogleFonts.inter(fontSize: 10, color: Colors.white),
+          ),
+        ],
       ),
     );
   }
 
   String _formatDate(dynamic timestamp) {
     if (timestamp == null) return "Sending...";
-    if (timestamp is int) {
-      final date = DateTime.fromMillisecondsSinceEpoch(timestamp);
-      return DateFormat('HH:mm').format(date);
-    }
+    try {
+      if (timestamp is int) {
+        final date = DateTime.fromMillisecondsSinceEpoch(timestamp);
+        return DateFormat('HH:mm').format(date);
+      } else if (timestamp is String) {
+        final date = DateTime.parse(timestamp);
+        return DateFormat('HH:mm').format(date);
+      }
+    } catch (_) {}
     return "";
   }
 }
 
 class _JobPreviewCard extends StatelessWidget {
   final ChatMessageModel message;
+
   const _JobPreviewCard({required this.message});
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final job = message.jobData;
+
+    if (job == null) return const SizedBox.shrink();
+
     return Container(
-      margin: const EdgeInsets.only(bottom: 24),
-      padding: const EdgeInsets.all(16),
+      margin: const EdgeInsets.symmetric(vertical: 20, horizontal: 8),
+      padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: Colors.grey.withOpacity(0.1)),
+        color: isDark ? colorScheme.surface : Colors.white,
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(
+          color: colorScheme.outlineVariant.withValues(alpha: 0.5),
+        ),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.02),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
+            color: Colors.black.withValues(alpha: isDark ? 0.2 : 0.05),
+            blurRadius: 15,
+            offset: const Offset(0, 8),
           ),
         ],
       ),
@@ -463,34 +523,49 @@ class _JobPreviewCard extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Container(
-                padding: const EdgeInsets.all(10),
+                width: 60,
+                height: 60,
+                padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
-                  color: Colors.grey[50],
-                  borderRadius: BorderRadius.circular(12),
+                  color: colorScheme.surfaceContainerHighest,
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(
+                    color: colorScheme.outlineVariant.withValues(alpha: 0.3),
+                  ),
                 ),
-                child: Icon(Icons.work_outline, color: AppColor.primaryLight),
+                child:
+                    job['logoUrl'] != null &&
+                        job['logoUrl'].toString().isNotEmpty
+                    ? Image.network(
+                        job['logoUrl'].toString(),
+                        errorBuilder: (context, error, stackTrace) =>
+                            Icon(Icons.business, color: colorScheme.primary),
+                      )
+                    : Icon(Icons.business, color: colorScheme.primary),
               ),
-              const SizedBox(width: 12),
+              const SizedBox(width: 16),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      message.content.contains("hired")
-                          ? "Hiring Offer"
-                          : "Job Update",
-                      style: GoogleFonts.outfit(
+                      job['title'] ?? 'Job Title',
+                      style: GoogleFonts.inter(
                         fontWeight: FontWeight.bold,
-                        fontSize: 16,
+                        fontSize: 18,
+                        color: colorScheme.onSurface,
                       ),
                     ),
+                    const SizedBox(height: 4),
                     Text(
-                      "Job ID: ${message.jobId}",
-                      style: GoogleFonts.outfit(
-                        color: Colors.grey,
-                        fontSize: 12,
+                      job['company'] ?? 'Company Name',
+                      style: GoogleFonts.inter(
+                        color: colorScheme.onSurfaceVariant,
+                        fontSize: 14,
+                        fontWeight: FontWeight.w500,
                       ),
                     ),
                   ],
@@ -498,50 +573,73 @@ class _JobPreviewCard extends StatelessWidget {
               ),
             ],
           ),
-          const SizedBox(height: 16),
-          Text(message.content, style: GoogleFonts.outfit(fontSize: 14)),
-          const SizedBox(height: 16),
-          SizedBox(
-            width: double.infinity,
-            child: ElevatedButton(
-              onPressed: () {},
-              style: ElevatedButton.styleFrom(
-                backgroundColor: AppColor.primaryLight,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: 16),
+            child: Divider(
+              color: colorScheme.outlineVariant.withValues(alpha: 0.5),
+            ),
+          ),
+          Row(
+            children: [
+              Icon(
+                Icons.location_on_outlined,
+                size: 16,
+                color: colorScheme.onSurfaceVariant,
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  job['location'] ?? 'Location',
+                  style: GoogleFonts.inter(
+                    color: colorScheme.onSurfaceVariant,
+                    fontSize: 14,
+                  ),
                 ),
               ),
-              child: const Text(
-                "View Details",
-                style: TextStyle(color: Colors.white),
-              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          Text(
+            job['salary'] ?? 'Unspecified Salary',
+            style: GoogleFonts.inter(
+              color: AppColor.primaryLight,
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
             ),
+          ),
+          const SizedBox(height: 16),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: [
+              if (job['jobType'] != null)
+                _buildTag(context, job['jobType'].toString()),
+              if (job['workplace'] != null)
+                _buildTag(context, job['workplace'].toString()),
+            ],
           ),
         ],
       ),
     );
   }
-}
 
-class _CallActionButton extends StatelessWidget {
-  final IconData icon;
-  final Color color;
-  final VoidCallback onTap;
-
-  const _CallActionButton({
-    required this.icon,
-    required this.color,
-    required this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(color: color, shape: BoxShape.circle),
-        child: Icon(icon, color: Colors.white, size: 28),
+  Widget _buildTag(BuildContext context, String text) {
+    final colorScheme = Theme.of(context).colorScheme;
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(
+          color: colorScheme.outlineVariant.withValues(alpha: 0.5),
+        ),
+      ),
+      child: Text(
+        text,
+        style: GoogleFonts.inter(
+          fontSize: 12,
+          color: colorScheme.onSurfaceVariant,
+          fontWeight: FontWeight.w500,
+        ),
       ),
     );
   }

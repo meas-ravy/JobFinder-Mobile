@@ -1,12 +1,15 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:job_finder/core/theme/app_color.dart';
 import 'package:job_finder/core/services/firebase_chat_service.dart';
 import 'package:job_finder/features/recruiter/data/models/chat_message_model.dart';
+import 'package:job_finder/features/recruiter/data/models/conversation_list_model.dart';
 import 'package:job_finder/features/recruiter/presentation/provider/recruiter_provider.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:intl/intl.dart';
+import 'package:job_finder/features/chat/presentation/screen/call_screen.dart';
 
 class RecruiterChatDetailScreen extends ConsumerStatefulWidget {
   final String conversationId;
@@ -37,6 +40,14 @@ class _RecruiterChatDetailScreenState
     _messagesStream = FirebaseChatService.instance.getMessagesStream(
       widget.conversationId,
     );
+
+    // Initial fetch of conversations if empty, to recover name/avatar from notification navigation
+    Future.microtask(() {
+      final state = ref.read(recruiterControllerProvider);
+      if (state.conversations.isEmpty) {
+        ref.read(recruiterControllerProvider.notifier).getConversations();
+      }
+    });
   }
 
   @override
@@ -50,8 +61,8 @@ class _RecruiterChatDetailScreenState
     final content = _messageController.text.trim();
     if (content.isEmpty) return;
 
-    final state = ref.read(recruiterControllerProvider);
-    final currentRecruiterId = state.company?.id ?? "recruiter_1"; // Fallback
+    final currentRecruiterId =
+        FirebaseAuth.instance.currentUser?.uid ?? "recruiter_1";
 
     final newMessage = ChatMessageModel(
       content: content,
@@ -102,11 +113,19 @@ class _RecruiterChatDetailScreenState
         .read(recruiterControllerProvider.notifier)
         .getAgoraToken(widget.conversationId);
 
-    final state = ref.read(recruiterControllerProvider);
-    if (state.agoraToken == null) {
+    final currentUserId = FirebaseAuth.instance.currentUser?.uid ?? "";
+    if (currentUserId.isEmpty) {
       ScaffoldMessenger.of(
         context,
       ).showSnackBar(const SnackBar(content: Text("Failed to get call token")));
+      return;
+    }
+
+    final state = ref.read(recruiterControllerProvider);
+    if (state.agoraAppId == null) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text("Failed to get App ID")));
       return;
     }
 
@@ -117,72 +136,20 @@ class _RecruiterChatDetailScreenState
       "callType": isVideo ? "VIDEO" : "VOICE",
     });
 
-    // 4. Navigate to Call Screen (To be implemented or stay here with overlay)
-    // For now, let's just show a simple calling dialog or placeholder
-    _showCallingOverlay(isVideo, state.agoraToken!);
-  }
+    final displayName = widget.candidateName;
+    final displayAvatar = widget.candidateAvatar;
 
-  void _showCallingOverlay(bool isVideo, String token) {
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.black,
-      builder: (context) => Container(
-        height: MediaQuery.of(context).size.height,
-        padding: const EdgeInsets.all(24),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            CircleAvatar(
-              radius: 60,
-              backgroundImage: widget.candidateAvatar != null
-                  ? NetworkImage(widget.candidateAvatar!)
-                  : null,
-              child: widget.candidateAvatar == null
-                  ? Text(
-                      widget.candidateName[0],
-                      style: const TextStyle(fontSize: 40),
-                    )
-                  : null,
-            ),
-            const SizedBox(height: 24),
-            Text(
-              widget.candidateName,
-              style: GoogleFonts.outfit(
-                fontSize: 24,
-                fontWeight: FontWeight.bold,
-                color: Colors.white,
-              ),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              "Calling...",
-              style: GoogleFonts.outfit(fontSize: 16, color: Colors.white70),
-            ),
-            const Spacer(),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-              children: [
-                _CallActionButton(
-                  icon: Icons.call_end,
-                  color: Colors.red,
-                  onTap: () => Navigator.pop(context),
-                ),
-                if (isVideo)
-                  _CallActionButton(
-                    icon: Icons.videocam,
-                    color: Colors.blue,
-                    onTap: () {},
-                  ),
-                _CallActionButton(
-                  icon: Icons.mic,
-                  color: Colors.white24,
-                  onTap: () {},
-                ),
-              ],
-            ),
-            const SizedBox(height: 48),
-          ],
+    if (!context.mounted) return;
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => CallScreen(
+          channelName: widget.conversationId,
+          token: state.agoraToken!,
+          appId: state.agoraAppId!,
+          isVideoCall: isVideo,
+          remoteName: displayName,
+          remoteAvatar: displayAvatar,
         ),
       ),
     );
@@ -191,8 +158,30 @@ class _RecruiterChatDetailScreenState
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
+    final currentRecruiterId = FirebaseAuth.instance.currentUser?.uid ?? "";
+
+    // Try to find conversation in state to get name and avatar if missing (from notification)
     final recruiterState = ref.watch(recruiterControllerProvider);
-    final currentRecruiterId = recruiterState.company?.id ?? "";
+    ConversationListModel? conversation;
+    try {
+      final convData = recruiterState.conversations.firstWhere(
+        (c) =>
+            (c is Map ? c['id'] : (c as dynamic).id) == widget.conversationId,
+        orElse: () => null,
+      );
+      if (convData != null) {
+        conversation = convData is Map
+            ? ConversationListModel.fromJson(
+                Map<String, dynamic>.from(convData),
+              )
+            : convData as ConversationListModel;
+      }
+    } catch (_) {}
+
+    final displayName =
+        conversation?.otherParticipant.name ?? widget.candidateName;
+    final displayAvatar =
+        conversation?.otherParticipant.avatar ?? widget.candidateAvatar;
 
     return Scaffold(
       appBar: AppBar(
@@ -206,12 +195,12 @@ class _RecruiterChatDetailScreenState
             CircleAvatar(
               radius: 18,
               backgroundColor: colorScheme.surfaceContainerHighest,
-              backgroundImage: widget.candidateAvatar != null
-                  ? NetworkImage(widget.candidateAvatar!)
+              backgroundImage: displayAvatar != null
+                  ? NetworkImage(displayAvatar)
                   : null,
-              child: widget.candidateAvatar == null
+              child: displayAvatar == null
                   ? Text(
-                      widget.candidateName[0],
+                      displayName[0].toUpperCase(),
                       style: TextStyle(color: colorScheme.primary),
                     )
                   : null,
@@ -222,20 +211,20 @@ class _RecruiterChatDetailScreenState
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    widget.candidateName,
+                    displayName,
                     style: GoogleFonts.outfit(
                       fontSize: 16,
                       fontWeight: FontWeight.bold,
                       color: colorScheme.onSurface,
                     ),
                   ),
-                  Text(
-                    "Online",
-                    style: GoogleFonts.outfit(
-                      fontSize: 12,
-                      color: Colors.green,
-                    ),
-                  ),
+                  // Text(
+                  //   "Online",
+                  //   style: GoogleFonts.outfit(
+                  //     fontSize: 12,
+                  //     color: Colors.green,
+                  //   ),
+                  // ),
                 ],
               ),
             ),
@@ -264,9 +253,9 @@ class _RecruiterChatDetailScreenState
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        const Icon(
+                        Icon(
                           Icons.error_outline,
-                          color: Colors.red,
+                          color: colorScheme.error,
                           size: 48,
                         ),
                         const SizedBox(height: 16),
@@ -275,14 +264,18 @@ class _RecruiterChatDetailScreenState
                           style: GoogleFonts.outfit(
                             fontSize: 18,
                             fontWeight: FontWeight.bold,
+                            color: colorScheme.onSurface,
                           ),
                         ),
                         const SizedBox(height: 8),
-                        Text(
-                          "Check your internet or Firebase permissions.",
-                          textAlign: TextAlign.center,
-                          style: GoogleFonts.outfit(
-                            color: colorScheme.onSurfaceVariant,
+                        Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 32),
+                          child: Text(
+                            "Check your internet or Firebase permissions.",
+                            textAlign: TextAlign.center,
+                            style: GoogleFonts.outfit(
+                              color: colorScheme.onSurfaceVariant,
+                            ),
                           ),
                         ),
                       ],
@@ -336,7 +329,7 @@ class _RecruiterChatDetailScreenState
                     final message = displayMessages[index];
                     final isMe = message.senderId == currentRecruiterId;
 
-                    if (message.jobId != null) {
+                    if (message.type == 'job_card') {
                       return _JobPreviewCard(message: message);
                     }
 
@@ -439,35 +432,22 @@ class _MessageBubble extends StatelessWidget {
               ? AppColor.leftMessageColorDark
               : AppColor.leftMessageColorLight);
 
-    final textColor = isMe
-        ? colorScheme.onPrimary
-        : (isDark ? colorScheme.onSurface : colorScheme.onSurface);
-
     return Align(
       alignment: isMe ? Alignment.centerRight : Alignment.centerLeft,
       child: Column(
-        crossAxisAlignment: isMe
-            ? CrossAxisAlignment.end
-            : CrossAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.center,
         children: [
+          const SizedBox(height: 10),
           Container(
-            margin: const EdgeInsets.only(bottom: 4),
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-            constraints: BoxConstraints(
-              maxWidth: MediaQuery.of(context).size.width * 0.7,
-            ),
+            margin: const EdgeInsets.only(bottom: 8),
+            padding: const EdgeInsets.symmetric(vertical: 7, horizontal: 16),
             decoration: BoxDecoration(
               color: bubbleColor,
-              borderRadius: BorderRadius.only(
-                topLeft: const Radius.circular(20),
-                topRight: const Radius.circular(20),
-                bottomLeft: Radius.circular(isMe ? 20 : 0),
-                bottomRight: Radius.circular(isMe ? 0 : 20),
-              ),
+              borderRadius: BorderRadius.circular(30),
               boxShadow: [
                 if (!isMe && !isDark)
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.05),
+                    color: Colors.black.withValues(alpha: 0.05),
                     blurRadius: 5,
                     offset: const Offset(0, 2),
                   ),
@@ -475,18 +455,16 @@ class _MessageBubble extends StatelessWidget {
             ),
             child: Text(
               message.content,
-              style: GoogleFonts.outfit(color: textColor, fontSize: 15),
-            ),
-          ),
-          Padding(
-            padding: const EdgeInsets.only(bottom: 16, left: 4, right: 4),
-            child: Text(
-              _formatDate(message.timestamp),
-              style: GoogleFonts.outfit(
-                fontSize: 10,
-                color: colorScheme.onSurfaceVariant,
+              style: GoogleFonts.inter(
+                fontSize: 15,
+                color: Colors.white,
+                fontWeight: FontWeight.w500,
               ),
             ),
+          ),
+          Text(
+            _formatDate(message.timestamp),
+            style: GoogleFonts.inter(fontSize: 10, color: Colors.white),
           ),
         ],
       ),
@@ -495,10 +473,15 @@ class _MessageBubble extends StatelessWidget {
 
   String _formatDate(dynamic timestamp) {
     if (timestamp == null) return "Sending...";
-    if (timestamp is int) {
-      final date = DateTime.fromMillisecondsSinceEpoch(timestamp);
-      return DateFormat('HH:mm').format(date);
-    }
+    try {
+      if (timestamp is int) {
+        final date = DateTime.fromMillisecondsSinceEpoch(timestamp);
+        return DateFormat('HH:mm').format(date);
+      } else if (timestamp is String) {
+        final date = DateTime.parse(timestamp);
+        return DateFormat('HH:mm').format(date);
+      }
+    } catch (_) {}
     return "";
   }
 }
@@ -511,18 +494,25 @@ class _JobPreviewCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final job = message.jobData;
+
+    if (job == null) return const SizedBox.shrink();
+
     return Container(
-      margin: const EdgeInsets.only(bottom: 24),
-      padding: const EdgeInsets.all(16),
+      margin: const EdgeInsets.symmetric(vertical: 20, horizontal: 8),
+      padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: colorScheme.surface,
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: colorScheme.outlineVariant.withOpacity(0.5)),
+        color: isDark ? colorScheme.surface : Colors.white,
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(
+          color: colorScheme.outlineVariant.withValues(alpha: 0.5),
+        ),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.02),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
+            color: Colors.black.withValues(alpha: isDark ? 0.2 : 0.05),
+            blurRadius: 15,
+            offset: const Offset(0, 8),
           ),
         ],
       ),
@@ -530,35 +520,49 @@ class _JobPreviewCard extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Container(
-                padding: const EdgeInsets.all(10),
+                width: 60,
+                height: 60,
+                padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
                   color: colorScheme.surfaceContainerHighest,
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(
+                    color: colorScheme.outlineVariant.withValues(alpha: 0.3),
+                  ),
                 ),
-                child: Icon(Icons.work_outline, color: colorScheme.primary),
+                child:
+                    job['logoUrl'] != null &&
+                        job['logoUrl'].toString().isNotEmpty
+                    ? Image.network(
+                        job['logoUrl'].toString(),
+                        errorBuilder: (context, error, stackTrace) =>
+                            Icon(Icons.business, color: colorScheme.primary),
+                      )
+                    : Icon(Icons.business, color: colorScheme.primary),
               ),
-              const SizedBox(width: 12),
+              const SizedBox(width: 16),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      message.content.contains("hired")
-                          ? "Hiring Offer"
-                          : "Job Update",
-                      style: GoogleFonts.outfit(
+                      job['title'] ?? 'Job Title',
+                      style: GoogleFonts.inter(
                         fontWeight: FontWeight.bold,
-                        fontSize: 16,
+                        fontSize: 18,
                         color: colorScheme.onSurface,
                       ),
                     ),
+                    const SizedBox(height: 4),
                     Text(
-                      "Job ID: ${message.jobId}",
-                      style: GoogleFonts.outfit(
+                      job['company'] ?? 'Company Name',
+                      style: GoogleFonts.inter(
                         color: colorScheme.onSurfaceVariant,
-                        fontSize: 12,
+                        fontSize: 14,
+                        fontWeight: FontWeight.w500,
                       ),
                     ),
                   ],
@@ -566,58 +570,73 @@ class _JobPreviewCard extends StatelessWidget {
               ),
             ],
           ),
-          const SizedBox(height: 16),
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: 16),
+            child: Divider(
+              color: colorScheme.outlineVariant.withValues(alpha: 0.5),
+            ),
+          ),
+          Row(
+            children: [
+              Icon(
+                Icons.location_on_outlined,
+                size: 16,
+                color: colorScheme.onSurfaceVariant,
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  job['location'] ?? 'Location',
+                  style: GoogleFonts.inter(
+                    color: colorScheme.onSurfaceVariant,
+                    fontSize: 14,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
           Text(
-            message.content,
-            style: GoogleFonts.outfit(
-              fontSize: 14,
-              color: colorScheme.onSurface,
+            job['salary'] ?? 'Unspecified Salary',
+            style: GoogleFonts.inter(
+              color: AppColor.primaryLight,
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
             ),
           ),
           const SizedBox(height: 16),
-          SizedBox(
-            width: double.infinity,
-            child: ElevatedButton(
-              onPressed: () {},
-              style: ElevatedButton.styleFrom(
-                backgroundColor: colorScheme.primary,
-                foregroundColor: colorScheme.onPrimary,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                elevation: 0,
-              ),
-              child: const Text(
-                "View Details",
-                style: TextStyle(color: Colors.white),
-              ),
-            ),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: [
+              if (job['jobType'] != null)
+                _buildTag(context, job['jobType'].toString()),
+              if (job['workplace'] != null)
+                _buildTag(context, job['workplace'].toString()),
+            ],
           ),
         ],
       ),
     );
   }
-}
 
-class _CallActionButton extends StatelessWidget {
-  final IconData icon;
-  final Color color;
-  final VoidCallback onTap;
-
-  const _CallActionButton({
-    required this.icon,
-    required this.color,
-    required this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(color: color, shape: BoxShape.circle),
-        child: Icon(icon, color: Colors.white, size: 28),
+  Widget _buildTag(BuildContext context, String text) {
+    final colorScheme = Theme.of(context).colorScheme;
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(
+          color: colorScheme.outlineVariant.withValues(alpha: 0.5),
+        ),
+      ),
+      child: Text(
+        text,
+        style: GoogleFonts.inter(
+          fontSize: 12,
+          color: colorScheme.onSurfaceVariant,
+          fontWeight: FontWeight.w500,
+        ),
       ),
     );
   }

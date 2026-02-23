@@ -1,3 +1,4 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
@@ -568,13 +569,42 @@ class RecruiterApplicationDetailPage extends HookConsumerWidget {
           ? "Congratulations $candidateName! You have been hired for the ${job['title']} position. We will reach out to you shortly for the next steps."
           : "Hi $candidateName, thank you for your interest in the ${job['title']} position. Unfortunately, we have decided to move forward with other candidates at this time.";
 
+      // 1. Send the Job Card
+      final String companyName = state.company?.name ?? "Company";
+      final String jobLocation =
+          job['location']?.toString() ?? state.company?.location ?? "";
+      final String salaryText = job['salaryMin'] != null
+          ? "${job['salaryCurrency'] ?? '\$'} ${job['salaryMin']} - ${job['salaryMax']}"
+          : "Salary not specified";
+
+      FirebaseChatService.instance.sendMessage(
+        conversationId,
+        ChatMessageModel(
+          content: "Job Information Card",
+          senderId: FirebaseAuth.instance.currentUser?.uid ?? "recruiter",
+          senderType: "User",
+          type: "job_card",
+          jobData: {
+            "title": job['title']?.toString() ?? "Job Title",
+            "company": companyName,
+            "location": jobLocation,
+            "salary": salaryText,
+            "logoUrl": state.company?.logoUrl,
+            "jobType": job['employmentType']?.toString(),
+            "workplace": job['workArrangement']?.toString(),
+          },
+        ),
+      );
+
+      // 2. Send the Text Message
       FirebaseChatService.instance.sendMessage(
         conversationId,
         ChatMessageModel(
           content: content,
-          senderId: state.company?.id ?? "recruiter",
+          senderId: FirebaseAuth.instance.currentUser?.uid ?? "recruiter",
           senderType: "User",
-          jobId: job['id']?.toString(),
+          type: "text",
+          jobId: jobIdVar,
         ),
       );
     } catch (e) {

@@ -20,18 +20,27 @@ class ProfileController extends StateNotifier<ProfileState> {
     state = state.copyWith(isLoading: true, errorMessage: null);
     try {
       final profile = await _getProfileUseCase();
-      state = state.copyWith(isLoading: false, profile: profile);
+      state = state.copyWith(
+        isLoading: false,
+        isFetched: true,
+        profile: profile,
+      );
     } catch (e) {
-      // If it's a 404 or profile not found error, we don't treat it as an error
-      // because it just means the user needs to set up their profile.
-      if (e.toString().contains('404')) {
+      if (e.toString().contains('404') ||
+          e.toString().contains("type 'Null' is not a subtype of type") ||
+          e.toString().contains("type 'Null' is not a subtype")) {
         state = state.copyWith(
           isLoading: false,
+          isFetched: true,
           profile: null,
           errorMessage: null,
         );
       } else {
-        state = state.copyWith(isLoading: false, errorMessage: e.toString());
+        state = state.copyWith(
+          isLoading: false,
+          isFetched: true,
+          errorMessage: e.toString(),
+        );
       }
     }
   }
@@ -40,10 +49,18 @@ class ProfileController extends StateNotifier<ProfileState> {
     state = state.copyWith(isLoading: true, errorMessage: null);
     try {
       final profile = await _createProfileUseCase(body);
-      state = state.copyWith(isLoading: false, profile: profile);
+      state = state.copyWith(
+        isLoading: false,
+        isFetched: true,
+        profile: profile,
+      );
       return true;
     } catch (e) {
-      state = state.copyWith(isLoading: false, errorMessage: e.toString());
+      state = state.copyWith(
+        isLoading: false,
+        isFetched: true,
+        errorMessage: e.toString(),
+      );
       return false;
     }
   }
@@ -52,10 +69,18 @@ class ProfileController extends StateNotifier<ProfileState> {
     state = state.copyWith(isLoading: true, errorMessage: null);
     try {
       final profile = await _updateProfileUseCase(body);
-      state = state.copyWith(isLoading: false, profile: profile);
+      state = state.copyWith(
+        isLoading: false,
+        isFetched: true,
+        profile: profile,
+      );
       return true;
     } catch (e) {
-      state = state.copyWith(isLoading: false, errorMessage: e.toString());
+      state = state.copyWith(
+        isLoading: false,
+        isFetched: true,
+        errorMessage: e.toString(),
+      );
       return false;
     }
   }

@@ -15,11 +15,16 @@ class ConversationListModel {
 
   factory ConversationListModel.fromJson(Map<String, dynamic> json) {
     return ConversationListModel(
-      id: json['id'] ?? '',
-      lastMessageContent: json['lastMessageContent'],
-      lastMessageTimestamp: json['lastMessageTimestamp'],
+      id: json['id']?.toString() ?? '',
+      lastMessageContent: json['lastMessageContent']?.toString(),
+      lastMessageTimestamp:
+          json['lastMessageTimestamp']?.toString() ??
+          json['lastMessageAt']?.toString() ??
+          json['updatedAt']?.toString(),
       otherParticipant: OtherParticipant.fromJson(
-        json['otherParticipant'] ?? {},
+        (json['otherParticipant'] is Map)
+            ? Map<String, dynamic>.from(json['otherParticipant'])
+            : <String, dynamic>{},
       ),
       unreadCount: json['unreadCount'] ?? 0,
     );
@@ -35,9 +40,12 @@ class OtherParticipant {
 
   factory OtherParticipant.fromJson(Map<String, dynamic> json) {
     return OtherParticipant(
-      id: json['id'] ?? '',
-      name: json['name'] ?? json['fullName'] ?? 'Unknown',
-      avatar: json['avatar'] ?? json['image'],
+      id: json['id']?.toString() ?? '',
+      name: json['name']?.toString() ?? json['fullName']?.toString() ?? 'User',
+      avatar:
+          json['avatar']?.toString() ??
+          json['image']?.toString() ??
+          json['avatarUrl']?.toString(),
     );
   }
 }

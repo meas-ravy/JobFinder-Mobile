@@ -6,6 +6,7 @@ class NotificationModel {
   final String content;
   final bool isRead;
   final String? link;
+  final String? imageUrl; // Added imageUrl
   final DateTime createdAt;
 
   NotificationModel({
@@ -14,6 +15,7 @@ class NotificationModel {
     required this.content,
     required this.isRead,
     this.link,
+    this.imageUrl,
     required this.createdAt,
   });
 
@@ -24,6 +26,7 @@ class NotificationModel {
       content: json['content'] ?? '',
       isRead: json['isRead'] ?? false,
       link: json['link'],
+      imageUrl: json['imageUrl'] ?? json['image'], // Handle both common keys
       createdAt: json['createdAt'] != null
           ? DateTime.parse(json['createdAt']).toLocal()
           : DateTime.now(),
@@ -36,6 +39,7 @@ class NotificationModel {
     String? content,
     bool? isRead,
     String? link,
+    String? imageUrl,
     DateTime? createdAt,
   }) {
     return NotificationModel(
@@ -44,6 +48,7 @@ class NotificationModel {
       content: content ?? this.content,
       isRead: isRead ?? this.isRead,
       link: link ?? this.link,
+      imageUrl: imageUrl ?? this.imageUrl,
       createdAt: createdAt ?? this.createdAt,
     );
   }

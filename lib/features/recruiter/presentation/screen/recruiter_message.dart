@@ -29,9 +29,12 @@ class _RecruiterMessagePageState extends ConsumerState<RecruiterMessagePage> {
   Widget build(BuildContext context) {
     final state = ref.watch(recruiterControllerProvider);
     final colorScheme = Theme.of(context).colorScheme;
-    final conversations = state.conversations
-        .map((e) => ConversationListModel.fromJson(e as Map<String, dynamic>))
-        .toList();
+    final conversations = state.conversations.map((e) {
+      final mapData = (e is Map)
+          ? Map<String, dynamic>.from(e)
+          : <String, dynamic>{};
+      return ConversationListModel.fromJson(mapData);
+    }).toList();
 
     return Scaffold(
       appBar: AppBar(
@@ -95,11 +98,8 @@ class _RecruiterMessagePageState extends ConsumerState<RecruiterMessagePage> {
                   ? _buildEmptyState(colorScheme)
                   : ListView.separated(
                       itemCount: conversations.length,
-                      separatorBuilder: (context, index) => Divider(
-                        height: 1,
-                        indent: 80,
-                        color: colorScheme.outlineVariant.withOpacity(0.5),
-                      ),
+                      separatorBuilder: (context, index) =>
+                          const SizedBox(height: 16),
                       itemBuilder: (context, index) {
                         final conversation = conversations[index];
                         return _ConversationTile(conversation: conversation);
@@ -179,8 +179,8 @@ class _ConversationTile extends StatelessWidget {
       ),
       title: Text(
         conversation.otherParticipant.name,
-        style: GoogleFonts.outfit(
-          fontSize: 16,
+        style: GoogleFonts.inter(
+          fontSize: 17,
           fontWeight: FontWeight.bold,
           color: colorScheme.onSurface,
         ),
@@ -189,8 +189,8 @@ class _ConversationTile extends StatelessWidget {
         conversation.lastMessageContent ?? "No messages yet",
         maxLines: 1,
         overflow: TextOverflow.ellipsis,
-        style: GoogleFonts.outfit(
-          fontSize: 14,
+        style: GoogleFonts.inter(
+          fontSize: 13,
           color: conversation.unreadCount > 0
               ? colorScheme.onSurface
               : colorScheme.onSurfaceVariant,

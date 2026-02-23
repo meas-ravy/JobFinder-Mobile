@@ -12,7 +12,8 @@ enum SecureStorageKey {
   appPin('app_pin'),
   appLockEnabled('app_lock_enabled'),
   securityQuestion('security_question'),
-  securityAnswer('security_answer');
+  securityAnswer('security_answer'),
+  firebaseToken('firebase_token');
 
   final String keyName;
   const SecureStorageKey(this.keyName);
@@ -76,6 +77,7 @@ class TokenStorageImpl implements TokenStorage<String> {
     // We only clear authentication related data on logout/unauthorized
     await _service.delete(SecureStorageKey.accessToken);
     await _service.delete(SecureStorageKey.role);
+    await _service.delete(SecureStorageKey.firebaseToken);
   }
 
   /// Reads the user role from storage
@@ -104,6 +106,21 @@ class TokenStorageImpl implements TokenStorage<String> {
   /// Sets the onboarding screen as seen
   Future<void> writeHasSeenOnboarding() {
     return _service.write(SecureStorageKey.hasSeenOnboarding, 'true');
+  }
+
+  /// Reads the Firebase token from storage
+  Future<String?> readFirebaseToken() async {
+    return await _service.read(SecureStorageKey.firebaseToken);
+  }
+
+  /// Writes the Firebase token to storage
+  Future<void> writeFirebaseToken(String token) {
+    return _service.write(SecureStorageKey.firebaseToken, token);
+  }
+
+  /// Deletes the Firebase token from storage
+  Future<void> deleteFirebaseToken() {
+    return _service.delete(SecureStorageKey.firebaseToken);
   }
 }
 

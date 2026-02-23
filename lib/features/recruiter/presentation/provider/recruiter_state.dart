@@ -40,6 +40,7 @@ class RecruiterState {
     this.dashboardData,
     this.conversations = const [],
     this.agoraToken,
+    this.agoraAppId,
   });
 
   final bool isLoading;
@@ -58,6 +59,7 @@ class RecruiterState {
   final DataMap? dashboardData;
   final List<dynamic> conversations;
   final String? agoraToken;
+  final String? agoraAppId;
 
   static const _sentinel = Object();
 
@@ -78,6 +80,7 @@ class RecruiterState {
     DataMap? dashboardData,
     List<dynamic>? conversations,
     String? agoraToken,
+    String? agoraAppId,
   }) {
     return RecruiterState(
       isLoading: isLoading ?? this.isLoading,
@@ -98,6 +101,7 @@ class RecruiterState {
       dashboardData: dashboardData ?? this.dashboardData,
       conversations: conversations ?? this.conversations,
       agoraToken: agoraToken ?? this.agoraToken,
+      agoraAppId: agoraAppId ?? this.agoraAppId,
     );
   }
 }

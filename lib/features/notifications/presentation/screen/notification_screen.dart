@@ -251,22 +251,38 @@ class _NotificationCard extends ConsumerWidget {
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Container(
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: isRead
-                    ? colorScheme.surfaceContainerHighest.withValues(alpha: 0.5)
-                    : colorScheme.primary.withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(16),
+            if (notification.imageUrl != null &&
+                notification.imageUrl!.isNotEmpty)
+              Container(
+                width: 48,
+                height: 48,
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(16),
+                  image: DecorationImage(
+                    image: NetworkImage(notification.imageUrl!),
+                    fit: BoxFit.cover,
+                  ),
+                ),
+              )
+            else
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: isRead
+                      ? colorScheme.surfaceContainerHighest.withValues(
+                          alpha: 0.5,
+                        )
+                      : colorScheme.primary.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                child: AppSvgIcon(
+                  assetName: AppIcon.notification,
+                  size: 24,
+                  color: isRead
+                      ? colorScheme.onSurfaceVariant
+                      : colorScheme.primary,
+                ),
               ),
-              child: AppSvgIcon(
-                assetName: AppIcon.notification,
-                size: 24,
-                color: isRead
-                    ? colorScheme.onSurfaceVariant
-                    : colorScheme.primary,
-              ),
-            ),
             const SizedBox(width: 16),
             Expanded(
               child: Column(

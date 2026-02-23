@@ -33,21 +33,30 @@ class JobSeekerHomePage extends HookConsumerWidget {
     final pageController = usePageController(initialPage: initialPage);
     final currentPage = useState(initialPage);
 
-    useEffect(() {
-      if (!profileState.isLoading &&
-          !profileState.isSetupShown &&
-          (profile == null ||
-              profile.fullName == null ||
-              profile.fullName!.isEmpty)) {
-        Future.delayed(const Duration(milliseconds: 300), () {
-          if (context.mounted) {
-            ref.read(profileControllerProvider.notifier).markSetupShown();
-            context.go(AppPath.setupProfile);
-          }
-        });
-      }
-      return null;
-    }, [profileState.isLoading, profileState.isSetupShown, profile]);
+    useEffect(
+      () {
+        if (!profileState.isLoading &&
+            profileState.isFetched &&
+            !profileState.isSetupShown &&
+            (profile == null ||
+                profile.fullName == null ||
+                profile.fullName!.isEmpty)) {
+          Future.delayed(const Duration(milliseconds: 300), () {
+            if (context.mounted) {
+              ref.read(profileControllerProvider.notifier).markSetupShown();
+              context.go(AppPath.setupProfile);
+            }
+          });
+        }
+        return null;
+      },
+      [
+        profileState.isLoading,
+        profileState.isFetched,
+        profileState.isSetupShown,
+        profile,
+      ],
+    );
 
     useEffect(() {
       if (tipState.tips.length <= 1) return null;
@@ -64,13 +73,15 @@ class JobSeekerHomePage extends HookConsumerWidget {
       return timer.cancel;
     }, [tipState.tips, pageController]);
 
-    // this run every time when widget build with depency []
-    // useEffect(() {
-    //   Future.microtask(() {
-    //     ref.read(profileControllerProvider.notifier).fetchProfile();
-    //   });
-    //   return null;
-    // }, []);
+    // Fetch profile on init if not fetched yet
+    useEffect(() {
+      if (!profileState.isFetched) {
+        Future.microtask(() {
+          ref.read(profileControllerProvider.notifier).fetchProfile();
+        });
+      }
+      return null;
+    }, []);
 
     final categories = [
       'All',

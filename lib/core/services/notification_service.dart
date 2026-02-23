@@ -13,7 +13,13 @@ import 'package:logger/logger.dart';
 @pragma('vm:entry-point')
 Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
   // Ensure Firebase is initialized for background tasks
-  await Firebase.initializeApp();
+  try {
+    if (Firebase.apps.isEmpty) {
+      await Firebase.initializeApp();
+    }
+  } catch (e) {
+    // Already initialized or other error
+  }
   Logger().i("Handling a background message: ${message.messageId}");
 }
 
