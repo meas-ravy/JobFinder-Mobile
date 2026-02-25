@@ -2,26 +2,25 @@
 
 A modern, dual-flow Flutter application designed for seamless connection between **Job Seekers** and **Recruiters**.
 
-## 📱 App Previews
+## 📱 App Screens
 
-<div align="center">
-  <figure>
-    <img src="assets/image/auth_screen.png" width="220"/>
-    <figcaption>Authentication</figcaption>
-  </figure>
+<h3 align="center">Splash & Onboarding Screen</h3>
+<p align="center">
+  <img src="assets/image/splash_screen.png" alt="Splash Screen"/>
+</p>
 
-  <figure>
-    <img src="assets/image/job_seeker_light.png" width="220"/>
-    <figcaption>Job Seeker (Light)</figcaption>
-  </figure>
+<h3 align="center">Authentication & Role Selection Screen</h3>
+<p align="center">
+  <img src="assets/image/auth_screen.png" alt="Authentication Screen"/>
+</p>
 
-  <figure>
-    <img src="assets/image/job_seeker_dark.png" width="220"/>
-    <figcaption>Job Seeker (Dark)</figcaption>
-  </figure>
+<h3 align="center">Job Seeker – Light & Dark Screens</h3>
+<p align="center">
+  <img src="assets/image/job_seeker_light.png" alt="Job Seeker Light"/>
+  <img src="assets/image/job_seeker_dark.png" alt="Job Seeker Dark"/>
+</p>
 
-  <figure>
-    <img src="assets/image/recruiter_light.png" width="220"/>
-    <figcaption>Recruiter (Light)</figcaption>
-  </figure>
-</div>
+<h3 align="center">Recruiter – Light Screens</h3>
+<p align="center">
+  <img src="assets/image/recruiter_light.png" alt="Recruiter Screen"/>
+</p>
