@@ -8,7 +8,7 @@ class HomeHeader extends StatelessWidget {
   final String userName;
   final String? userAvatarUrl;
   final VoidCallback? onNotificationTap;
-  final bool hasUnreadNotifications;
+  final int unreadNotificationCount;
   final bool isLoading;
 
   const HomeHeader({
@@ -16,7 +16,7 @@ class HomeHeader extends StatelessWidget {
     required this.userName,
     this.userAvatarUrl,
     this.onNotificationTap,
-    this.hasUnreadNotifications = false,
+    this.unreadNotificationCount = 0,
     this.isLoading = false,
   });
 
@@ -131,16 +131,36 @@ class HomeHeader extends StatelessWidget {
                       size: 24,
                     ),
                   ),
-                  if (hasUnreadNotifications)
+                  if (unreadNotificationCount > 0)
                     Positioned(
-                      top: 10,
-                      right: 10,
+                      top: 4,
+                      right: 4,
                       child: Container(
-                        width: 8,
-                        height: 8,
-                        decoration: const BoxDecoration(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 4,
+                          vertical: 2,
+                        ),
+                        decoration: BoxDecoration(
                           color: Colors.red,
-                          shape: BoxShape.circle,
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        constraints: const BoxConstraints(
+                          minWidth: 16,
+                          minHeight: 16,
+                        ),
+                        child: Center(
+                          child: Text(
+                            unreadNotificationCount > 99
+                                ? '99+'
+                                : unreadNotificationCount.toString(),
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 13,
+                              fontWeight: FontWeight.bold,
+                              height: 1,
+                            ),
+                            textAlign: TextAlign.center,
+                          ),
                         ),
                       ),
                     ),

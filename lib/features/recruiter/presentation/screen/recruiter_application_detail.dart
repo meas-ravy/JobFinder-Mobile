@@ -11,7 +11,6 @@ import 'package:job_finder/shared/widget/shimmer_loading.dart';
 import 'package:job_finder/shared/widget/svg_icon.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:job_finder/core/theme/app_color.dart';
-import 'package:job_finder/features/recruiter/presentation/screen/recruiter_chat_detail.dart';
 import 'package:job_finder/core/services/firebase_chat_service.dart';
 import 'package:job_finder/features/recruiter/data/models/chat_message_model.dart';
 
@@ -24,6 +23,7 @@ class RecruiterApplicationDetailPage extends HookConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final recruiterState = ref.watch(recruiterControllerProvider);
     final colorScheme = Theme.of(context).colorScheme;
+    final updatingStatus = useState<String?>(null);
 
     useEffect(() {
       Future.delayed(Duration.zero, () {
@@ -40,6 +40,7 @@ class RecruiterApplicationDetailPage extends HookConsumerWidget {
       if (next.lastAction == RecruiterAction.updateApplicationStatus &&
           !next.isLoading &&
           previous?.isLoading == true) {
+        updatingStatus.value = null;
         if (next.errorMessage != null) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
@@ -185,10 +186,6 @@ class RecruiterApplicationDetailPage extends HookConsumerWidget {
     final jobMap = application['job'];
     final job = (jobMap is Map) ? DataMap.from(jobMap) : <String, dynamic>{};
 
-    final candidateId =
-        jobSeeker['_id'] ?? jobSeeker['id'] ?? application['jobSeekerId'] ?? '';
-    final jobId = job['_id'] ?? job['id'] ?? application['jobId'] ?? '';
-
     return Scaffold(
       backgroundColor: colorScheme.surface,
       appBar: AppBar(title: const Text('Application Details'), elevation: 0),
@@ -202,10 +199,10 @@ class RecruiterApplicationDetailPage extends HookConsumerWidget {
               children: [
                 CircleAvatar(
                   radius: 40,
-                  backgroundImage: avatarUrl != null
+                  backgroundImage: (avatarUrl != null && avatarUrl.isNotEmpty)
                       ? NetworkImage(avatarUrl)
                       : null,
-                  child: avatarUrl == null
+                  child: (avatarUrl == null || avatarUrl.isEmpty)
                       ? Text(
                           (name?.isNotEmpty == true)
                               ? name!.substring(0, 1).toUpperCase()
@@ -242,33 +239,6 @@ class RecruiterApplicationDetailPage extends HookConsumerWidget {
                       ),
                     ],
                   ),
-                ),
-                IconButton(
-                  icon: const Icon(
-                    Icons.message_outlined,
-                    color: AppColor.primaryLight,
-                  ),
-                  onPressed: () {
-                    // Start or go to conversation
-                    // For now, we need to map application to conversationId
-                    // Usually conversationId is provided in the application object or fetched via an endpoint
-                    // Let's assume conversationId might be in application['conversationId'] or similar
-                    final conversationId =
-                        application['conversationId']?.toString() ??
-                        "conv_${candidateId}_$jobId";
-
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => RecruiterChatDetailScreen(
-                          conversationId: conversationId,
-                          candidateName:
-                              profile['fullName']?.toString() ?? 'Candidate',
-                          candidateAvatar: profile['avatarUrl']?.toString(),
-                        ),
-                      ),
-                    );
-                  },
                 ),
               ],
             ),
@@ -443,7 +413,13 @@ class RecruiterApplicationDetailPage extends HookConsumerWidget {
                     child: OutlinedButton(
                       onPressed: recruiterState.isLoading
                           ? null
-                          : () => _confirmAction(context, ref, id, 'Rejected'),
+                          : () => _confirmAction(
+                              context,
+                              ref,
+                              id,
+                              'Rejected',
+                              updatingStatus,
+                            ),
                       style: OutlinedButton.styleFrom(
                         padding: const EdgeInsets.symmetric(vertical: 16),
                         side: BorderSide(color: colorScheme.error),
@@ -452,10 +428,23 @@ class RecruiterApplicationDetailPage extends HookConsumerWidget {
                           borderRadius: BorderRadius.circular(12),
                         ),
                       ),
-                      child: const Text(
-                        'Reject Candidate',
-                        style: TextStyle(fontWeight: FontWeight.bold),
-                      ),
+                      child:
+                          recruiterState.isLoading &&
+                              recruiterState.lastAction ==
+                                  RecruiterAction.updateApplicationStatus &&
+                              updatingStatus.value == 'Rejected'
+                          ? const SizedBox(
+                              height: 20,
+                              width: 20,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                color: Colors.red,
+                              ),
+                            )
+                          : const Text(
+                              'Reject Candidate',
+                              style: TextStyle(fontWeight: FontWeight.bold),
+                            ),
                     ),
                   ),
                   const SizedBox(width: 16),
@@ -463,7 +452,13 @@ class RecruiterApplicationDetailPage extends HookConsumerWidget {
                     child: ElevatedButton(
                       onPressed: recruiterState.isLoading
                           ? null
-                          : () => _confirmAction(context, ref, id, 'Hired'),
+                          : () => _confirmAction(
+                              context,
+                              ref,
+                              id,
+                              'Hired',
+                              updatingStatus,
+                            ),
                       style: ElevatedButton.styleFrom(
                         padding: const EdgeInsets.symmetric(vertical: 16),
                         backgroundColor: colorScheme.primary,
@@ -473,13 +468,26 @@ class RecruiterApplicationDetailPage extends HookConsumerWidget {
                         ),
                         elevation: 0,
                       ),
-                      child: const Text(
-                        'Hire Candidate',
-                        style: TextStyle(
-                          fontWeight: FontWeight.bold,
-                          color: Colors.white,
-                        ),
-                      ),
+                      child:
+                          recruiterState.isLoading &&
+                              recruiterState.lastAction ==
+                                  RecruiterAction.updateApplicationStatus &&
+                              updatingStatus.value == 'Hired'
+                          ? const SizedBox(
+                              height: 20,
+                              width: 20,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                color: Colors.white,
+                              ),
+                            )
+                          : const Text(
+                              'Hire Candidate',
+                              style: TextStyle(
+                                fontWeight: FontWeight.bold,
+                                color: Colors.white,
+                              ),
+                            ),
                     ),
                   ),
                 ],
@@ -495,18 +503,19 @@ class RecruiterApplicationDetailPage extends HookConsumerWidget {
     WidgetRef ref,
     String id,
     String status,
+    ValueNotifier<String?> updatingStatus,
   ) {
     final application = ref
         .read(recruiterControllerProvider)
         .applicationDetails;
     final jobSeekerMap = application?['jobSeeker'] ?? application?['user'];
     final jobSeeker = (jobSeekerMap is Map)
-        ? Map<String, dynamic>.from(jobSeekerMap)
+        ? DataMap.from(jobSeekerMap)
         : <String, dynamic>{};
 
     final profileMap = jobSeeker['profile'];
     final profile = (profileMap is Map)
-        ? Map<String, dynamic>.from(profileMap)
+        ? DataMap.from(profileMap)
         : <String, dynamic>{};
 
     final candidateName = profile['fullName'] ?? "this candidate";
@@ -518,7 +527,7 @@ class RecruiterApplicationDetailPage extends HookConsumerWidget {
           status == 'Hired' ? "Hire Candidate?" : "Reject Candidate?",
         ),
         content: Text(
-          "Are you sure you want to $status $candidateName? This action will notify the candidate.",
+          "Are you sure you want to ${status == 'Hired' ? 'hire' : 'reject'} $candidateName? This action will notify the candidate.",
         ),
         actions: [
           TextButton(
@@ -528,6 +537,7 @@ class RecruiterApplicationDetailPage extends HookConsumerWidget {
           ElevatedButton(
             onPressed: () {
               Navigator.pop(context);
+              updatingStatus.value = status;
               ref
                   .read(recruiterControllerProvider.notifier)
                   .updateApplicationStatus(id, status);
@@ -573,17 +583,22 @@ class RecruiterApplicationDetailPage extends HookConsumerWidget {
           application['conversationId']?.toString() ??
           "conv_${candidateId}_$jobIdVar";
 
+      final String jobTitle = job['title']?.toString() ?? "Job";
+
       final content = isHired
-          ? "Congratulations $candidateName! You have been hired for the ${job['title']} position. We will reach out to you shortly for the next steps."
-          : "Hi $candidateName, thank you for your interest in the ${job['title']} position. Unfortunately, we have decided to move forward with other candidates at this time.";
+          ? "Congratulations $candidateName! You have been hired for the $jobTitle position. We will reach out to you shortly for the next steps."
+          : "Hi $candidateName, thank you for your interest in the $jobTitle position. Unfortunately, we have decided to move forward with other candidates at this time.";
 
       // 1. Send the Job Card
-      final String companyName = state.company?.name ?? "Company";
+      final String companyName =
+          state.company?.name ?? job['company']?.toString() ?? "Company";
       final String jobLocation =
           job['location']?.toString() ?? state.company?.location ?? "";
-      final String salaryText = job['salaryMin'] != null
-          ? "${job['salaryCurrency'] ?? '\$'} ${job['salaryMin']} - ${job['salaryMax']}"
-          : "Salary not specified";
+      final String salaryText =
+          job['salary']?.toString() ??
+          (job['salaryMin'] != null
+              ? "${job['salaryCurrency'] ?? '\$'} ${job['salaryMin']} - ${job['salaryMax'] ?? ''}"
+              : "Salary not specified");
 
       FirebaseChatService.instance.sendMessage(
         conversationId,
@@ -597,9 +612,9 @@ class RecruiterApplicationDetailPage extends HookConsumerWidget {
             "company": companyName,
             "location": jobLocation,
             "salary": salaryText,
-            "logoUrl": state.company?.logoUrl,
-            "jobType": job['employmentType']?.toString(),
-            "workplace": job['workArrangement']?.toString(),
+            "logoUrl": job['logoUrl'] ?? state.company?.logoUrl,
+            "jobType": job['jobType'] ?? job['employmentType']?.toString(),
+            "workplace": job['workplace'] ?? job['workArrangement']?.toString(),
           },
         ),
       );
@@ -644,8 +659,8 @@ class RecruiterApplicationDetailPage extends HookConsumerWidget {
             Container(
               padding: const EdgeInsets.all(20),
               decoration: BoxDecoration(
-                color: (isHired ? Colors.green : Colors.orange).withOpacity(
-                  0.1,
+                color: (isHired ? Colors.green : Colors.orange).withValues(
+                  alpha: 0.1,
                 ),
                 shape: BoxShape.circle,
               ),
@@ -666,8 +681,8 @@ class RecruiterApplicationDetailPage extends HookConsumerWidget {
             const SizedBox(height: 12),
             Text(
               isHired
-                  ? "You have successfully hired $candidateName for ${job['title']}."
-                  : "You have rejected $candidateName's application for ${job['title']}.",
+                  ? "You have successfully hired $candidateName for ${job['title'] ?? 'this position'}."
+                  : "You have rejected $candidateName's application for ${job['title'] ?? 'this position'}.",
               textAlign: TextAlign.center,
               style: GoogleFonts.outfit(
                 fontSize: 16,
@@ -796,6 +811,13 @@ class RecruiterApplicationDetailPage extends HookConsumerWidget {
   String _formatDate(dynamic date) {
     if (date == null) return 'N/A';
     try {
+      if (date is DateTime) {
+        return '${date.day}/${date.month}/${date.year}';
+      }
+      if (date is int) {
+        final dt = DateTime.fromMillisecondsSinceEpoch(date);
+        return '${dt.day}/${dt.month}/${dt.year}';
+      }
       final dt = DateTime.parse(date.toString());
       return '${dt.day}/${dt.month}/${dt.year}';
     } catch (_) {

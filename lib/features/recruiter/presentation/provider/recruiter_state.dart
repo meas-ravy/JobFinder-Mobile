@@ -41,6 +41,7 @@ class RecruiterState {
     this.conversations = const [],
     this.agoraToken,
     this.agoraAppId,
+    this.agoraUid,
   });
 
   final bool isLoading;
@@ -60,6 +61,7 @@ class RecruiterState {
   final List<dynamic> conversations;
   final String? agoraToken;
   final String? agoraAppId;
+  final String? agoraUid;
 
   static const _sentinel = Object();
 
@@ -81,6 +83,7 @@ class RecruiterState {
     List<dynamic>? conversations,
     String? agoraToken,
     String? agoraAppId,
+    String? agoraUid,
   }) {
     return RecruiterState(
       isLoading: isLoading ?? this.isLoading,
@@ -102,6 +105,7 @@ class RecruiterState {
       conversations: conversations ?? this.conversations,
       agoraToken: agoraToken ?? this.agoraToken,
       agoraAppId: agoraAppId ?? this.agoraAppId,
+      agoraUid: agoraUid ?? this.agoraUid,
     );
   }
 }

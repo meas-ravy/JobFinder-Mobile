@@ -14,9 +14,11 @@ class ApplicationModel extends ApplicationEntity {
     return ApplicationModel(
       id: json['id'] ?? json['_id'] ?? '',
       jobId: json['jobId'] ?? '',
-      status: json['status'] ?? 'Submitted',
+      status:
+          (json['status'] ?? json['applicationStatus'])?.toString().trim() ??
+          'Submitted',
       createdAt: json['createdAt'] != null
-          ? DateTime.parse(json['createdAt'])
+          ? DateTime.parse(json['createdAt'].toString())
           : DateTime.now(),
       job: json['job'] != null ? JobModel.fromJson(json['job']) : null,
     );

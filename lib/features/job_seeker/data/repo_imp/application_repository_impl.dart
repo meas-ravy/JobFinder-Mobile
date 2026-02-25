@@ -11,4 +11,9 @@ class ApplicationRepositoryImpl implements ApplicationRepository {
   Future<List<ApplicationEntity>> getMyApplications() {
     return _server.getMyApplications();
   }
+
+  @override
+  Future<ApplicationEntity> getApplicationDetails(String id) {
+    return _server.getApplicationDetails(id);
+  }
 }

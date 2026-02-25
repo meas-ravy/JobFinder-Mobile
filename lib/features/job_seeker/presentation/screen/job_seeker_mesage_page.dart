@@ -2,9 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
+import 'package:job_finder/core/constants/assets.dart';
 import 'package:job_finder/core/routes/app_path.dart';
 import 'package:job_finder/features/recruiter/data/models/conversation_list_model.dart';
 import 'package:job_finder/features/job_seeker/presentation/provider/chat_provider.dart';
+import 'package:job_finder/shared/widget/svg_icon.dart';
 
 class JobSeekerMessagePage extends ConsumerStatefulWidget {
   const JobSeekerMessagePage({super.key});
@@ -15,9 +17,17 @@ class JobSeekerMessagePage extends ConsumerStatefulWidget {
 }
 
 class _JobSeekerMessagePageState extends ConsumerState<JobSeekerMessagePage> {
+  final TextEditingController _searchController = TextEditingController();
+  String _searchQuery = '';
+
   @override
   void initState() {
     super.initState();
+    _searchController.addListener(() {
+      setState(() {
+        _searchQuery = _searchController.text.toLowerCase();
+      });
+    });
     Future.microtask(() {
       if (mounted) {
         ref.read(jobSeekerChatControllerProvider.notifier).getConversations();
@@ -36,6 +46,16 @@ class _JobSeekerMessagePageState extends ConsumerState<JobSeekerMessagePage> {
       return ConversationListModel.fromJson(mapData);
     }).toList();
 
+    final filteredConversations = _searchQuery.isEmpty
+        ? conversations
+        : conversations
+              .where(
+                (c) => c.otherParticipant.name.toLowerCase().contains(
+                  _searchQuery,
+                ),
+              )
+              .toList();
+
     return Scaffold(
       appBar: AppBar(
         title: Text(
@@ -53,9 +73,16 @@ class _JobSeekerMessagePageState extends ConsumerState<JobSeekerMessagePage> {
           Padding(
             padding: const EdgeInsets.all(16.0),
             child: TextField(
+              controller: _searchController,
               decoration: InputDecoration(
                 hintText: "Search messages...",
-                prefixIcon: const Icon(Icons.search),
+                prefixIcon: Padding(
+                  padding: const EdgeInsets.all(12.0),
+                  child: AppSvgIcon(
+                    assetName: AppIcon.search,
+                    color: colorScheme.onSurfaceVariant,
+                  ),
+                ),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
                   borderSide: BorderSide.none,
@@ -74,14 +101,24 @@ class _JobSeekerMessagePageState extends ConsumerState<JobSeekerMessagePage> {
               },
               child: state.isLoading && conversations.isEmpty
                   ? const Center(child: CircularProgressIndicator())
-                  : conversations.isEmpty
-                  ? _buildEmptyState(colorScheme)
+                  : filteredConversations.isEmpty
+                  ? (conversations.isEmpty
+                        ? _buildEmptyState(colorScheme)
+                        : Center(
+                            child: Text(
+                              "No messages match your search.",
+                              style: GoogleFonts.outfit(
+                                color: colorScheme.onSurfaceVariant,
+                                fontSize: 16,
+                              ),
+                            ),
+                          ))
                   : ListView.separated(
-                      itemCount: conversations.length,
+                      itemCount: filteredConversations.length,
                       separatorBuilder: (context, index) =>
                           const SizedBox(height: 16),
                       itemBuilder: (context, index) {
-                        final conversation = conversations[index];
+                        final conversation = filteredConversations[index];
                         return _ConversationTile(conversation: conversation);
                       },
                     ),

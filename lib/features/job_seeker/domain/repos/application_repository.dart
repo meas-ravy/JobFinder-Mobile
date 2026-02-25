@@ -2,4 +2,5 @@ import 'package:job_finder/features/job_seeker/domain/entities/application_entit
 
 abstract class ApplicationRepository {
   Future<List<ApplicationEntity>> getMyApplications();
+  Future<ApplicationEntity> getApplicationDetails(String id);
 }

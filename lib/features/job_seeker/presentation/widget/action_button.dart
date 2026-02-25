@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:job_finder/shared/widget/svg_icon.dart';
 
 class ActionButton extends StatelessWidget {
   const ActionButton({
@@ -26,9 +27,10 @@ class ActionButton extends StatelessWidget {
         child: Container(
           padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 16),
           child: Row(
-            mainAxisAlignment: MainAxisAlignment.center,
+            mainAxisAlignment: MainAxisAlignment.start,
             children: [
-              Expanded(child: Image.asset(icon, width: 35, height: 35)),
+              AppSvgIcon(assetName: icon, size: 35, color: colorScheme.primary),
+
               const SizedBox(width: 8),
               Text(
                 label,

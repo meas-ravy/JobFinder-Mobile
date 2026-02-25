@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:job_finder/core/constants/assets.dart';
-import 'package:job_finder/features/job_seeker/presentation/screen/create_resume.dart';
+import 'package:job_finder/core/routes/app_path.dart';
+import 'package:job_finder/core/theme/app_color.dart';
 import 'package:job_finder/features/job_seeker/presentation/screen/cv_form_screen.dart';
 import 'package:job_finder/features/job_seeker/data/model/template_model.dart';
-import 'package:job_finder/features/job_seeker/presentation/widget/action_button.dart';
 import 'package:job_finder/features/job_seeker/presentation/widget/resume_card.dart';
 import 'package:job_finder/features/job_seeker/presentation/screen/cv_pdf_preview_screen.dart';
 import 'package:job_finder/features/job_seeker/presentation/provider/cv_provider.dart';
@@ -24,6 +25,33 @@ class MyDocumentPage extends ConsumerWidget {
 
     return Scaffold(
       backgroundColor: colorScheme.surface,
+      floatingActionButton: FloatingActionButton(
+        onPressed: () async {
+          await context.push(AppPath.buildTemplate);
+          // Refresh the list after returning
+          ref.invalidate(cvListProvider);
+        },
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        tooltip: 'Post a Job',
+        child: Container(
+          width: 56,
+          height: 56,
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            color: AppColor.primaryLight,
+            boxShadow: [
+              BoxShadow(
+                color: AppColor.primaryLight.withValues(alpha: 0.3),
+                spreadRadius: 2,
+                blurRadius: 4,
+                offset: const Offset(0, 2),
+              ),
+            ],
+          ),
+          child: const Icon(Icons.add_rounded, color: Colors.white, size: 28),
+        ),
+      ),
       appBar: AppBar(
         backgroundColor: colorScheme.surface,
         elevation: 0,
@@ -37,66 +65,65 @@ class MyDocumentPage extends ConsumerWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             // Action Buttons
-            Padding(
-              padding: const EdgeInsets.fromLTRB(20, 16, 20, 24),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: ActionButton(
-                      icon: 'assets/image/cv.png',
-                      label: l10n.newResume,
-                      onTap: () async {
-                        await Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => BuildTemplate(),
-                          ),
-                        );
-                        // Refresh the list after returning
-                        ref.invalidate(cvListProvider);
-                      },
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: ActionButton(
-                      icon: 'assets/image/cover_letter.webp',
-                      label: l10n.coverLetter,
-                      onTap: () {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(
-                            content: Text(
-                              l10n.featureSoonMessage,
-                              style: textTheme.bodyMedium?.copyWith(
-                                fontWeight: FontWeight.w600,
-                                fontSize: 15,
-                                color: colorScheme.onSurface,
-                              ),
-                            ),
-                            backgroundColor: colorScheme.surface,
-                            behavior: SnackBarBehavior.fixed,
-                            duration: Duration(seconds: 2),
-                          ),
-                        );
-                      },
-                    ),
-                  ),
-                ],
-              ),
-            ),
+            // Padding(
+            //   padding: const EdgeInsets.fromLTRB(20, 16, 20, 24),
+            //   child: Row(
+            //     children: [
+            //       ActionButton(
+            //         icon: AppIcon.document,
+            //         label: l10n.newResume,
+            //         onTap: () async {
+            //           await Navigator.push(
+            //             context,
+            //             MaterialPageRoute(
+            //               builder: (context) => BuildTemplate(),
+            //             ),
+            //           );
+            //           // Refresh the list after returning
+            //           ref.invalidate(cvListProvider);
+            //         },
+            //       ),
 
-            // My Resumes Section
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20),
-              child: Text(
-                l10n.myResumes,
-                style: textTheme.titleMedium?.copyWith(
-                  fontWeight: FontWeight.w700,
-                  fontSize: 18,
-                ),
-              ),
-            ),
-            const SizedBox(height: 16),
+            //       // const SizedBox(width: 12),
+            //       // Expanded(
+            //       //   child: ActionButton(
+            //       //     icon: 'assets/image/cover_letter.webp',
+            //       //     label: l10n.coverLetter,
+            //       //     onTap: () {
+            //       //       ScaffoldMessenger.of(context).showSnackBar(
+            //       //         SnackBar(
+            //       //           content: Text(
+            //       //             l10n.featureSoonMessage,
+            //       //             style: textTheme.bodyMedium?.copyWith(
+            //       //               fontWeight: FontWeight.w600,
+            //       //               fontSize: 15,
+            //       //               color: colorScheme.onSurface,
+            //       //             ),
+            //       //           ),
+            //       //           backgroundColor: colorScheme.surface,
+            //       //           behavior: SnackBarBehavior.fixed,
+            //       //           duration: Duration(seconds: 2),
+            //       //         ),
+            //       //       );
+            //       //     },
+            //       //   ),
+            //       // ),
+            //     ],
+            //   ),
+            // ),
+
+            // // My Resumes Section
+            // Padding(
+            //   padding: const EdgeInsets.symmetric(horizontal: 20),
+            //   child: Text(
+            //     l10n.myResumes,
+            //     style: textTheme.titleMedium?.copyWith(
+            //       fontWeight: FontWeight.w700,
+            //       fontSize: 18,
+            //     ),
+            //   ),
+            // ),
+            const SizedBox(height: 4),
 
             // Resume List
             Expanded(

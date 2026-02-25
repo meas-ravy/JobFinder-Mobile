@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:job_finder/core/helper/typedef.dart';
 import 'package:job_finder/core/theme/app_color.dart';
 import 'package:job_finder/core/services/firebase_chat_service.dart';
 import 'package:job_finder/features/recruiter/data/models/chat_message_model.dart';
@@ -104,11 +105,29 @@ class _JobSeekerChatDetailScreenState
 
   Future<void> _startCall(bool isVideo) async {
     final micStatus = await Permission.microphone.request();
-    if (micStatus != PermissionStatus.granted) return;
+    if (micStatus != PermissionStatus.granted) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text("Microphone permission required for calls."),
+          ),
+        );
+      }
+      return;
+    }
 
     if (isVideo) {
       final cameraStatus = await Permission.camera.request();
-      if (cameraStatus != PermissionStatus.granted) return;
+      if (cameraStatus != PermissionStatus.granted) {
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text("Camera permission required for video calls."),
+            ),
+          );
+        }
+        return;
+      }
     }
 
     await ref
@@ -116,10 +135,17 @@ class _JobSeekerChatDetailScreenState
         .getAgoraToken(widget.conversationId);
 
     final state = ref.read(jobSeekerChatControllerProvider);
-    if (state.agoraAppId == null) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text("Failed to get App ID")));
+    if (state.agoraAppId == null || state.agoraToken == null) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              state.errorMessage ??
+                  "Failed to initialize call. Server token missing!",
+            ),
+          ),
+        );
+      }
       return;
     }
 
@@ -141,6 +167,7 @@ class _JobSeekerChatDetailScreenState
           channelName: widget.conversationId,
           token: state.agoraToken!,
           appId: state.agoraAppId!,
+          uid: state.agoraUid!,
           isVideoCall: isVideo,
           remoteName: displayName,
           remoteAvatar: displayAvatar,
@@ -165,9 +192,7 @@ class _JobSeekerChatDetailScreenState
       );
       if (convData != null) {
         conversation = convData is Map
-            ? ConversationListModel.fromJson(
-                Map<String, dynamic>.from(convData),
-              )
+            ? ConversationListModel.fromJson(DataMap.from(convData))
             : convData as ConversationListModel;
       }
     } catch (_) {}
@@ -300,7 +325,9 @@ class _JobSeekerChatDetailScreenState
                         Icon(
                           Icons.chat_bubble_outline,
                           size: 64,
-                          color: colorScheme.onSurfaceVariant.withOpacity(0.3),
+                          color: colorScheme.onSurfaceVariant.withValues(
+                            alpha: .3,
+                          ),
                         ),
                         const SizedBox(height: 16),
                         Text(
@@ -322,7 +349,9 @@ class _JobSeekerChatDetailScreenState
                   padding: const EdgeInsets.symmetric(horizontal: 16),
                   itemCount: displayMessages.length,
                   itemBuilder: (context, index) {
-                    final message = messages[index];
+                    // displayMessages is reversed list of messages
+                    // final message = messages[index];
+                    final message = displayMessages[index];
                     final isMe = message.senderId == currentUserId;
 
                     if (message.type == 'job_card') {
@@ -360,7 +389,7 @@ class _JobSeekerChatDetailScreenState
                 color: colorScheme.surfaceContainerHighest,
                 borderRadius: BorderRadius.circular(30),
                 border: Border.all(
-                  color: colorScheme.outlineVariant.withOpacity(0.5),
+                  color: colorScheme.outlineVariant.withValues(alpha: 0.5),
                 ),
               ),
               child: Row(
@@ -377,7 +406,9 @@ class _JobSeekerChatDetailScreenState
                       decoration: InputDecoration(
                         hintText: "Type a message ...",
                         hintStyle: GoogleFonts.outfit(
-                          color: colorScheme.onSurfaceVariant.withOpacity(0.5),
+                          color: colorScheme.onSurfaceVariant.withValues(
+                            alpha: 0.5,
+                          ),
                           fontSize: 15,
                         ),
                         border: InputBorder.none,
@@ -405,7 +436,7 @@ class _JobSeekerChatDetailScreenState
                 shape: BoxShape.circle,
                 boxShadow: [
                   BoxShadow(
-                    color: colorScheme.primary.withOpacity(0.3),
+                    color: colorScheme.primary.withValues(alpha: 0.3),
                     blurRadius: 10,
                     offset: const Offset(0, 4),
                   ),
@@ -433,12 +464,18 @@ class _MessageBubble extends StatelessWidget {
 
     final bubbleColor = isMe
         ? colorScheme.primary
-        : (isDark ? AppColor.leftMessageColorDark : const Color(0xffF2F2F2));
+        : (isDark ? AppColor.cardDarkSecondary : const Color(0xffF2F2F2));
+
+    final textColor = isMe
+        ? Colors.white
+        : (isDark ? Colors.white : Colors.black87);
 
     return Align(
       alignment: isMe ? Alignment.centerRight : Alignment.centerLeft,
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.center,
+        crossAxisAlignment: isMe
+            ? CrossAxisAlignment.end
+            : CrossAxisAlignment.start,
         children: [
           const SizedBox(height: 10),
           Container(
@@ -460,14 +497,20 @@ class _MessageBubble extends StatelessWidget {
               message.content,
               style: GoogleFonts.inter(
                 fontSize: 15,
-                color: Colors.white,
+                color: textColor,
                 fontWeight: FontWeight.w500,
               ),
             ),
           ),
-          Text(
-            _formatDate(message.timestamp),
-            style: GoogleFonts.inter(fontSize: 10, color: Colors.white),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 4),
+            child: Text(
+              _formatDate(message.timestamp),
+              style: GoogleFonts.inter(
+                fontSize: 10,
+                color: colorScheme.onSurfaceVariant,
+              ),
+            ),
           ),
         ],
       ),
@@ -509,40 +552,35 @@ class _JobPreviewCard extends StatelessWidget {
         color: isDark ? colorScheme.surface : Colors.white,
         borderRadius: BorderRadius.circular(24),
         border: Border.all(
-          color: colorScheme.outlineVariant.withValues(alpha: 0.5),
+          color: colorScheme.outlineVariant.withValues(alpha: 0.2),
         ),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: isDark ? 0.2 : 0.05),
-            blurRadius: 15,
-            offset: const Offset(0, 8),
-          ),
-        ],
       ),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.center,
         children: [
           Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Container(
                 width: 60,
                 height: 60,
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
-                  color: colorScheme.surfaceContainerHighest,
                   borderRadius: BorderRadius.circular(16),
                   border: Border.all(
-                    color: colorScheme.outlineVariant.withValues(alpha: 0.3),
+                    color: colorScheme.outlineVariant.withValues(alpha: 0.1),
                   ),
                 ),
                 child:
                     job['logoUrl'] != null &&
                         job['logoUrl'].toString().isNotEmpty
-                    ? Image.network(
-                        job['logoUrl'].toString(),
-                        errorBuilder: (context, error, stackTrace) =>
-                            Icon(Icons.business, color: colorScheme.primary),
+                    ? ClipRRect(
+                        borderRadius: BorderRadius.circular(12),
+                        child: Image.network(
+                          job['logoUrl'],
+                          fit: BoxFit.cover,
+                          errorBuilder: (_, _, _) =>
+                              Icon(Icons.business, color: colorScheme.primary),
+                        ),
                       )
                     : Icon(Icons.business, color: colorScheme.primary),
               ),
@@ -554,8 +592,8 @@ class _JobPreviewCard extends StatelessWidget {
                     Text(
                       job['title'] ?? 'Job Title',
                       style: GoogleFonts.inter(
-                        fontWeight: FontWeight.bold,
                         fontSize: 18,
+                        fontWeight: FontWeight.bold,
                         color: colorScheme.onSurface,
                       ),
                     ),
@@ -563,9 +601,9 @@ class _JobPreviewCard extends StatelessWidget {
                     Text(
                       job['company'] ?? 'Company Name',
                       style: GoogleFonts.inter(
-                        color: colorScheme.onSurfaceVariant,
                         fontSize: 14,
                         fontWeight: FontWeight.w500,
+                        color: colorScheme.onSurfaceVariant,
                       ),
                     ),
                   ],
@@ -573,49 +611,55 @@ class _JobPreviewCard extends StatelessWidget {
               ),
             ],
           ),
-          Padding(
-            padding: const EdgeInsets.symmetric(vertical: 16),
-            child: Divider(
-              color: colorScheme.outlineVariant.withValues(alpha: 0.5),
-            ),
-          ),
+
+          const SizedBox(height: 16),
+          Divider(color: colorScheme.outlineVariant.withValues(alpha: 0.2)),
+          const SizedBox(height: 12),
+
           Row(
+            mainAxisAlignment: MainAxisAlignment.center,
             children: [
               Icon(
                 Icons.location_on_outlined,
                 size: 16,
                 color: colorScheme.onSurfaceVariant,
               ),
-              const SizedBox(width: 8),
-              Expanded(
-                child: Text(
-                  job['location'] ?? 'Location',
-                  style: GoogleFonts.inter(
-                    color: colorScheme.onSurfaceVariant,
-                    fontSize: 14,
-                  ),
+              const SizedBox(width: 6),
+              Text(
+                job['location'] ?? 'Location',
+                style: GoogleFonts.inter(
+                  fontSize: 14,
+                  color: colorScheme.onSurfaceVariant,
                 ),
+                textAlign: TextAlign.center,
               ),
             ],
           ),
+
           const SizedBox(height: 12),
-          Text(
-            job['salary'] ?? 'Unspecified Salary',
-            style: GoogleFonts.inter(
-              color: AppColor.primaryLight,
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
+
+          /// Salary
+          Center(
+            child: Text(
+              job['salary'] ?? 'Unspecified Salary',
+              style: GoogleFonts.inter(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+                color: AppColor.primaryLight,
+              ),
             ),
           ),
+
           const SizedBox(height: 16),
+
+          /// Tags
           Wrap(
             spacing: 8,
             runSpacing: 8,
             children: [
-              if (job['jobType'] != null)
-                _buildTag(context, job['jobType'].toString()),
+              if (job['jobType'] != null) _buildTag(context, job['jobType']),
               if (job['workplace'] != null)
-                _buildTag(context, job['workplace'].toString()),
+                _buildTag(context, job['workplace']),
             ],
           ),
         ],

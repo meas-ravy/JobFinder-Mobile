@@ -57,7 +57,6 @@ class JobSeekerProfilePage extends HookConsumerWidget {
                 onRefresh: () =>
                     ref.read(profileControllerProvider.notifier).fetchProfile(),
                 child: ListView(
-                  physics: const BouncingScrollPhysics(),
                   padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
                   children: [
                     if (profileState.errorMessage != null && profile == null)

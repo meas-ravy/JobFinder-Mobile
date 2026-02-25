@@ -122,7 +122,7 @@ class HeaderSection extends ConsumerWidget {
                         unreadCount > 9 ? '9+' : unreadCount.toString(),
                         style: const TextStyle(
                           color: Colors.white,
-                          fontSize: 9,
+                          fontSize: 11,
                           fontWeight: FontWeight.bold,
                         ),
                       ),

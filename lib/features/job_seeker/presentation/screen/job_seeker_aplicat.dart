@@ -9,6 +9,8 @@ import 'package:job_finder/features/job_seeker/presentation/widget/application_c
 import 'package:job_finder/features/job_seeker/presentation/widget/filter_bottom_sheet.dart';
 import 'package:job_finder/shared/widget/svg_icon.dart';
 import 'package:shimmer/shimmer.dart';
+import 'package:go_router/go_router.dart';
+import 'package:job_finder/core/routes/app_path.dart';
 
 class JobSeekerAplicatPage extends HookConsumerWidget {
   const JobSeekerAplicatPage({super.key});
@@ -37,6 +39,7 @@ class JobSeekerAplicatPage extends HookConsumerWidget {
           const SizedBox(width: 8),
         ],
       ),
+
       body: Column(
         children: [
           Padding(
@@ -190,9 +193,18 @@ class JobSeekerAplicatPage extends HookConsumerWidget {
                       thickness: 1,
                       color: isDark ? Colors.grey[800] : Colors.grey[200],
                     ),
-                    itemBuilder: (context, index) => ApplicationCard(
-                      key: ValueKey(filteredApps[index].id),
-                      application: filteredApps[index],
+                    itemBuilder: (context, index) => InkWell(
+                      onTap: () async {
+                        await context.push(
+                          '${AppPath.jobSeekerApplicationDetail}/${filteredApps[index].id}',
+                        );
+                        // Refresh the list when returning to ensure latest status
+                        ref.invalidate(myApplicationsProvider);
+                      },
+                      child: ApplicationCard(
+                        key: ValueKey(filteredApps[index].id),
+                        application: filteredApps[index],
+                      ),
                     ),
                   ),
                 );
@@ -271,63 +283,80 @@ class JobSeekerAplicatPage extends HookConsumerWidget {
 
   Widget _buildLoadingState(bool isDark) {
     return ListView.separated(
-      padding: const EdgeInsets.symmetric(horizontal: 20),
+      padding: const EdgeInsets.fromLTRB(20, 0, 20, 100),
       itemCount: 5,
-      separatorBuilder: (context, index) => const SizedBox(height: 16),
+      separatorBuilder: (context, index) => Divider(
+        height: 1,
+        thickness: 1,
+        color: isDark ? Colors.grey[800] : Colors.grey[200],
+      ),
       itemBuilder: (context, index) => Shimmer.fromColors(
         baseColor: isDark ? Colors.grey[800]! : Colors.grey[200]!,
         highlightColor: isDark ? Colors.grey[700]! : Colors.grey[100]!,
-        child: Container(
+        child: Padding(
           padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(20),
-          ),
-          child: Row(
-            children: [
-              Container(
-                width: 64,
-                height: 64,
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(16),
+          child: Container(
+            padding: const EdgeInsets.all(20),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Container(
+                  width: 72,
+                  height: 72,
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(22),
+                  ),
                 ),
-              ),
-              const SizedBox(width: 16),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Container(
-                      width: 150,
-                      height: 16,
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(4),
+                const SizedBox(width: 24),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Container(
+                        width: 180,
+                        height: 18,
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(4),
+                        ),
                       ),
-                    ),
-                    const SizedBox(height: 8),
-                    Container(
-                      width: 100,
-                      height: 14,
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(4),
+                      const SizedBox(height: 12),
+                      Row(
+                        children: [
+                          Container(
+                            width: 120,
+                            height: 14,
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              borderRadius: BorderRadius.circular(4),
+                            ),
+                          ),
+                          const Spacer(),
+                          Container(
+                            width: 16,
+                            height: 16,
+                            decoration: const BoxDecoration(
+                              color: Colors.white,
+                              shape: BoxShape.circle,
+                            ),
+                          ),
+                        ],
                       ),
-                    ),
-                    const SizedBox(height: 12),
-                    Container(
-                      width: 120,
-                      height: 24,
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(8),
+                      const SizedBox(height: 16),
+                      Container(
+                        width: 140,
+                        height: 22,
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(100),
+                        ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),

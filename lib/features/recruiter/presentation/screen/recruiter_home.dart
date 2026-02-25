@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
+import 'package:job_finder/core/helper/typedef.dart';
 import 'package:job_finder/core/routes/app_path.dart';
 import 'package:job_finder/core/theme/app_color.dart';
 import 'package:job_finder/features/recruiter/data/models/job_card_data.dart';
@@ -227,7 +228,7 @@ class RecruiterHomePage extends HookConsumerWidget {
               itemBuilder: (context, index) {
                 final jobItem = jobs[index];
                 final job = (jobItem is Map)
-                    ? Map<String, dynamic>.from(jobItem)
+                    ? DataMap.from(jobItem)
                     : <String, dynamic>{};
                 final jobId = job['_id'] ?? job['id'];
                 return JobCard(

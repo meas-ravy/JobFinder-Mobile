@@ -10,3 +10,13 @@ class GetMyApplicationsUseCase {
     return _repository.getMyApplications();
   }
 }
+
+class GetApplicationDetailsUseCase {
+  final ApplicationRepository _repository;
+
+  GetApplicationDetailsUseCase(this._repository);
+
+  Future<ApplicationEntity> call(String id) {
+    return _repository.getApplicationDetails(id);
+  }
+}

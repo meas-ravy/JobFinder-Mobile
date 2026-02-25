@@ -130,10 +130,11 @@ class JobSeekerHomePage extends HookConsumerWidget {
                 child: HomeHeader(
                   userName: profile?.fullName ?? 'User',
                   userAvatarUrl: profile?.avatarUrl,
-                  hasUnreadNotifications: ref
+                  unreadNotificationCount: ref
                       .watch(notificationControllerProvider)
                       .notifications
-                      .any((n) => !n.isRead),
+                      .where((n) => !n.isRead)
+                      .length,
                   isLoading: profileState.isLoading,
                   onNotificationTap: () => context.push(AppPath.notifications),
                 ),

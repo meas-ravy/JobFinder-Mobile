@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:job_finder/features/job_seeker/domain/entities/cv_entity.dart';
 import 'package:job_finder/features/job_seeker/domain/usecase/cv_template_factory.dart';
-import 'package:job_finder/features/job_seeker/presentation/screen/jobb_seeker_document.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
@@ -45,7 +44,7 @@ class CvPdfPreviewScreen extends StatelessWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(l10n.appName), // Use l10n if needed or keep static
+        title: Text(l10n.appName),
         centerTitle: true,
         elevation: 0,
       ),
@@ -173,7 +172,7 @@ class CvPdfPreviewScreen extends StatelessWidget {
       if (context.mounted) {
         showDialog(
           context: context,
-          builder: (context) => AlertDialog(
+          builder: (dialogContext) => AlertDialog(
             title: const Text('Success'),
             content: Text('PDF downloaded successfully to:\n$fileName'),
             actions: [
@@ -182,19 +181,16 @@ class CvPdfPreviewScreen extends StatelessWidget {
                 children: [
                   TextButton(
                     onPressed: () {
-                      Navigator.pushAndRemoveUntil(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => const MyDocumentPage(),
-                        ),
-                        (route) => false,
-                      );
+                      Navigator.pop(dialogContext);
+                      if (context.mounted) {
+                        Navigator.pop(context);
+                      }
                     },
-                    child: const Text('OK'),
+                    child: const Text('Back'),
                   ),
                   TextButton(
                     onPressed: () {
-                      Navigator.pop(context);
+                      Navigator.pop(dialogContext);
                       OpenFile.open(filePath);
                     },
                     child: const Text('View'),

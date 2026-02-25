@@ -15,9 +15,17 @@ class RecruiterMessagePage extends ConsumerStatefulWidget {
 }
 
 class _RecruiterMessagePageState extends ConsumerState<RecruiterMessagePage> {
+  final TextEditingController _searchController = TextEditingController();
+  String _searchQuery = '';
+
   @override
   void initState() {
     super.initState();
+    _searchController.addListener(() {
+      setState(() {
+        _searchQuery = _searchController.text.toLowerCase();
+      });
+    });
     Future.microtask(() {
       if (mounted) {
         ref.read(recruiterControllerProvider.notifier).getConversations();
@@ -35,6 +43,16 @@ class _RecruiterMessagePageState extends ConsumerState<RecruiterMessagePage> {
           : <String, dynamic>{};
       return ConversationListModel.fromJson(mapData);
     }).toList();
+
+    final filteredConversations = _searchQuery.isEmpty
+        ? conversations
+        : conversations
+              .where(
+                (c) => c.otherParticipant.name.toLowerCase().contains(
+                  _searchQuery,
+                ),
+              )
+              .toList();
 
     return Scaffold(
       appBar: AppBar(
@@ -59,6 +77,7 @@ class _RecruiterMessagePageState extends ConsumerState<RecruiterMessagePage> {
           Padding(
             padding: const EdgeInsets.all(16.0),
             child: TextField(
+              controller: _searchController,
               style: TextStyle(color: colorScheme.onSurface),
               decoration: InputDecoration(
                 hintText: "Search messages...",
@@ -94,14 +113,24 @@ class _RecruiterMessagePageState extends ConsumerState<RecruiterMessagePage> {
                         color: colorScheme.primary,
                       ),
                     )
-                  : conversations.isEmpty
-                  ? _buildEmptyState(colorScheme)
+                  : filteredConversations.isEmpty
+                  ? (conversations.isEmpty
+                        ? _buildEmptyState(colorScheme)
+                        : Center(
+                            child: Text(
+                              "No messages match your search.",
+                              style: GoogleFonts.outfit(
+                                color: colorScheme.onSurfaceVariant,
+                                fontSize: 16,
+                              ),
+                            ),
+                          ))
                   : ListView.separated(
-                      itemCount: conversations.length,
+                      itemCount: filteredConversations.length,
                       separatorBuilder: (context, index) =>
                           const SizedBox(height: 16),
                       itemBuilder: (context, index) {
-                        final conversation = conversations[index];
+                        final conversation = filteredConversations[index];
                         return _ConversationTile(conversation: conversation);
                       },
                     ),

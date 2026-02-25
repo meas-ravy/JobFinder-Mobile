@@ -25,9 +25,6 @@ class SocialIconButton extends StatelessWidget {
         decoration: BoxDecoration(
           color: backgroundColor,
           borderRadius: BorderRadius.circular(14),
-          // border: Border.all(
-          //   color: colorScheme.onSurface.withValues(alpha: 0.10),
-          // ),
         ),
         child: Center(child: AppSvgIcon(assetName: assetName, size: 28)),
       ),

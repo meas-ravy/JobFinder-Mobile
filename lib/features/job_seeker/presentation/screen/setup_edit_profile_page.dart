@@ -244,7 +244,9 @@ class EditProfilePage extends HookConsumerWidget {
                           );
                           final profileData = {
                             'fullName': nameController.text,
-                            'email': emailController.text,
+                            if (emailController.text.isNotEmpty &&
+                                emailController.text != profile?.email)
+                              'email': emailController.text,
                             'dateOfBirth': dobController.text.isNotEmpty
                                 ? DateFormat('yyyy-MM-dd').format(
                                     DateFormat(

@@ -2,11 +2,17 @@ import 'package:agora_rtc_engine/agora_rtc_engine.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:permission_handler/permission_handler.dart';
+import 'package:hooks_riverpod/hooks_riverpod.dart';
+import 'package:job_finder/features/recruiter/presentation/provider/recruiter_provider.dart';
+import 'package:job_finder/features/job_seeker/presentation/provider/chat_provider.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:job_finder/core/helper/secure_storage.dart';
 
-class CallScreen extends StatefulWidget {
+class CallScreen extends ConsumerStatefulWidget {
   final String channelName;
-  final String token;
-  final String appId;
+  final String? token;
+  final String? appId;
+  final String? uid;
   final bool isVideoCall;
   final String remoteName;
   final String? remoteAvatar;
@@ -14,21 +20,23 @@ class CallScreen extends StatefulWidget {
   const CallScreen({
     super.key,
     required this.channelName,
-    required this.token,
-    required this.appId,
+    this.token,
+    this.appId,
+    this.uid,
     required this.isVideoCall,
     required this.remoteName,
     this.remoteAvatar,
   });
 
   @override
-  State<CallScreen> createState() => _CallScreenState();
+  ConsumerState<CallScreen> createState() => _CallScreenState();
 }
 
-class _CallScreenState extends State<CallScreen> {
+class _CallScreenState extends ConsumerState<CallScreen> {
   int? _remoteUid;
   bool _localUserJoined = false;
   late RtcEngine _engine;
+  bool _isEngineInitialized = false;
   bool _muted = false;
   bool _videoEnabled = true;
 
@@ -43,14 +51,55 @@ class _CallScreenState extends State<CallScreen> {
     // Retrieve permissions
     await [Permission.microphone, Permission.camera].request();
 
+    String? token = widget.token;
+    String? appId = widget.appId;
+    String? uid = widget.uid;
+
+    // If token is missing (incoming call from notification), fetch it
+    if (token == null || appId == null || uid == null) {
+      final storage = TokenStorageImpl(const FlutterSecureStorage());
+      final role = await storage.readRole();
+
+      if (role == 'Recruiter') {
+        await ref
+            .read(recruiterControllerProvider.notifier)
+            .getAgoraToken(widget.channelName);
+        final state = ref.read(recruiterControllerProvider);
+        token = state.agoraToken;
+        appId = state.agoraAppId;
+        uid = state.agoraUid;
+      } else {
+        await ref
+            .read(jobSeekerChatControllerProvider.notifier)
+            .getAgoraToken(widget.channelName);
+        final state = ref.read(jobSeekerChatControllerProvider);
+        token = state.agoraToken;
+        appId = state.agoraAppId;
+        uid = state.agoraUid;
+      }
+    }
+
+    if (token == null || appId == null || uid == null) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text("Failed to join call: Missing token or UID"),
+          ),
+        );
+        Navigator.pop(context);
+      }
+      return;
+    }
+
     // Create the engine
     _engine = createAgoraRtcEngine();
     await _engine.initialize(
       RtcEngineContext(
-        appId: widget.appId,
+        appId: appId,
         channelProfile: ChannelProfileType.channelProfileCommunication,
       ),
     );
+    _isEngineInitialized = true;
 
     if (widget.isVideoCall) {
       await _engine.enableVideo();
@@ -94,10 +143,10 @@ class _CallScreenState extends State<CallScreen> {
       ),
     );
 
-    await _engine.joinChannel(
-      token: widget.token,
+    await _engine.joinChannelWithUserAccount(
+      token: token,
       channelId: widget.channelName,
-      uid: 0,
+      userAccount: uid,
       options: const ChannelMediaOptions(),
     );
   }
@@ -109,8 +158,10 @@ class _CallScreenState extends State<CallScreen> {
   }
 
   Future<void> _dispose() async {
-    await _engine.leaveChannel();
-    await _engine.release();
+    if (_isEngineInitialized) {
+      await _engine.leaveChannel();
+      await _engine.release();
+    }
   }
 
   void _onCallEnd(BuildContext context) {

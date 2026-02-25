@@ -1,3 +1,4 @@
+import 'package:job_finder/core/helper/typedef.dart';
 import 'package:job_finder/features/job_seeker/domain/entities/profile_entity.dart';
 
 class ProfileModel extends ProfileEntity {
@@ -11,6 +12,35 @@ class ProfileModel extends ProfileEntity {
   });
 
   factory ProfileModel.fromJson(Map<String, dynamic> json) {
+    // If the JSON is the root response containing 'profile' and/or 'user'
+    final containsKeys =
+        json.containsKey('profile') || json.containsKey('user');
+
+    if (containsKeys) {
+      final profileData = json['profile'] as DataMap?;
+      final userData = json['user'] as DataMap?;
+
+      if (profileData != null) {
+        return ProfileModel(
+          id: profileData['id']?.toString() ?? profileData['_id']?.toString(),
+          fullName: profileData['fullName'],
+          email: profileData['email'],
+          dateOfBirth: profileData['dateOfBirth'],
+          gender: profileData['gender'],
+          avatarUrl: profileData['avatarUrl'],
+        );
+      }
+
+      // Fallback to user data if profile is null
+      return ProfileModel(
+        id: userData?['id']?.toString(),
+        fullName: userData?['name'],
+        email: userData?['email'],
+        avatarUrl: userData?['avatarUrl'],
+      );
+    }
+
+    // If it's the direct profile data (no 'profile' or 'user' at root)
     return ProfileModel(
       id: json['id']?.toString() ?? json['_id']?.toString(),
       fullName: json['fullName'],
@@ -21,7 +51,7 @@ class ProfileModel extends ProfileEntity {
     );
   }
 
-  Map<String, dynamic> toJson() {
+  DataMap toJson() {
     return {
       if (id != null) 'id': id,
       if (fullName != null) 'fullName': fullName,

@@ -455,8 +455,18 @@ class RecruiterController extends StateNotifier<RecruiterState> {
         state = state.copyWith(isLoading: false, errorMessage: failure.message);
       },
       (data) {
-        state = state.copyWith(isLoading: false, data: data);
-        // Refresh application details to get updated status
+        final application = data['application'] ?? data['data'] ?? data;
+        DataMap? typedApplication;
+        if (application is Map) {
+          typedApplication = Map<String, dynamic>.from(application);
+        }
+
+        state = state.copyWith(
+          isLoading: false,
+          data: data,
+          applicationDetails: typedApplication ?? state.applicationDetails,
+        );
+        // Refresh anyway to be safe, but now state is updated immediately
         getApplicationDetails(id, refresh: true);
       },
     );
@@ -531,10 +541,12 @@ class RecruiterController extends StateNotifier<RecruiterState> {
       (data) {
         final token = data['token'] ?? data['data']?['token'];
         final appId = data['appId'] ?? data['data']?['appId'];
+        final uid = data['uid'] ?? data['data']?['uid'];
         state = state.copyWith(
           isLoading: false,
           agoraToken: token,
           agoraAppId: appId,
+          agoraUid: uid?.toString(),
           data: data,
         );
       },

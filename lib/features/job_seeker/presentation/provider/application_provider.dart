@@ -16,6 +16,15 @@ final getMyApplicationsUseCaseProvider = Provider((ref) {
   return GetMyApplicationsUseCase(ref.watch(applicationRepositoryProvider));
 });
 
+final getApplicationDetailsUseCaseProvider = Provider((ref) {
+  return GetApplicationDetailsUseCase(ref.watch(applicationRepositoryProvider));
+});
+
 final myApplicationsProvider = FutureProvider<List<ApplicationEntity>>((ref) {
   return ref.watch(getMyApplicationsUseCaseProvider).call();
 });
+
+final applicationDetailsProvider =
+    FutureProvider.family<ApplicationEntity, String>((ref, id) {
+      return ref.watch(getApplicationDetailsUseCaseProvider).call(id);
+    });

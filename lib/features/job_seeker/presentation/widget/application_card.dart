@@ -60,14 +60,20 @@ class ApplicationCard extends StatelessWidget {
 
                 const SizedBox(height: 6),
 
-                Text(
-                  company?.name ?? 'Unknown Company',
-                  style: theme.textTheme.titleMedium?.copyWith(
-                    color: Colors.grey[600],
-                    fontWeight: FontWeight.w600,
-                  ),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
+                Row(
+                  children: [
+                    Text(
+                      company?.name ?? 'Unknown Company',
+                      style: theme.textTheme.titleMedium?.copyWith(
+                        color: Colors.grey[600],
+                        fontWeight: FontWeight.w600,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    const Spacer(),
+                    const Icon(Icons.arrow_forward_ios, size: 16),
+                  ],
                 ),
 
                 const SizedBox(height: 12),
@@ -93,17 +99,17 @@ class ApplicationCard extends StatelessWidget {
         textColor = Colors.blue[700]!;
         label = 'Application Sent';
         break;
-      case 'accepted':
+      case 'application accepted':
         bgColor = Colors.green.withValues(alpha: 0.1);
         textColor = Colors.green[700]!;
         label = 'Application Accepted';
         break;
-      case 'rejected':
+      case 'application rejected':
         bgColor = Colors.red.withValues(alpha: 0.1);
         textColor = Colors.red[700]!;
         label = 'Application Rejected';
         break;
-      case 'pending':
+      case 'application pending':
       default:
         bgColor = Colors.orange.withValues(alpha: 0.1);
         textColor = Colors.orange[700]!;

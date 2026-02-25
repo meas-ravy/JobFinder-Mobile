@@ -5,6 +5,7 @@ import 'package:job_finder/features/job_seeker/domain/entities/application_entit
 
 abstract class ApplicationServer {
   Future<List<ApplicationEntity>> getMyApplications();
+  Future<ApplicationEntity> getApplicationDetails(String id);
 }
 
 class ApplicationServerImpl implements ApplicationServer {
@@ -19,6 +20,17 @@ class ApplicationServerImpl implements ApplicationServer {
       return applicationsJson
           .map((json) => ApplicationModel.fromJson(json))
           .toList();
+    } catch (e) {
+      rethrow;
+    }
+  }
+
+  @override
+  Future<ApplicationEntity> getApplicationDetails(String id) async {
+    try {
+      final response = await dio.get(ApiEnpoint.applicationDetails(id));
+      final applicationJson = response.data['application'] ?? response.data;
+      return ApplicationModel.fromJson(applicationJson);
     } catch (e) {
       rethrow;
     }

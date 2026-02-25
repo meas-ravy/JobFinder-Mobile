@@ -17,9 +17,7 @@ class ProfileServerImpl implements ProfileServer {
   Future<ProfileEntity> getProfile() async {
     try {
       final response = await dio.get(ApiEnpoint.profile);
-      final dynamic data =
-          response.data['data'] ?? response.data['profile'] ?? response.data;
-      return ProfileModel.fromJson(data);
+      return ProfileModel.fromJson(response.data);
     } catch (e) {
       rethrow;
     }
@@ -29,9 +27,7 @@ class ProfileServerImpl implements ProfileServer {
   Future<ProfileEntity> createProfile(DataMap body) async {
     try {
       final response = await dio.post(ApiEnpoint.profile, data: body);
-      final dynamic data =
-          response.data['data'] ?? response.data['profile'] ?? response.data;
-      return ProfileModel.fromJson(data);
+      return ProfileModel.fromJson(response.data);
     } catch (e) {
       rethrow;
     }
@@ -41,9 +37,7 @@ class ProfileServerImpl implements ProfileServer {
   Future<ProfileEntity> updateProfile(DataMap body) async {
     try {
       final response = await dio.put(ApiEnpoint.profile, data: body);
-      final dynamic data =
-          response.data['data'] ?? response.data['profile'] ?? response.data;
-      return ProfileModel.fromJson(data);
+      return ProfileModel.fromJson(response.data);
     } catch (e) {
       rethrow;
     }

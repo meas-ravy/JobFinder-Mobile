@@ -1,16 +1,27 @@
-# job_finder
+# Jober - Modern Job Finder Application 🚀
 
-A new Flutter project.
+A modern, dual-flow Flutter application designed for seamless connection between **Job Seekers** and **Recruiters**.
 
-## Getting Started
+## 📱 App Previews
 
-This project is a starting point for a Flutter application.
+<div align="center">
+  <figure>
+    <img src="assets/image/auth_screen.png" width="220"/>
+    <figcaption>Authentication</figcaption>
+  </figure>
 
-A few resources to get you started if this is your first Flutter project:
+  <figure>
+    <img src="assets/image/job_seeker_light.png" width="220"/>
+    <figcaption>Job Seeker (Light)</figcaption>
+  </figure>
 
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
+  <figure>
+    <img src="assets/image/job_seeker_dark.png" width="220"/>
+    <figcaption>Job Seeker (Dark)</figcaption>
+  </figure>
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+  <figure>
+    <img src="assets/image/recruiter_light.png" width="220"/>
+    <figcaption>Recruiter (Light)</figcaption>
+  </figure>
+</div>

@@ -59,13 +59,12 @@ class SeeAllJobsPage extends HookConsumerWidget {
         ),
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new, size: 20),
+          icon: const Icon(Icons.arrow_back, size: 24),
           onPressed: () => Navigator.of(context).pop(),
         ),
       ),
       body: Column(
         children: [
-          // Category filters (only for recent jobs)
           if (!isRecommended) ...[
             SizedBox(
               height: 52,

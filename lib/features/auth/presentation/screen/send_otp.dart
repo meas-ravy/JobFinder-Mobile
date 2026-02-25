@@ -9,6 +9,9 @@ import 'package:job_finder/features/auth/presentation/screen/veriffy_otp.dart';
 import 'package:job_finder/features/auth/presentation/widget/social_icon_button.dart';
 import 'package:job_finder/shared/components/primary_button.dart';
 import 'package:job_finder/shared/widget/svg_icon.dart';
+import 'package:go_router/go_router.dart';
+import 'package:job_finder/core/routes/app_path.dart';
+import 'package:job_finder/core/helper/secure_storage.dart';
 
 class SendOtpScreen extends ConsumerStatefulWidget {
   const SendOtpScreen({super.key});
@@ -62,12 +65,34 @@ class _SendOtpScreenState extends ConsumerState<SendOtpScreen> {
 
           case AuthAction.googleSignIn:
           case AuthAction.linkedInSignIn:
-            setState(() {
-              _socialError = next.errorMessage;
-              _socialMessage = next.errorMessage == null && next.data != null
-                  ? 'Signed in successfully'
-                  : null;
-            });
+            if (next.errorMessage != null) {
+              setState(() {
+                _socialError = next.errorMessage;
+                _socialMessage = null;
+              });
+            } else if (next.data != null) {
+              final data = next.data!;
+              final user = data['user'];
+              String? role;
+
+              if (user is Map) {
+                final roles = user['roles'];
+                if (roles is List && roles.isNotEmpty) {
+                  role = roles.first.toString();
+                  // Store role if it exists to match the main.dart logic
+                  ref.read(tokenStorageProvider).writeRole(role);
+                }
+              }
+
+              if (role == null || role.isEmpty) {
+                context.go(AppPath.selectRole);
+              } else {
+                final target = role == 'Job_finder'
+                    ? AppPath.jobSeekerHome
+                    : AppPath.recruiterHome;
+                context.go(target);
+              }
+            }
             return;
 
           case AuthAction.resendOtp:
@@ -302,46 +327,61 @@ class _SendOtpScreenState extends ConsumerState<SendOtpScreen> {
                   ],
                 ),
                 const SizedBox(height: 28),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    SocialIconButton(
-                      assetName: AppIcon.google,
-                      backgroundColor: colorScheme.onSurface.withValues(
-                        alpha: 0.08,
-                      ),
-                      onTap: authState.isLoading
-                          ? () {}
-                          : () {
-                              setState(() {
-                                _socialError = null;
-                                _socialMessage = null;
-                              });
-                              ref
-                                  .read(authControllerProvider.notifier)
-                                  .signInWithGoogle();
-                            },
-                    ),
-                    const SizedBox(width: 16),
-                    SocialIconButton(
-                      assetName: AppIcon.linkenin,
-                      backgroundColor: colorScheme.onSurface.withValues(
-                        alpha: 0.08,
-                      ),
-                      onTap: authState.isLoading
-                          ? () {}
-                          : () {
-                              setState(() {
-                                _socialError = null;
-                                _socialMessage = null;
-                              });
-                              ref
-                                  .read(authControllerProvider.notifier)
-                                  .signInWithLinkedIn(context);
-                            },
-                    ),
-                  ],
+                SocialIconButton(
+                  assetName: AppIcon.google,
+                  backgroundColor: colorScheme.surfaceContainerHighest,
+                  onTap: authState.isLoading
+                      ? () {}
+                      : () {
+                          setState(() {
+                            _socialError = null;
+                            _socialMessage = null;
+                          });
+                          ref
+                              .read(authControllerProvider.notifier)
+                              .signInWithGoogle();
+                        },
                 ),
+                // Row(
+                //   mainAxisAlignment: MainAxisAlignment.center,
+                //   children: [
+                //  SocialIconButton(
+                //   assetName: AppIcon.google,
+                //   backgroundColor: colorScheme.onSurface.withValues(
+                //     alpha: 0.08,
+                //   ),
+                //   onTap: authState.isLoading
+                //       ? () {}
+                //       : () {
+                //           setState(() {
+                //             _socialError = null;
+                //             _socialMessage = null;
+                //           });
+                //           ref
+                //               .read(authControllerProvider.notifier)
+                //               .signInWithGoogle();
+                //         },
+                // ),
+                // const SizedBox(width: 16),
+                // SocialIconButton(
+                //   assetName: AppIcon.linkenin,
+                //   backgroundColor: colorScheme.onSurface.withValues(
+                //     alpha: 0.08,
+                //   ),
+                //   onTap: authState.isLoading
+                //       ? () {}
+                //       : () {
+                //           setState(() {
+                //             _socialError = null;
+                //             _socialMessage = null;
+                //           });
+                //           ref
+                //               .read(authControllerProvider.notifier)
+                //               .signInWithLinkedIn(context);
+                //         },
+                // ),
+                //   ],
+                // ),
                 if (_socialError != null) ...[
                   const SizedBox(height: 12),
                   Text(

@@ -13,6 +13,7 @@ class ChatState {
     this.lastAction,
     this.agoraToken,
     this.agoraAppId,
+    this.agoraUid,
   });
 
   final bool isLoading;
@@ -21,6 +22,7 @@ class ChatState {
   final ChatAction? lastAction;
   final String? agoraToken;
   final String? agoraAppId;
+  final String? agoraUid;
 
   ChatState copyWith({
     bool? isLoading,
@@ -29,6 +31,7 @@ class ChatState {
     ChatAction? lastAction,
     String? agoraToken,
     String? agoraAppId,
+    String? agoraUid,
   }) {
     return ChatState(
       isLoading: isLoading ?? this.isLoading,
@@ -37,6 +40,7 @@ class ChatState {
       lastAction: lastAction ?? this.lastAction,
       agoraToken: agoraToken ?? this.agoraToken,
       agoraAppId: agoraAppId ?? this.agoraAppId,
+      agoraUid: agoraUid ?? this.agoraUid,
     );
   }
 }

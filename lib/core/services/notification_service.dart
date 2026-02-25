@@ -9,6 +9,55 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:go_router/go_router.dart';
 import 'package:job_finder/core/routes/app_route.dart';
 import 'package:logger/logger.dart';
+import 'package:flutter_callkit_incoming/entities/entities.dart';
+import 'package:flutter_callkit_incoming/flutter_callkit_incoming.dart';
+import 'package:uuid/uuid.dart';
+
+Future<void> showCallkitIncoming(Map<String, dynamic> data) async {
+  final uuid = data['conversationId'] ?? const Uuid().v4();
+  final callerName = data['title'] ?? data['senderName'] ?? 'Incoming Call';
+  final callerAvatar = data['imageUrl'] ?? data['senderAvatar'] ?? '';
+  final callType = data['callType'] ?? 'VIDEO';
+  final isVideo = callType == 'VIDEO';
+
+  CallKitParams callKitParams = CallKitParams(
+    id: uuid,
+    nameCaller: callerName,
+    appName: 'Jober',
+    avatar: callerAvatar,
+    handle: "Incoming Call",
+    type: isVideo ? 1 : 0,
+    duration: 30000,
+    textAccept: 'Accept',
+    textDecline: 'Decline',
+    extra: data,
+    android: const AndroidParams(
+      isCustomNotification: true,
+      isShowLogo: false,
+      ringtonePath: 'system_ringtone_default',
+      backgroundColor: '#0955fa',
+      actionColor: '#4CAF50',
+    ),
+    ios: const IOSParams(
+      iconName: 'CallKitLogo',
+      handleType: '',
+      supportsVideo: true,
+      maximumCallGroups: 2,
+      maximumCallsPerCallGroup: 1,
+      audioSessionMode: 'default',
+      audioSessionActive: true,
+      audioSessionPreferredSampleRate: 44100.0,
+      audioSessionPreferredIOBufferDuration: 0.005,
+      supportsDTMF: true,
+      supportsHolding: true,
+      supportsGrouping: false,
+      supportsUngrouping: false,
+      ringtonePath: 'system_ringtone_default',
+    ),
+  );
+
+  await FlutterCallkitIncoming.showCallkitIncoming(callKitParams);
+}
 
 @pragma('vm:entry-point')
 Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
@@ -20,6 +69,14 @@ Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
   } catch (e) {
     // Already initialized or other error
   }
+
+  final data = message.data;
+  final String? type = data['type'] ?? data['signalType'];
+
+  if (type == 'INCOMING_CALL' || type == 'START_CALL') {
+    await showCallkitIncoming(data);
+  }
+
   Logger().i("Handling a background message: ${message.messageId}");
 }
 
@@ -66,13 +123,49 @@ class NotificationService {
       },
     );
 
+    // Setup CallKit Events
+    FlutterCallkitIncoming.onEvent.listen((event) {
+      switch (event!.event) {
+        case Event.actionCallAccept:
+          final data = Map<String, dynamic>.from(event.body['extra'] ?? {});
+          final channelName = data['conversationId'] ?? data['channelName'];
+          final callType = data['callType'] ?? 'VIDEO';
+          final remoteName =
+              data['title'] ?? data['senderName'] ?? 'Incoming Call';
+
+          if (channelName != null) {
+            final route =
+                '/call?channelName=$channelName&isVideoCall=${callType == 'VIDEO'}&remoteName=$remoteName';
+            handleLink(route);
+          }
+          break;
+        case Event.actionCallDecline:
+          // Optional: Send decline ping to backend with signalType: "MISSED_CALL"
+          // We can add logic to ping your /api/agora/call-signal here in the future
+          break;
+        default:
+          break;
+      }
+    });
+
     // 2.5 Setup Background Handling
     FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
 
     // Handle initial message (when app is opened from terminated state)
     FirebaseMessaging.instance.getInitialMessage().then((message) {
       if (message != null) {
-        final link = message.data['link'];
+        final data = message.data;
+        final String? type = data['type'] ?? data['signalType'];
+
+        if (type == 'INCOMING_CALL' || type == 'START_CALL') {
+          final channelName = data['conversationId'] ?? data['channelName'];
+          final callType = data['callType'] ?? 'VIDEO';
+          final remoteName =
+              data['title'] ?? data['senderName'] ?? 'Incoming Call';
+          data['link'] =
+              '/incoming-call?channelName=$channelName&isVideoCall=${callType == 'VIDEO'}&remoteName=$remoteName';
+        }
+        final link = data['link'];
         if (link != null && link.toString().isNotEmpty) {
           handleLink(link.toString());
         }
@@ -81,7 +174,18 @@ class NotificationService {
 
     // Handle background messages tapped while app is in background
     FirebaseMessaging.onMessageOpenedApp.listen((message) {
-      final link = message.data['link'];
+      final data = message.data;
+      final String? type = data['type'] ?? data['signalType'];
+
+      if (type == 'INCOMING_CALL' || type == 'START_CALL') {
+        final channelName = data['conversationId'] ?? data['channelName'];
+        final callType = data['callType'] ?? 'VIDEO';
+        final remoteName =
+            data['title'] ?? data['senderName'] ?? 'Incoming Call';
+        data['link'] =
+            '/incoming-call?channelName=$channelName&isVideoCall=${callType == 'VIDEO'}&remoteName=$remoteName';
+      }
+      final link = data['link'];
       if (link != null && link.toString().isNotEmpty) {
         handleLink(link.toString());
       }
@@ -110,6 +214,18 @@ class NotificationService {
 
       final data = message.data;
       final targetRole = data['targetRole'] ?? 'Both';
+      final String? type = data['type'] ?? data['signalType'];
+
+      if (type == 'INCOMING_CALL' || type == 'START_CALL') {
+        final channelName = data['conversationId'] ?? data['channelName'];
+        final callType = data['callType'] ?? 'VIDEO';
+        final remoteName =
+            data['title'] ?? data['senderName'] ?? 'Incoming Call';
+
+        // Construct deep link for the call
+        data['link'] =
+            '/incoming-call?channelName=$channelName&isVideoCall=${callType == 'VIDEO'}&remoteName=$remoteName';
+      }
 
       // Filtering Logic
       if (targetRole != 'Both' &&
@@ -141,6 +257,11 @@ class NotificationService {
           ),
         );
       }
+
+      // If foreground call signal, aggressively push callkit overlay
+      if (type == 'INCOMING_CALL' || type == 'START_CALL') {
+        showCallkitIncoming(Map<String, dynamic>.from(data));
+      }
     });
 
     // 5. Register Token to Backend
@@ -157,7 +278,7 @@ class NotificationService {
 
     // Wait for context to be available (useful for cold starts)
     int retryCount = 0;
-    while (rootNavigatorKey.currentContext == null && retryCount < 10) {
+    while (rootNavigatorKey.currentContext == null && retryCount < 50) {
       await Future.delayed(const Duration(milliseconds: 200));
       retryCount++;
     }
