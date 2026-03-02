@@ -1,11 +1,18 @@
 import 'package:job_finder/core/constants/api_enpoint.dart';
+import 'package:job_finder/core/helper/typedef.dart';
 import 'package:job_finder/core/networks/dio_client.dart';
 import 'package:job_finder/features/job_seeker/data/model/job_model.dart';
 import 'package:job_finder/features/job_seeker/domain/entities/job_entity.dart';
+import 'package:job_finder/features/job_seeker/domain/entities/paginated_jobs.dart';
+import 'package:job_finder/core/helper/pagination.dart';
 
 abstract class JobServer {
   Future<List<JobEntity>> getRecommendedJobs();
-  Future<List<JobEntity>> getRecentJobs({String? category});
+  Future<PaginatedJobs> getRecentJobs({
+    String? category,
+    int page = 1,
+    int limit = 20,
+  });
   Future<JobEntity> getJobById(String id);
   Future<bool> saveJob(String id);
   Future<List<JobEntity>> getSavedJobs();
@@ -37,9 +44,18 @@ class JobServerImpl implements JobServer {
   }
 
   @override
-  Future<List<JobEntity>> getRecentJobs({String? category}) async {
+  Future<PaginatedJobs> getRecentJobs({
+    String? category,
+    int page = 1,
+    int limit = 20,
+  }) async {
     try {
-      final Map<String, dynamic> queryParams = {'section': 'recent'};
+      final DataMap queryParams = {
+        'section': 'recent',
+        'page': page,
+        'limit': limit,
+      };
+      
       if (category != null) {
         queryParams['category'] = category == 'All' ? 'all' : category;
       }
@@ -50,7 +66,19 @@ class JobServerImpl implements JobServer {
       );
 
       final List<dynamic> jobsJson = response.data['jobs'] ?? [];
-      return jobsJson.map((json) => JobModel.fromJson(json)).toList();
+      final jobs = jobsJson.map((json) => JobModel.fromJson(json)).toList();
+
+      final paginationJson = response.data['pagination'];
+      final pagination = paginationJson != null
+          ? PaginationInfo.fromJson(paginationJson)
+          : PaginationInfo(
+              page: page,
+              limit: limit,
+              totalCount: 0,
+              totalPages: 1,
+            );
+
+      return PaginatedJobs(jobs: jobs, pagination: pagination);
     } catch (e) {
       rethrow;
     }

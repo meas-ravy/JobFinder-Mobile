@@ -1,3 +1,4 @@
+import 'package:job_finder/core/helper/typedef.dart';
 import 'package:job_finder/features/job_seeker/domain/entities/tip_entity.dart';
 
 class TipModel extends TipEntity {
@@ -12,7 +13,7 @@ class TipModel extends TipEntity {
     super.authorAvatarUrl,
   });
 
-  factory TipModel.fromJson(Map<String, dynamic> json) {
+  factory TipModel.fromJson(DataMap json) {
     return TipModel(
       id: json['_id'] ?? json['id'],
       title: json['title'],
@@ -27,7 +28,7 @@ class TipModel extends TipEntity {
     );
   }
 
-  Map<String, dynamic> toJson() {
+  DataMap toJson() {
     return {
       'id': id,
       'title': title,

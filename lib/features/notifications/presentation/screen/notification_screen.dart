@@ -74,14 +74,13 @@ class NotificationScreen extends HookConsumerWidget {
           if (state.notifications.any((n) => !n.isRead))
             TextButton(
               onPressed: () {
-                // Future: Implement mark all as read API
                 for (final n in state.notifications.where((n) => !n.isRead)) {
                   ref
                       .read(notificationControllerProvider.notifier)
                       .markAsRead(n.id);
                 }
               },
-              child: const Text('Mark all as read'),
+              child: const Icon(Icons.mark_as_unread),
             ),
           const SizedBox(width: 8),
         ],

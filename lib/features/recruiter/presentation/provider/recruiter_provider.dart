@@ -97,13 +97,6 @@ final updateConversationUseCaseProvider = Provider<UpdateConversationUseCase>((
   return UpdateConversationUseCase(ref.watch(recruiterRepositoryProvider));
 });
 
-final getAgoraTokenUseCaseProvider = Provider<GetAgoraTokenUseCase>((ref) {
-  return GetAgoraTokenUseCase(ref.watch(recruiterRepositoryProvider));
-});
-
-final signalCallUseCaseProvider = Provider<SignalCallUseCase>((ref) {
-  return SignalCallUseCase(ref.watch(recruiterRepositoryProvider));
-});
 
 final recruiterControllerProvider =
     StateNotifierProvider<RecruiterController, RecruiterState>((ref) {
@@ -130,8 +123,6 @@ final recruiterControllerProvider =
         ),
         getConversationsUseCase: ref.watch(getConversationsUseCaseProvider),
         updateConversationUseCase: ref.watch(updateConversationUseCaseProvider),
-        getAgoraTokenUseCase: ref.watch(getAgoraTokenUseCaseProvider),
-        signalCallUseCase: ref.watch(signalCallUseCaseProvider),
       );
     });
 

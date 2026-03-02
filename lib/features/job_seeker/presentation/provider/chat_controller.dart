@@ -41,39 +41,4 @@ class JobSeekerChatController extends StateNotifier<ChatState> {
       },
     );
   }
-
-  Future<void> getAgoraToken(String channelName) async {
-    state = state.copyWith(isLoading: true, errorMessage: null);
-    final result = await _chatServer.getAgoraToken(channelName);
-    result.fold(
-      (failure) {
-        state = state.copyWith(isLoading: false, errorMessage: failure.message);
-      },
-      (data) {
-        final token = data['token'] ?? data['data']?['token'];
-        final appId = data['appId'] ?? data['data']?['appId'];
-        final uid = data['uid'] ?? data['data']?['uid'];
-        state = state.copyWith(
-          isLoading: false,
-          agoraToken: token,
-          agoraAppId: appId,
-          agoraUid: uid?.toString(),
-          lastAction: ChatAction.getAgoraToken,
-        );
-      },
-    );
-  }
-
-  Future<void> signalCall(DataMap body) async {
-    state = state.copyWith(lastAction: ChatAction.signalCall);
-    final result = await _chatServer.signalCall(body);
-    result.fold(
-      (failure) {
-        state = state.copyWith(errorMessage: failure.message);
-      },
-      (data) {
-        // Call signaled
-      },
-    );
-  }
 }

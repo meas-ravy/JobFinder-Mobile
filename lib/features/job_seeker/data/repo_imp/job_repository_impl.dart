@@ -1,5 +1,6 @@
 import 'package:job_finder/features/job_seeker/data/server/job_server.dart';
 import 'package:job_finder/features/job_seeker/domain/entities/job_entity.dart';
+import 'package:job_finder/features/job_seeker/domain/entities/paginated_jobs.dart';
 import 'package:job_finder/features/job_seeker/domain/repos/job_repository.dart';
 
 class JobRepositoryImpl implements JobRepository {
@@ -13,8 +14,12 @@ class JobRepositoryImpl implements JobRepository {
   }
 
   @override
-  Future<List<JobEntity>> getRecentJobs({String? category}) {
-    return _server.getRecentJobs(category: category);
+  Future<PaginatedJobs> getRecentJobs({
+    String? category,
+    int page = 1,
+    int limit = 10,
+  }) {
+    return _server.getRecentJobs(category: category, page: page, limit: limit);
   }
 
   @override

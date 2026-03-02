@@ -5,6 +5,8 @@ import 'package:job_finder/features/job_seeker/domain/entities/job_entity.dart';
 import 'package:job_finder/features/job_seeker/domain/usecase/job_usecase.dart';
 import 'package:job_finder/features/job_seeker/presentation/provider/job_controller.dart';
 import 'package:job_finder/features/job_seeker/presentation/provider/job_state.dart';
+import 'package:job_finder/features/job_seeker/presentation/provider/saved_job_controller.dart';
+import 'package:job_finder/features/job_seeker/presentation/provider/saved_job_state.dart';
 
 final jobServerProvider = Provider<JobServer>((ref) {
   return JobServerImpl();
@@ -42,38 +44,19 @@ final jobDetailProvider = FutureProvider.family<JobEntity, String>((ref, id) {
   return ref.watch(getJobByIdUseCaseProvider).call(id);
 });
 
-final savedJobsProvider = FutureProvider<List<JobEntity>>((ref) {
-  return ref.watch(getSavedJobsUseCaseProvider).call();
-});
-
-final jobLocalSaveStatusProvider = StateProvider.family<bool?, String>(
-  (ref, id) => null,
+// Job Controller
+final jobControllerProvider = NotifierProvider<JobController, JobState>(
+  JobController.new,
 );
 
-final jobSavedStatusProvider = Provider.family<bool?, String>((ref, id) {
-  // 1. Check local override
-  final override = ref.watch(jobLocalSaveStatusProvider(id));
-  if (override != null) return override;
+// Saved Job Controller
+final savedJobControllerProvider =
+    NotifierProvider<SavedJobController, SavedJobState>(SavedJobController.new);
 
-  // 2. Cross-reference with the global saved jobs list
-  final savedJobsAsync = ref.watch(savedJobsProvider);
-  return savedJobsAsync.maybeWhen(
-    data: (jobs) => jobs.any((j) => j.id == id),
-    orElse: () => null, // Return null to fall back to the job object's isSaved
-  );
-});
-
-final jobControllerProvider = StateNotifierProvider<JobController, JobState>((
-  ref,
-) {
-  final controller = JobController(
-    getRecommendedJobsUseCase: ref.watch(getRecommendedJobsUseCaseProvider),
-    getRecentJobsUseCase: ref.watch(getRecentJobsUseCaseProvider),
-    getSavedJobsUseCase: ref.watch(getSavedJobsUseCaseProvider),
-  );
-  // Fetch initial data
-  Future.microtask(() => controller.fetchAll());
-  return controller;
+// Check if a specific job is saved (reads from SavedJobController)
+final jobSavedStatusProvider = Provider.family<bool, String>((ref, id) {
+  final savedState = ref.watch(savedJobControllerProvider);
+  return savedState.isJobSaved(id);
 });
 
 final mainWrapperIndexProvider = StateProvider<int>((ref) => 0);

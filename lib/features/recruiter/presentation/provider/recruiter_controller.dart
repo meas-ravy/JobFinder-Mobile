@@ -22,8 +22,6 @@ class RecruiterController extends StateNotifier<RecruiterState> {
     required GetRecruiterDashboardUseCase getRecruiterDashboardUseCase,
     required GetConversationsUseCase getConversationsUseCase,
     required UpdateConversationUseCase updateConversationUseCase,
-    required GetAgoraTokenUseCase getAgoraTokenUseCase,
-    required SignalCallUseCase signalCallUseCase,
   }) : _createCompanyUseCase = createCompanyUseCase,
        _getCompanyProfileUseCase = getCompanyProfileUseCase,
        _updateCompanyUseCase = updateCompanyUseCase,
@@ -40,8 +38,6 @@ class RecruiterController extends StateNotifier<RecruiterState> {
        _getRecruiterDashboardUseCase = getRecruiterDashboardUseCase,
        _getConversationsUseCase = getConversationsUseCase,
        _updateConversationUseCase = updateConversationUseCase,
-       _getAgoraTokenUseCase = getAgoraTokenUseCase,
-       _signalCallUseCase = signalCallUseCase,
        super(const RecruiterState()) {
     _loadInitialData();
   }
@@ -133,8 +129,6 @@ class RecruiterController extends StateNotifier<RecruiterState> {
   final GetRecruiterDashboardUseCase _getRecruiterDashboardUseCase;
   final GetConversationsUseCase _getConversationsUseCase;
   final UpdateConversationUseCase _updateConversationUseCase;
-  final GetAgoraTokenUseCase _getAgoraTokenUseCase;
-  final SignalCallUseCase _signalCallUseCase;
 
   CompanyModel? _parseCompany(DataMap data) {
     // 1. Check if the top level has company-like fields
@@ -523,45 +517,6 @@ class RecruiterController extends StateNotifier<RecruiterState> {
       },
       (data) {
         // Conversation updated on server
-      },
-    );
-  }
-
-  Future<void> getAgoraToken(String channelName) async {
-    state = state.copyWith(
-      isLoading: true,
-      errorMessage: null,
-      lastAction: RecruiterAction.getAgoraToken,
-    );
-    final result = await _getAgoraTokenUseCase(channelName);
-    result.fold(
-      (failure) {
-        state = state.copyWith(isLoading: false, errorMessage: failure.message);
-      },
-      (data) {
-        final token = data['token'] ?? data['data']?['token'];
-        final appId = data['appId'] ?? data['data']?['appId'];
-        final uid = data['uid'] ?? data['data']?['uid'];
-        state = state.copyWith(
-          isLoading: false,
-          agoraToken: token,
-          agoraAppId: appId,
-          agoraUid: uid?.toString(),
-          data: data,
-        );
-      },
-    );
-  }
-
-  Future<void> signalCall(DataMap body) async {
-    state = state.copyWith(lastAction: RecruiterAction.signalCall);
-    final result = await _signalCallUseCase(body);
-    result.fold(
-      (failure) {
-        state = state.copyWith(errorMessage: failure.message);
-      },
-      (data) {
-        // Call signaled
       },
     );
   }

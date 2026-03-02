@@ -15,7 +15,7 @@ class ConversationListModel {
 
   factory ConversationListModel.fromJson(Map<String, dynamic> json) {
     return ConversationListModel(
-      id: json['id']?.toString() ?? '',
+      id: json['id']?.toString() ?? json['_id']?.toString() ?? '',
       lastMessageContent: json['lastMessageContent']?.toString(),
       lastMessageTimestamp:
           json['lastMessageTimestamp']?.toString() ??
@@ -40,7 +40,7 @@ class OtherParticipant {
 
   factory OtherParticipant.fromJson(Map<String, dynamic> json) {
     return OtherParticipant(
-      id: json['id']?.toString() ?? '',
+      id: json['id']?.toString() ?? json['_id']?.toString() ?? '',
       name: json['name']?.toString() ?? json['fullName']?.toString() ?? 'User',
       avatar:
           json['avatar']?.toString() ??

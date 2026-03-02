@@ -220,23 +220,3 @@ class UpdateConversationUseCase
     return _repository.updateConversation(params.id, params.body);
   }
 }
-
-class GetAgoraTokenUseCase extends UseCaseWithParams<DataMap, String> {
-  const GetAgoraTokenUseCase(this._repository);
-  final RecruiterRepository _repository;
-
-  @override
-  ResultFuture<DataMap> call(String params) {
-    return _repository.getAgoraToken(params);
-  }
-}
-
-class SignalCallUseCase extends UseCaseWithParams<DataMap, DataMap> {
-  const SignalCallUseCase(this._repository);
-  final RecruiterRepository _repository;
-
-  @override
-  ResultFuture<DataMap> call(DataMap params) {
-    return _repository.signalCall(params);
-  }
-}

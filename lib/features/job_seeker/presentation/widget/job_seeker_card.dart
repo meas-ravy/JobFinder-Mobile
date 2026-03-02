@@ -7,7 +7,6 @@ import 'package:job_finder/shared/widget/svg_icon.dart';
 import 'package:job_finder/features/job_seeker/domain/entities/job_entity.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:job_finder/features/job_seeker/presentation/provider/job_provider.dart';
-import 'package:job_finder/features/job_seeker/presentation/widget/unsave_confirmation_bottom_sheet.dart';
 
 class JobSeekerCard extends StatelessWidget {
   final JobEntity job;
@@ -145,33 +144,34 @@ class JobSeekerCard extends StatelessWidget {
                 // Bookmark Component
                 Consumer(
                   builder: (context, ref, child) {
-                    final savedOverride = ref.watch(
-                      jobSavedStatusProvider(job.id),
+                    final isSaved = ref.watch(jobSavedStatusProvider(job.id));
+                    final isToggling = ref.watch(
+                      savedJobControllerProvider.select(
+                        (s) => s.togglingJobIds.contains(job.id),
+                      ),
                     );
-                    final isSaved = savedOverride ?? job.isSaved ?? false;
 
                     return IconButton(
-                      onPressed: () {
-                        if (isSaved) {
-                          showModalBottomSheet(
-                            context: context,
-                            backgroundColor: Colors.transparent,
-                            isScrollControlled: true,
-                            builder: (context) => UnsaveConfirmationBottomSheet(
-                              job: job,
-                              onConfirm: () =>
-                                  _handleSaveToggle(ref, context, isSaved),
+                      onPressed: isToggling
+                          ? null
+                          : () {
+                              ref
+                                  .read(savedJobControllerProvider.notifier)
+                                  .toggleSaveJob(job.id);
+                            },
+                      icon: isToggling
+                          ? const SizedBox(
+                              width: 20,
+                              height: 20,
+                              child: CircularProgressIndicator(strokeWidth: 2),
+                            )
+                          : AppSvgIcon(
+                              assetName: isSaved
+                                  ? AppIcon.saveBold
+                                  : AppIcon.save,
+                              color: AppColor.primaryDark,
+                              size: 24,
                             ),
-                          );
-                        } else {
-                          _handleSaveToggle(ref, context, isSaved);
-                        }
-                      },
-                      icon: AppSvgIcon(
-                        assetName: isSaved ? AppIcon.saveBold : AppIcon.save,
-                        color: AppColor.primaryDark,
-                        size: 24,
-                      ),
                       padding: EdgeInsets.zero,
                       constraints: const BoxConstraints(),
                     );
@@ -232,33 +232,6 @@ class JobSeekerCard extends StatelessWidget {
         ),
       ),
     );
-  }
-
-  Future<void> _handleSaveToggle(
-    WidgetRef ref,
-    BuildContext context,
-    bool isSaved,
-  ) async {
-    try {
-      // Optimistic update
-      ref.read(jobLocalSaveStatusProvider(job.id).notifier).state = !isSaved;
-
-      final result = await ref.read(saveJobUseCaseProvider).call(job.id);
-
-      // Sync with result
-      ref.read(jobLocalSaveStatusProvider(job.id).notifier).state = result;
-
-      // Refresh saved jobs list only
-      ref.invalidate(savedJobsProvider);
-    } catch (e) {
-      // Rollback
-      ref.read(jobLocalSaveStatusProvider(job.id).notifier).state = isSaved;
-      if (context.mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Error: $e')));
-      }
-    }
   }
 
   // void _showSavedNotification(BuildContext context, bool isDark, bool isSaved) {

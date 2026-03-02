@@ -17,6 +17,4 @@ abstract class RecruiterRepository {
   ResultFuture<DataMap> getRecruiterDashboard();
   ResultFuture<DataMap> getConversations();
   ResultFuture<DataMap> updateConversation(String id, DataMap body);
-  ResultFuture<DataMap> getAgoraToken(String channelName);
-  ResultFuture<DataMap> signalCall(DataMap body);
 }

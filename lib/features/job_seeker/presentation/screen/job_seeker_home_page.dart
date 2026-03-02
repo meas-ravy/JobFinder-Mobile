@@ -15,6 +15,7 @@ import 'package:job_finder/features/job_seeker/presentation/provider/tip_provide
 import 'package:job_finder/features/job_seeker/presentation/provider/job_provider.dart';
 import 'package:job_finder/features/job_seeker/presentation/widget/job_seeker_home_shimmer.dart';
 import 'package:job_finder/features/notifications/presentation/provider/notification_provider.dart';
+import 'package:job_finder/core/provider/scroll_provider.dart';
 
 class JobSeekerHomePage extends HookConsumerWidget {
   const JobSeekerHomePage({super.key});
@@ -28,7 +29,6 @@ class JobSeekerHomePage extends HookConsumerWidget {
     final profile = profileState.profile;
     final tipState = ref.watch(tipControllerProvider);
     final jobState = ref.watch(jobControllerProvider);
-    // Use a large initial page for seamless infinite scrolling
     const int initialPage = 5000;
     final pageController = usePageController(initialPage: initialPage);
     final currentPage = useState(initialPage);
@@ -83,6 +83,22 @@ class JobSeekerHomePage extends HookConsumerWidget {
       return null;
     }, []);
 
+    // Pagination Listener
+    final scrollController = ref.watch(jobSeekerHomeScrollControllerProvider);
+    useEffect(() {
+      void listener() {
+        if (scrollController.position.pixels >=
+            scrollController.position.maxScrollExtent - 200) {
+          ref
+              .read(jobControllerProvider.notifier)
+              .fetchMoreRecentJobs(category: selectedCategory.value);
+        }
+      }
+
+      scrollController.addListener(listener);
+      return () => scrollController.removeListener(listener);
+    }, [scrollController, selectedCategory.value]);
+
     final categories = [
       'All',
       'Technology',
@@ -110,6 +126,7 @@ class JobSeekerHomePage extends HookConsumerWidget {
     return Scaffold(
       body: SafeArea(
         child: RefreshIndicator(
+          key: ref.watch(jobSeekerRefreshKeyProvider),
           onRefresh: () async {
             await Future.wait([
               ref.read(profileControllerProvider.notifier).fetchProfile(),
@@ -121,9 +138,7 @@ class JobSeekerHomePage extends HookConsumerWidget {
             ]);
           },
           child: CustomScrollView(
-            // physics: const AlwaysScrollableScrollPhysics(
-            //   parent: BouncingScrollPhysics(),
-            // ),
+            controller: ref.watch(jobSeekerHomeScrollControllerProvider),
             slivers: [
               // 1. Header
               SliverToBoxAdapter(
@@ -250,7 +265,7 @@ class JobSeekerHomePage extends HookConsumerWidget {
                   child: jobState.isLoading
                       ? RecommendedJobShimmer(isDark: isDark)
                       : jobState.recommendedJobs.isEmpty
-                      ? const Center(child: Text('No recommendations found'))
+                      ? Center(child: Text('No recommendations data found'))
                       : ListView.builder(
                           padding: const EdgeInsets.symmetric(horizontal: 20),
                           scrollDirection: Axis.horizontal,
@@ -307,7 +322,7 @@ class JobSeekerHomePage extends HookConsumerWidget {
                               selectedCategory.value = categories[index];
                               ref
                                   .read(jobControllerProvider.notifier)
-                                  .fetchRecentJobs(category: categories[index]);
+                                  .fetchRecentJob(category: categories[index]);
                             }
                           },
                         ),
@@ -345,6 +360,15 @@ class JobSeekerHomePage extends HookConsumerWidget {
                         }, childCount: jobState.recentJobs.length),
                       ),
               ),
+
+              // 9. Fetch More Loading Indicator
+              if (jobState.isFetchingMore)
+                const SliverToBoxAdapter(
+                  child: Padding(
+                    padding: EdgeInsets.symmetric(vertical: 20),
+                    child: Center(child: CircularProgressIndicator()),
+                  ),
+                ),
 
               // Padding for bottom nav bar
               const SliverToBoxAdapter(child: SizedBox(height: 20)),

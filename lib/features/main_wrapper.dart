@@ -12,6 +12,7 @@ import 'package:job_finder/features/job_seeker/presentation/screen/job_seeker_sa
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:job_finder/features/job_seeker/presentation/provider/job_provider.dart';
 import 'package:job_finder/l10n/app_localizations.dart';
+import 'package:job_finder/core/provider/scroll_provider.dart';
 
 class MainWrapper extends HookConsumerWidget {
   final int? initialIndex;
@@ -38,25 +39,17 @@ class MainWrapper extends HookConsumerWidget {
       return null;
     }, [initialIndex]);
 
-    Widget buildBody() {
-      switch (currentIndex) {
-        case 0:
-          return JobSeekerHomePage();
-        case 1:
-          return JobSeekerSavePage();
-        case 2:
-          return JobSeekerAplicatPage();
-        case 3:
-          return JobSeekerMessagePage();
-        case 4:
-          return JobSeekerProfilePage();
-        default:
-          return JobSeekerHomePage();
-      }
-    }
-
     return Scaffold(
-      body: buildBody(),
+      body: IndexedStack(
+        index: currentIndex,
+        children: const [
+          JobSeekerHomePage(),
+          JobSeekerSavePage(),
+          JobSeekerAplicatPage(),
+          JobSeekerMessagePage(),
+          JobSeekerProfilePage(),
+        ],
+      ),
       bottomNavigationBar: Container(
         decoration: BoxDecoration(
           border: Border(
@@ -73,8 +66,26 @@ class MainWrapper extends HookConsumerWidget {
           onTap: (index) {
             HapticFeedback.selectionClick();
             animateTap(index);
-            ref.read(mainWrapperIndexProvider.notifier).state = index;
+            if (currentIndex == index && index == 0) {
+              final scrollController = ref.read(
+                jobSeekerHomeScrollControllerProvider,
+              );
+              if (scrollController.hasClients) {
+                if (scrollController.offset > 0) {
+                  scrollController.animateTo(
+                    0,
+                    duration: const Duration(milliseconds: 500),
+                    curve: Curves.easeInOut,
+                  );
+                } else {
+                  ref.read(jobSeekerRefreshKeyProvider).currentState?.show();
+                }
+              }
+            } else {
+              ref.read(mainWrapperIndexProvider.notifier).state = index;
+            }
           },
+
           items: [
             BottomNavigationBarItem(
               label: AppLocalizations.of(context).homeLabel,

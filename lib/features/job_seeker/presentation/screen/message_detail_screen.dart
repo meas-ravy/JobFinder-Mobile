@@ -8,20 +8,20 @@ import 'package:job_finder/core/services/firebase_chat_service.dart';
 import 'package:job_finder/features/recruiter/data/models/chat_message_model.dart';
 import 'package:job_finder/features/recruiter/data/models/conversation_list_model.dart';
 import 'package:job_finder/features/job_seeker/presentation/provider/chat_provider.dart';
-import 'package:permission_handler/permission_handler.dart';
 import 'package:intl/intl.dart';
-import 'package:job_finder/features/chat/presentation/screen/call_screen.dart';
 
 class JobSeekerChatDetailScreen extends ConsumerStatefulWidget {
   final String conversationId;
   final String name;
   final String? avatar;
+  final String? participantId;
 
   const JobSeekerChatDetailScreen({
     super.key,
     required this.conversationId,
     required this.name,
     this.avatar,
+    this.participantId,
   });
 
   @override
@@ -103,78 +103,7 @@ class _JobSeekerChatDetailScreenState
     }
   }
 
-  Future<void> _startCall(bool isVideo) async {
-    final micStatus = await Permission.microphone.request();
-    if (micStatus != PermissionStatus.granted) {
-      if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text("Microphone permission required for calls."),
-          ),
-        );
-      }
-      return;
-    }
-
-    if (isVideo) {
-      final cameraStatus = await Permission.camera.request();
-      if (cameraStatus != PermissionStatus.granted) {
-        if (context.mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text("Camera permission required for video calls."),
-            ),
-          );
-        }
-        return;
-      }
-    }
-
-    await ref
-        .read(jobSeekerChatControllerProvider.notifier)
-        .getAgoraToken(widget.conversationId);
-
-    final state = ref.read(jobSeekerChatControllerProvider);
-    if (state.agoraAppId == null || state.agoraToken == null) {
-      if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              state.errorMessage ??
-                  "Failed to initialize call. Server token missing!",
-            ),
-          ),
-        );
-      }
-      return;
-    }
-
-    ref.read(jobSeekerChatControllerProvider.notifier).signalCall({
-      "conversationId": widget.conversationId,
-      "signalType": "START_CALL",
-      "callType": isVideo ? "VIDEO" : "VOICE",
-    });
-
-    // Try to get dynamic name and avatar
-    final displayName = widget.name;
-    final displayAvatar = widget.avatar;
-
-    if (!context.mounted) return;
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => CallScreen(
-          channelName: widget.conversationId,
-          token: state.agoraToken!,
-          appId: state.agoraAppId!,
-          uid: state.agoraUid!,
-          isVideoCall: isVideo,
-          remoteName: displayName,
-          remoteAvatar: displayAvatar,
-        ),
-      ),
-    );
-  }
+  // Zego handles call invitation automatically via ZegoSendCallInvitationButton
 
   @override
   Widget build(BuildContext context) {
@@ -187,7 +116,8 @@ class _JobSeekerChatDetailScreenState
     try {
       final convData = chatState.conversations.firstWhere(
         (c) =>
-            (c is Map ? c['id'] : (c as dynamic).id) == widget.conversationId,
+            (c is Map ? (c['id'] ?? c['_id']) : (c as dynamic).id) ==
+            widget.conversationId,
         orElse: () => null,
       );
       if (convData != null) {
@@ -258,14 +188,6 @@ class _JobSeekerChatDetailScreenState
             ],
           ),
           actions: [
-            IconButton(
-              icon: Icon(Icons.phone_outlined, color: colorScheme.onSurface),
-              onPressed: () => _startCall(false),
-            ),
-            IconButton(
-              icon: Icon(Icons.videocam_outlined, color: colorScheme.onSurface),
-              onPressed: () => _startCall(true),
-            ),
             IconButton(
               icon: Icon(Icons.more_horiz, color: colorScheme.onSurface),
               onPressed: () {},

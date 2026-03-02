@@ -8,7 +8,6 @@ import 'package:share_plus/share_plus.dart';
 import 'package:job_finder/features/job_seeker/presentation/widget/job_detail/job_detail_tabs.dart';
 import 'package:job_finder/features/job_seeker/presentation/widget/job_detail/apply_bottom_sheet.dart';
 import 'package:job_finder/features/job_seeker/presentation/widget/job_detail/job_detail_shimmer.dart';
-import 'package:job_finder/features/job_seeker/presentation/widget/unsave_confirmation_bottom_sheet.dart';
 
 class JobDetailPage extends ConsumerWidget {
   final String jobId;
@@ -20,7 +19,12 @@ class JobDetailPage extends ConsumerWidget {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
     final jobAsync = ref.watch(jobDetailProvider(jobId));
-    final savedOverride = ref.watch(jobSavedStatusProvider(jobId));
+    final isSaved = ref.watch(jobSavedStatusProvider(jobId));
+    final isToggling = ref.watch(
+      savedJobControllerProvider.select(
+        (s) => s.togglingJobIds.contains(jobId),
+      ),
+    );
 
     return Scaffold(
       appBar: AppBar(
@@ -37,44 +41,43 @@ class JobDetailPage extends ConsumerWidget {
         actions: [
           jobAsync.when(
             data: (job) {
-              final isSaved = savedOverride ?? job.isSaved ?? false;
               return IconButton(
-                icon: AppSvgIcon(
-                  assetName: isSaved ? AppIcon.saveBold : AppIcon.save,
-                  color: isSaved
-                      ? AppColor.primaryDark
-                      : theme.colorScheme.onSurface,
-                  size: 26,
-                ),
-                onPressed: () {
-                  if (isSaved) {
-                    showModalBottomSheet(
-                      context: context,
-                      backgroundColor: Colors.transparent,
-                      isScrollControlled: true,
-                      builder: (context) => UnsaveConfirmationBottomSheet(
-                        job: job,
-                        onConfirm: () => _handleSaveToggle(
-                          ref,
-                          context,
-                          job,
-                          isSaved,
-                          isDark,
-                        ),
+                icon: isToggling
+                    ? const SizedBox(
+                        width: 22,
+                        height: 22,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      )
+                    : AppSvgIcon(
+                        assetName: isSaved ? AppIcon.saveBold : AppIcon.save,
+                        color: isSaved
+                            ? AppColor.primaryDark
+                            : theme.colorScheme.onSurface,
+                        size: 26,
                       ),
-                    );
-                  } else {
-                    _handleSaveToggle(ref, context, job, isSaved, isDark);
-                  }
-                },
+                onPressed: isToggling
+                    ? null
+                    : () {
+                        ref
+                            .read(savedJobControllerProvider.notifier)
+                            .toggleSaveJob(jobId);
+                      },
               );
             },
             loading: () => IconButton(
-              icon: AppSvgIcon(assetName: AppIcon.save, size: 26),
+              icon: AppSvgIcon(
+                assetName: AppIcon.save,
+                size: 26,
+                color: theme.colorScheme.onSurface,
+              ),
               onPressed: null,
             ),
             error: (_, _) => IconButton(
-              icon: AppSvgIcon(assetName: AppIcon.save, size: 26),
+              icon: AppSvgIcon(
+                assetName: AppIcon.save,
+                size: 26,
+                color: theme.colorScheme.onSurface,
+              ),
               onPressed: null,
             ),
           ),
@@ -120,36 +123,6 @@ class JobDetailPage extends ConsumerWidget {
         error: (err, stack) => const SizedBox.shrink(),
       ),
     );
-  }
-
-  Future<void> _handleSaveToggle(
-    WidgetRef ref,
-    BuildContext context,
-    dynamic job,
-    bool isSaved,
-    bool isDark,
-  ) async {
-    try {
-      // Optimistic update
-      ref.read(jobLocalSaveStatusProvider(jobId).notifier).state = !isSaved;
-
-      final result = await ref.read(saveJobUseCaseProvider).call(job.id);
-
-      // Sync with actual result
-      ref.read(jobLocalSaveStatusProvider(jobId).notifier).state = result;
-
-      // Refresh both the list and the detail provider
-      ref.invalidate(savedJobsProvider);
-      ref.invalidate(jobDetailProvider(jobId));
-    } catch (e) {
-      // Rollback
-      ref.read(jobLocalSaveStatusProvider(jobId).notifier).state = isSaved;
-      if (context.mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Error: $e')));
-      }
-    }
   }
 
   Widget _buildBottomButton(BuildContext context, bool isDark) {

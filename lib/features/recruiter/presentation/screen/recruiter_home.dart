@@ -10,6 +10,7 @@ import 'package:job_finder/features/recruiter/presentation/provider/recruiter_pr
 import 'package:job_finder/features/recruiter/presentation/screen/widgets/job_card_widget.dart';
 import 'package:job_finder/features/recruiter/presentation/screen/widgets/recruiter_home_shimmer.dart';
 import 'package:job_finder/features/recruiter/presentation/widget/header_section.dart';
+import 'package:job_finder/core/provider/scroll_provider.dart';
 
 class RecruiterHomePage extends HookConsumerWidget {
   const RecruiterHomePage({super.key});
@@ -171,10 +172,12 @@ class RecruiterHomePage extends HookConsumerWidget {
     final recruiterState = ref.watch(recruiterControllerProvider);
 
     return RefreshIndicator(
+      key: ref.watch(recruiterRefreshKeyProvider),
       onRefresh: () =>
           ref.read(recruiterControllerProvider.notifier).refreshAllJobs(),
       child: jobs.isEmpty
           ? SingleChildScrollView(
+              controller: ref.watch(recruiterHomeScrollControllerProvider),
               physics: const AlwaysScrollableScrollPhysics(),
               child: SizedBox(
                 height: MediaQuery.of(ref.context).size.height * 0.5,
@@ -221,6 +224,7 @@ class RecruiterHomePage extends HookConsumerWidget {
               ),
             )
           : ListView.separated(
+              controller: ref.watch(recruiterHomeScrollControllerProvider),
               physics: const AlwaysScrollableScrollPhysics(),
               padding: const EdgeInsets.fromLTRB(20, 16, 20, 100),
               itemCount: jobs.length,

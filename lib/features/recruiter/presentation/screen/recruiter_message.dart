@@ -190,6 +190,7 @@ class _ConversationTile extends StatelessWidget {
           extra: {
             'candidateName': conversation.otherParticipant.name,
             'candidateAvatar': conversation.otherParticipant.avatar,
+            'participantId': conversation.otherParticipant.id,
           },
         );
       },

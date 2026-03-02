@@ -8,20 +8,20 @@ import 'package:job_finder/core/services/firebase_chat_service.dart';
 import 'package:job_finder/features/recruiter/data/models/chat_message_model.dart';
 import 'package:job_finder/features/recruiter/data/models/conversation_list_model.dart';
 import 'package:job_finder/features/recruiter/presentation/provider/recruiter_provider.dart';
-import 'package:permission_handler/permission_handler.dart';
 import 'package:intl/intl.dart';
-import 'package:job_finder/features/chat/presentation/screen/call_screen.dart';
 
 class RecruiterChatDetailScreen extends ConsumerStatefulWidget {
   final String conversationId;
   final String candidateName;
   final String? candidateAvatar;
+  final String? participantId;
 
   const RecruiterChatDetailScreen({
     super.key,
     required this.conversationId,
     required this.candidateName,
     this.candidateAvatar,
+    this.participantId,
   });
 
   @override
@@ -99,88 +99,7 @@ class _RecruiterChatDetailScreenState
     }
   }
 
-  Future<void> _startCall(bool isVideo) async {
-    // 1. Check Permissions
-    final micStatus = await Permission.microphone.request();
-    if (micStatus != PermissionStatus.granted) {
-      if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text("Microphone permission is required to make calls."),
-          ),
-        );
-      }
-      return;
-    }
-
-    if (isVideo) {
-      final cameraStatus = await Permission.camera.request();
-      if (cameraStatus != PermissionStatus.granted) {
-        if (context.mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text("Camera permission is required for video calls."),
-            ),
-          );
-        }
-        return;
-      }
-    }
-
-    // 2. Get Agora Token
-    await ref
-        .read(recruiterControllerProvider.notifier)
-        .getAgoraToken(widget.conversationId);
-
-    final currentUserId = FirebaseAuth.instance.currentUser?.uid ?? "";
-    if (currentUserId.isEmpty) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text("Failed to get call token")));
-      return;
-    }
-
-    final state = ref.read(recruiterControllerProvider);
-    if (state.agoraAppId == null || state.agoraToken == null) {
-      if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              state.errorMessage ??
-                  "Failed to initialize call. Server token missing!",
-            ),
-          ),
-        );
-      }
-      return;
-    }
-
-    // 3. Signal Call to Seeker
-    ref.read(recruiterControllerProvider.notifier).signalCall({
-      "conversationId": widget.conversationId,
-      "signalType": "START_CALL",
-      "callType": isVideo ? "VIDEO" : "VOICE",
-    });
-
-    final displayName = widget.candidateName;
-    final displayAvatar = widget.candidateAvatar;
-
-    if (!context.mounted) return;
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => CallScreen(
-          channelName: widget.conversationId,
-          token: state.agoraToken!,
-          appId: state.agoraAppId!,
-          uid: state.agoraUid!,
-          isVideoCall: isVideo,
-          remoteName: displayName,
-          remoteAvatar: displayAvatar,
-        ),
-      ),
-    );
-  }
+  // Zego handles call invitation automatically via ZegoSendCallInvitationButton
 
   @override
   Widget build(BuildContext context) {
@@ -193,7 +112,8 @@ class _RecruiterChatDetailScreenState
     try {
       final convData = recruiterState.conversations.firstWhere(
         (c) =>
-            (c is Map ? c['id'] : (c as dynamic).id) == widget.conversationId,
+            (c is Map ? (c['id'] ?? c['_id']) : (c as dynamic).id) ==
+            widget.conversationId,
         orElse: () => null,
       );
       if (convData != null) {
@@ -255,17 +175,7 @@ class _RecruiterChatDetailScreenState
             ),
           ],
         ),
-        actions: [
-          IconButton(
-            icon: Icon(Icons.phone_outlined, color: colorScheme.onSurface),
-            onPressed: () => _startCall(false),
-          ),
-          IconButton(
-            icon: Icon(Icons.videocam_outlined, color: colorScheme.onSurface),
-            onPressed: () => _startCall(true),
-          ),
-          const SizedBox(width: 8),
-        ],
+        actions: [const SizedBox(width: 8)],
       ),
       body: Column(
         children: [
@@ -340,11 +250,6 @@ class _RecruiterChatDetailScreenState
                     ),
                   );
                 }
-
-                // Since we use reverse: true in ListView, the first items in the list
-                // (oldest) should be rendered at the top, and bottom-most item is most recent.
-                // However, Firebase returns them in chronological order.
-                // ListView.builder(reverse: true) expects the 0-th element to be the bottom-most.
                 final displayMessages = messages.reversed.toList();
 
                 return ListView.builder(
@@ -561,7 +466,7 @@ class _JobPreviewCard extends StatelessWidget {
                         child: Image.network(
                           job['logoUrl'],
                           fit: BoxFit.cover,
-                          errorBuilder: (_, __, ___) =>
+                          errorBuilder: (_, _, _) =>
                               Icon(Icons.business, color: colorScheme.primary),
                         ),
                       )

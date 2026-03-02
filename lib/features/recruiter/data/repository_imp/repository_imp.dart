@@ -87,14 +87,4 @@ class RecruiterRepositoryImpl implements RecruiterRepository {
   ResultFuture<DataMap> updateConversation(String id, DataMap body) {
     return _server.updateConversation(id, body);
   }
-
-  @override
-  ResultFuture<DataMap> getAgoraToken(String channelName) {
-    return _server.getAgoraToken(channelName);
-  }
-
-  @override
-  ResultFuture<DataMap> signalCall(DataMap body) {
-    return _server.signalCall(body);
-  }
 }

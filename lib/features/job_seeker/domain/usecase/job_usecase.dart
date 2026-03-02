@@ -1,4 +1,5 @@
 import 'package:job_finder/features/job_seeker/domain/entities/job_entity.dart';
+import 'package:job_finder/features/job_seeker/domain/entities/paginated_jobs.dart';
 import 'package:job_finder/features/job_seeker/domain/repos/job_repository.dart';
 
 class GetRecommendedJobsUseCase {
@@ -16,14 +17,17 @@ class GetRecentJobsUseCase {
 
   GetRecentJobsUseCase(this._repository);
 
-  Future<List<JobEntity>> call({String? category}) {
-    return _repository.getRecentJobs(category: category);
+  Future<PaginatedJobs> call({String? category, int page = 1, int limit = 10}) {
+    return _repository.getRecentJobs(
+      category: category,
+      page: page,
+      limit: limit,
+    );
   }
 }
 
 class GetJobByIdUseCase {
   final JobRepository _repository;
-
   GetJobByIdUseCase(this._repository);
 
   Future<JobEntity> call(String id) {
@@ -33,7 +37,6 @@ class GetJobByIdUseCase {
 
 class SaveJobUseCase {
   final JobRepository _repository;
-
   SaveJobUseCase(this._repository);
 
   Future<bool> call(String id) {

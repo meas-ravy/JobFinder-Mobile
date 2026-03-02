@@ -87,7 +87,7 @@ class SeeAllJobsPage extends HookConsumerWidget {
                           selectedCategory.value = categories[index];
                           ref
                               .read(jobControllerProvider.notifier)
-                              .fetchRecentJobs(category: categories[index]);
+                              .fetchRecentJob(category: categories[index]);
                         }
                       },
                     ),
@@ -131,11 +131,11 @@ class SeeAllJobsPage extends HookConsumerWidget {
                       if (isRecommended) {
                         await ref
                             .read(jobControllerProvider.notifier)
-                            .fetchRecommendedJobs();
+                            .fetchRecomJob();
                       } else {
                         await ref
                             .read(jobControllerProvider.notifier)
-                            .fetchRecentJobs(category: selectedCategory.value);
+                            .fetchRecentJob(category: selectedCategory.value);
                       }
                     },
                     child: ListView.builder(

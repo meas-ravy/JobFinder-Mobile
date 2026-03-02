@@ -4,20 +4,21 @@ import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:job_finder/core/constants/assets.dart';
 import 'package:job_finder/core/theme/app_color.dart';
-import 'package:job_finder/features/job_seeker/presentation/screen/job_seeker_home_page.dart';
 import 'package:job_finder/features/recruiter/presentation/screen/recruiter_applied.dart';
 import 'package:job_finder/features/recruiter/presentation/screen/recruiter_home.dart';
 import 'package:job_finder/features/recruiter/presentation/screen/recruiter_message.dart';
 import 'package:job_finder/features/recruiter/presentation/screen/recruiter_profile.dart';
 import 'package:job_finder/features/recruiter/presentation/screen/recruiter_stats.dart';
 import 'package:job_finder/l10n/app_localizations.dart';
+import 'package:hooks_riverpod/hooks_riverpod.dart';
+import 'package:job_finder/core/provider/scroll_provider.dart';
 
-class ButonNavRecruiter extends HookWidget {
+class ButonNavRecruiter extends HookConsumerWidget {
   final int? initialIndex;
   const ButonNavRecruiter({super.key, this.initialIndex});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final currentIndex = useState(initialIndex ?? 0);
     final pressedIndex = useState(-1);
 
@@ -28,25 +29,17 @@ class ButonNavRecruiter extends HookWidget {
       });
     }
 
-    Widget buildBody() {
-      switch (currentIndex.value) {
-        case 0:
-          return RecruiterHomePage();
-        case 1:
-          return RecruiterAppliedPage();
-        case 2:
-          return RecruiterStatsPage();
-        case 3:
-          return RecruiterMessagePage();
-        case 4:
-          return RecruiterProfilePage();
-        default:
-          return JobSeekerHomePage();
-      }
-    }
-
     return Scaffold(
-      body: buildBody(),
+      body: IndexedStack(
+        index: currentIndex.value,
+        children: const [
+          RecruiterHomePage(),
+          RecruiterAppliedPage(),
+          RecruiterStatsPage(),
+          RecruiterMessagePage(),
+          RecruiterProfilePage(),
+        ],
+      ),
       bottomNavigationBar: Container(
         decoration: BoxDecoration(
           border: Border(
@@ -63,7 +56,24 @@ class ButonNavRecruiter extends HookWidget {
           onTap: (index) {
             HapticFeedback.selectionClick();
             animateTap(index);
-            currentIndex.value = index;
+            if (currentIndex.value == index && index == 0) {
+              final scrollController = ref.read(
+                recruiterHomeScrollControllerProvider,
+              );
+              if (scrollController.hasClients) {
+                if (scrollController.offset > 0) {
+                  scrollController.animateTo(
+                    0,
+                    duration: const Duration(milliseconds: 500),
+                    curve: Curves.easeInOut,
+                  );
+                } else {
+                  ref.read(recruiterRefreshKeyProvider).currentState?.show();
+                }
+              }
+            } else {
+              currentIndex.value = index;
+            }
           },
           items: [
             BottomNavigationBarItem(

@@ -255,12 +255,6 @@ class JobSeekerApplicationDetailPage extends HookConsumerWidget {
       case 'accepted':
         labelText = 'Send Message to Reviewer';
         onPressed = () {
-          // If hired, maybe navigate to job seeker messages.
-          // They can talk to the recruiter.
-          // We can route them to chat tab or create the dynamic conversation.
-          // In standard flow, the recruiter sends an automated message.
-          // From candidate end, maybe just route to Inbox list for now
-          // The query parms `tab=2` usually is the messages tab.
           context.go('${AppPath.jobSeekerHome}?tab=2');
         };
         break;

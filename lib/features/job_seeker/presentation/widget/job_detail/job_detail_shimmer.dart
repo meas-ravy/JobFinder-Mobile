@@ -8,7 +8,6 @@ class JobDetailShimmer extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Get screen width for proportional shimmers
     final screenWidth = MediaQuery.of(context).size.width;
 
     return SingleChildScrollView(
@@ -105,9 +104,9 @@ class JobDetailShimmer extends StatelessWidget {
             padding: const EdgeInsets.symmetric(horizontal: 20),
             child: Container(
               height: 3,
-              width: 90, // Match the first tab's width precisely
+              width: 90,
               decoration: BoxDecoration(
-                color: AppColor.primaryDark.withOpacity(0.3),
+                color: AppColor.primaryDark.withValues(alpha: 0.3),
                 borderRadius: BorderRadius.circular(2),
               ),
             ),
@@ -121,7 +120,6 @@ class JobDetailShimmer extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Section Title (e.g., Description)
                 const ShimmerLoading(width: 160, height: 22, borderRadius: 10),
                 const SizedBox(height: 20),
 

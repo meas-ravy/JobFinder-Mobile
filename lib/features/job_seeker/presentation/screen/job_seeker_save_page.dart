@@ -17,7 +17,7 @@ class JobSeekerSavePage extends HookConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
-    final savedJobsAsync = ref.watch(savedJobsProvider);
+    final savedState = ref.watch(savedJobControllerProvider);
     final searchController = useTextEditingController();
     final selectedFilters = useState<SearchFilters>(const SearchFilters());
     // Re-build when search or filters change
@@ -128,99 +128,106 @@ class JobSeekerSavePage extends HookConsumerWidget {
 
           // Job List
           Expanded(
-            child: savedJobsAsync.when(
-              skipLoadingOnRefresh: true,
-              data: (jobs) {
-                final query = searchController.text.toLowerCase();
-                final filters = selectedFilters.value;
+            child: savedState.isLoading
+                ? _buildLoadingState(isDark)
+                : savedState.errorMessage != null
+                ? Center(child: Text('Error: ${savedState.errorMessage}'))
+                : Builder(
+                    builder: (context) {
+                      final jobs = savedState.savedJobs;
+                      final query = searchController.text.toLowerCase();
+                      final filters = selectedFilters.value;
 
-                final filteredJobs = jobs.where((job) {
-                  // Optimistic check: hide instantly if unsaved
-                  final isCurrentlySaved =
-                      ref.watch(jobSavedStatusProvider(job.id)) ??
-                      job.isSaved ??
-                      true;
-                  if (!isCurrentlySaved) return false;
+                      final filteredJobs = jobs.where((job) {
+                        // Text Search
+                        final matchesQuery =
+                            job.title.toLowerCase().contains(query) ||
+                            (job.companyProfile?.name.toLowerCase().contains(
+                                  query,
+                                ) ??
+                                false);
+                        if (!matchesQuery) return false;
 
-                  // Text Search
-                  final matchesQuery =
-                      job.title.toLowerCase().contains(query) ||
-                      (job.companyProfile?.name.toLowerCase().contains(query) ??
-                          false);
-                  if (!matchesQuery) return false;
+                        // Active Filters
+                        if (filters.location != null &&
+                            filters.location!.isNotEmpty) {
+                          if (!(job.location?.toLowerCase().contains(
+                                filters.location!.toLowerCase(),
+                              ) ??
+                              false)) {
+                            return false;
+                          }
+                        }
+                        if (filters.category != null &&
+                            filters.category!.isNotEmpty &&
+                            filters.category != 'Other') {
+                          if (job.category != filters.category) return false;
+                        }
+                        if (filters.workArrangement != null &&
+                            filters.workArrangement!.isNotEmpty) {
+                          if (job.workArrangement != filters.workArrangement) {
+                            return false;
+                          }
+                        }
+                        if (filters.experienceLevel != null &&
+                            filters.experienceLevel!.isNotEmpty) {
+                          if (job.experienceLevel != filters.experienceLevel) {
+                            return false;
+                          }
+                        }
+                        if (filters.employmentType != null &&
+                            filters.employmentType!.isNotEmpty) {
+                          if (job.employmentType != filters.employmentType) {
+                            return false;
+                          }
+                        }
+                        if (filters.salaryMin != null) {
+                          if ((job.salaryMin ?? 0) < filters.salaryMin!) {
+                            return false;
+                          }
+                        }
+                        if (filters.salaryMax != null) {
+                          if ((job.salaryMax ?? double.infinity) >
+                              filters.salaryMax!) {
+                            return false;
+                          }
+                        }
 
-                  // Active Filters
-                  if (filters.location != null &&
-                      filters.location!.isNotEmpty) {
-                    if (!(job.location?.toLowerCase().contains(
-                          filters.location!.toLowerCase(),
-                        ) ??
-                        false))
-                      return false;
-                  }
-                  if (filters.category != null &&
-                      filters.category!.isNotEmpty &&
-                      filters.category != 'Other') {
-                    if (job.category != filters.category) return false;
-                  }
-                  if (filters.workArrangement != null &&
-                      filters.workArrangement!.isNotEmpty) {
-                    if (job.workArrangement != filters.workArrangement)
-                      return false;
-                  }
-                  if (filters.experienceLevel != null &&
-                      filters.experienceLevel!.isNotEmpty) {
-                    if (job.experienceLevel != filters.experienceLevel)
-                      return false;
-                  }
-                  if (filters.employmentType != null &&
-                      filters.employmentType!.isNotEmpty) {
-                    if (job.employmentType != filters.employmentType)
-                      return false;
-                  }
-                  if (filters.salaryMin != null) {
-                    if ((job.salaryMin ?? 0) < filters.salaryMin!) return false;
-                  }
-                  if (filters.salaryMax != null) {
-                    if ((job.salaryMax ?? double.infinity) > filters.salaryMax!)
-                      return false;
-                  }
+                        return true;
+                      }).toList();
 
-                  return true;
-                }).toList();
+                      if (jobs.isEmpty ||
+                          (filteredJobs.isEmpty &&
+                              searchController.text.isEmpty &&
+                              !selectedFilters.value.hasActiveFilters)) {
+                        return _buildEmptyState(isDark, theme);
+                      }
 
-                if (jobs.isEmpty ||
-                    (filteredJobs.isEmpty &&
-                        searchController.text.isEmpty &&
-                        !selectedFilters.value.hasActiveFilters)) {
-                  return _buildEmptyState(isDark, theme);
-                }
+                      if (filteredJobs.isEmpty) {
+                        return _buildNoResultsState(
+                          isDark,
+                          theme,
+                          searchController.text,
+                        );
+                      }
 
-                if (filteredJobs.isEmpty) {
-                  return _buildNoResultsState(
-                    isDark,
-                    theme,
-                    searchController.text,
-                  );
-                }
-
-                return RefreshIndicator(
-                  onRefresh: () async => ref.refresh(savedJobsProvider),
-                  child: ListView.separated(
-                    padding: const EdgeInsets.fromLTRB(20, 0, 20, 100),
-                    itemCount: filteredJobs.length,
-                    separatorBuilder: (context, index) =>
-                        const SizedBox(height: 20),
-                    itemBuilder: (context, index) => JobSeekerCard(
-                      key: ValueKey(filteredJobs[index].id),
-                      job: filteredJobs[index],
-                    ),
+                      return RefreshIndicator(
+                        onRefresh: () => ref
+                            .read(savedJobControllerProvider.notifier)
+                            .fetchSavedJobs(),
+                        child: ListView.separated(
+                          padding: const EdgeInsets.fromLTRB(20, 0, 20, 100),
+                          itemCount: filteredJobs.length,
+                          separatorBuilder: (context, index) =>
+                              const SizedBox(height: 20),
+                          itemBuilder: (context, index) => JobSeekerCard(
+                            key: ValueKey(filteredJobs[index].id),
+                            job: filteredJobs[index],
+                          ),
+                        ),
+                      );
+                    },
                   ),
-                );
-              },
-              loading: () => _buildLoadingState(isDark),
-              error: (err, stack) => Center(child: Text('Error: $err')),
-            ),
           ),
         ],
       ),
