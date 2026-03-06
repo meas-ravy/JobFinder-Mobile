@@ -8,6 +8,8 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:job_finder/core/helper/secure_storage.dart';
 import 'package:job_finder/core/routes/app_path.dart';
 import 'package:job_finder/core/routes/app_route.dart';
+import 'package:job_finder/core/services/agora_service.dart';
+import 'package:job_finder/core/constants/agora_config.dart';
 import 'package:job_finder/shared/widget/app_lock_wrapper.dart';
 import 'package:job_finder/l10n/app_localizations.dart';
 import 'package:job_finder/core/theme/app_theme.dart';
@@ -70,6 +72,7 @@ Future<void> main() async {
 
   // 4️⃣ Initialize Notifications (AFTER auth)
   await NotificationService.instance.initialize();
+  await AgoraService.instance.initialize(AgoraConfig.appId);
 
   // 5️⃣ Decide initial route
   String initialRoute = AppPath.splash;

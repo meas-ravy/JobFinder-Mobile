@@ -2,6 +2,7 @@ import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:job_finder/features/job_seeker/domain/usecase/profile_usecase.dart';
 import 'package:job_finder/features/job_seeker/presentation/provider/profile_state.dart';
 
+
 class ProfileController extends StateNotifier<ProfileState> {
   final GetProfileUseCase _getProfileUseCase;
   final UpdateProfileUseCase _updateProfileUseCase;
@@ -20,6 +21,7 @@ class ProfileController extends StateNotifier<ProfileState> {
     state = state.copyWith(isLoading: true, errorMessage: null);
     try {
       final profile = await _getProfileUseCase();
+
       state = state.copyWith(
         isLoading: false,
         isFetched: true,

@@ -8,6 +8,8 @@ import 'package:job_finder/core/services/firebase_chat_service.dart';
 import 'package:job_finder/features/recruiter/data/models/chat_message_model.dart';
 import 'package:job_finder/features/recruiter/data/models/conversation_list_model.dart';
 import 'package:job_finder/features/job_seeker/presentation/provider/chat_provider.dart';
+import 'package:job_finder/core/services/agora_service.dart';
+import 'package:job_finder/shared/screen/agora_call_screen.dart';
 import 'package:intl/intl.dart';
 
 class JobSeekerChatDetailScreen extends ConsumerStatefulWidget {
@@ -105,6 +107,51 @@ class _JobSeekerChatDetailScreenState
 
   // Zego handles call invitation automatically via ZegoSendCallInvitationButton
 
+  void _startAgoraCall({
+    required BuildContext context,
+    required bool isVideoCall,
+    required String displayName,
+    required String? displayAvatar,
+  }) {
+    if (widget.participantId == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Cannot start call: participant not set')),
+      );
+      return;
+    }
+    final currentUserId = FirebaseAuth.instance.currentUser?.uid ?? '';
+    if (currentUserId.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Cannot start call: not logged in')),
+      );
+      return;
+    }
+
+    // Navigate immediately so user gets instant feedback
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => AgoraCallScreen(
+          conversationId: widget.conversationId,
+          callerName: displayName,
+          callerAvatar: displayAvatar,
+          calleeId: widget.participantId!,
+          calleeName: widget.name,
+          isVideoCall: isVideoCall,
+          isIncoming: false,
+        ),
+      ),
+    );
+
+    // Signal receiver via Firebase (in background)
+    AgoraService.instance.sendCallInvitation(
+      conversationId: widget.conversationId,
+      callerId: currentUserId,
+      callerName: displayName,
+      callerAvatar: displayAvatar ?? '',
+      isVideoCall: isVideoCall,
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
@@ -188,11 +235,31 @@ class _JobSeekerChatDetailScreenState
             ],
           ),
           actions: [
-            IconButton(
-              icon: Icon(Icons.more_horiz, color: colorScheme.onSurface),
-              onPressed: () {},
-            ),
-            const SizedBox(width: 8),
+            if (widget.participantId != null) ...[
+              IconButton(
+                tooltip: 'Voice Call',
+                icon: const Icon(Icons.call_rounded),
+                color: colorScheme.onSurface,
+                onPressed: () => _startAgoraCall(
+                  context: context,
+                  isVideoCall: false,
+                  displayName: displayName,
+                  displayAvatar: displayAvatar,
+                ),
+              ),
+              IconButton(
+                tooltip: 'Video Call',
+                icon: const Icon(Icons.videocam_rounded),
+                color: colorScheme.onSurface,
+                onPressed: () => _startAgoraCall(
+                  context: context,
+                  isVideoCall: true,
+                  displayName: displayName,
+                  displayAvatar: displayAvatar,
+                ),
+              ),
+            ],
+            const SizedBox(width: 4),
           ],
         ),
       ),
@@ -239,6 +306,41 @@ class _JobSeekerChatDetailScreenState
                 }
 
                 final messages = snapshot.data ?? [];
+
+                // Only show empty state if we are NOT in waiting state and messages are truly empty
+                // if (messages.isEmpty &&
+                //     snapshot.connectionState != ConnectionState.waiting) {
+                //   return Center(
+                //     child: Column(
+                //       mainAxisAlignment: MainAxisAlignment.center,
+                //       children: [
+                //         Icon(
+                //           Icons.chat_bubble_outline,
+                //           size: 64,
+                //           color: colorScheme.onSurfaceVariant.withValues(
+                //             alpha: .3,
+                //           ),
+                //         ),
+                //         const SizedBox(height: 16),
+                //         Text(
+                //           "No messages yet",
+                //           style: GoogleFonts.outfit(
+                //             color: colorScheme.onSurfaceVariant,
+                //             fontSize: 16,
+                //           ),
+                //         ),
+                //       ],
+                //     ),
+                //   );
+                // }
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return Center(
+                    child: CircularProgressIndicator(
+                      color: colorScheme.primary,
+                    ),
+                  );
+                }
+
                 if (messages.isEmpty) {
                   return Center(
                     child: Column(
@@ -256,6 +358,7 @@ class _JobSeekerChatDetailScreenState
                           "No messages yet",
                           style: GoogleFonts.outfit(
                             color: colorScheme.onSurfaceVariant,
+                            fontSize: 16,
                           ),
                         ),
                       ],
@@ -316,10 +419,10 @@ class _JobSeekerChatDetailScreenState
               ),
               child: Row(
                 children: [
-                  Icon(
-                    Icons.sentiment_satisfied_alt_outlined,
-                    color: colorScheme.onSurfaceVariant,
-                  ),
+                  // Icon(
+                  //   Icons.sentiment_satisfied_alt_outlined,
+                  //   color: colorScheme.onSurfaceVariant,
+                  // ),
                   const SizedBox(width: 12),
                   Expanded(
                     child: TextField(

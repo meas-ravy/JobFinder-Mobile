@@ -137,7 +137,7 @@ class _JobSeekerMessagePageState extends ConsumerState<JobSeekerMessagePage> {
           Icon(
             Icons.message_outlined,
             size: 64,
-            color: colorScheme.onSurfaceVariant.withOpacity(0.3),
+            color: colorScheme.onSurfaceVariant.withValues(alpha: 0.3),
           ),
           const SizedBox(height: 16),
           Text(

@@ -33,4 +33,6 @@ class ApiEnpoint {
   static const String conversations = "api/conversations";
   static String updateConversation(String id) => "api/conversations/$id";
   static const String firebaseCustomToken = "api/auth/firebase-custom-token";
+  static String agoraToken(String channelName) =>
+      "api/agora/token?channelName=$channelName";
 }

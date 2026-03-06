@@ -174,7 +174,6 @@ class JobSeekerApplicationDetailPage extends HookConsumerWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       decoration: BoxDecoration(
-        color: Colors.transparent,
         borderRadius: BorderRadius.circular(8),
         border: Border.all(
           color: isDark ? Colors.grey[700]! : Colors.grey[300]!,
@@ -199,24 +198,24 @@ class JobSeekerApplicationDetailPage extends HookConsumerWidget {
     switch (status.toLowerCase()) {
       case 'submitted':
       case 'application sent':
-        bgColor = Colors.blue.withOpacity(0.1);
+        bgColor = Colors.blue.withValues(alpha: 0.1);
         textColor = Colors.blue[700]!;
         label = 'Application Sent';
         break;
       case 'hired':
       case 'accepted':
-        bgColor = Colors.green.withOpacity(0.1);
+        bgColor = Colors.green.withValues(alpha: 0.1);
         textColor = Colors.green[700]!;
         label = 'Application Accepted';
         break;
       case 'rejected':
-        bgColor = Colors.red.withOpacity(0.1);
+        bgColor = Colors.red.withValues(alpha: 0.1);
         textColor = Colors.red[700]!;
         label = 'Application Rejected';
         break;
       case 'pending':
       default:
-        bgColor = Colors.orange.withOpacity(0.1);
+        bgColor = Colors.orange.withValues(alpha: 0.1);
         textColor = Colors.orange[700]!;
         label = 'Application Pending';
         break;
@@ -273,7 +272,7 @@ class JobSeekerApplicationDetailPage extends HookConsumerWidget {
         color: Theme.of(context).scaffoldBackgroundColor,
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.black.withValues(alpha: 0.05),
             offset: const Offset(0, -4),
             blurRadius: 16,
           ),
@@ -287,7 +286,7 @@ class JobSeekerApplicationDetailPage extends HookConsumerWidget {
             onPressed: onPressed,
             style: ElevatedButton.styleFrom(
               backgroundColor: Colors.blue[600],
-              disabledBackgroundColor: Colors.blue[600]?.withOpacity(0.6),
+              disabledBackgroundColor: Colors.blue[600]?.withValues(alpha: 0.6),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(16),
               ),

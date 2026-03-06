@@ -145,14 +145,11 @@ class BiometricService {
 
       return await _localAuth.authenticate(
         localizedReason: reason,
-        options: AuthenticationOptions(
-          stickyAuth: true,
-          biometricOnly: biometricOnly,
-          useErrorDialogs: true,
-        ),
+        authMessages: const [],
+        persistAcrossBackgrounding: true,
+        biometricOnly: biometricOnly,
       );
     } on PlatformException catch (e) {
-      // Handle specific errors
       if (e.code == 'NotAvailable' ||
           e.code == 'NotEnrolled' ||
           e.code == 'PasscodeNotSet') {

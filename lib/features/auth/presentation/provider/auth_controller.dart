@@ -1,9 +1,6 @@
-import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
-import 'package:linkedin_login/linkedin_login.dart';
-import 'package:job_finder/core/constants/oauth_config.dart';
 import 'package:job_finder/features/auth/domain/usecase/auth_usecase.dart';
 import 'package:job_finder/features/auth/presentation/provider/auth_state.dart';
 
@@ -20,7 +17,6 @@ class AuthController extends StateNotifier<AuthState> {
        _resendOtpUseCase = resendOtpUseCase,
        _verifyOtpUseCase = verifyOtpUseCase,
        _googleOAuthUseCase = googleOAuthUseCase,
-       _linkedInOAuthUseCase = linkedInOAuthUseCase,
        _selectRoleUseCase = selectRoleUseCase,
        _googleSignIn = googleSignIn,
        super(const AuthState());
@@ -29,7 +25,6 @@ class AuthController extends StateNotifier<AuthState> {
   final ResendOtpUseCase _resendOtpUseCase;
   final VerifyOtpUseCase _verifyOtpUseCase;
   final GoogleOAuthUseCase _googleOAuthUseCase;
-  final LinkedInOAuthUseCase _linkedInOAuthUseCase;
   final SelectRoleUseCase _selectRoleUseCase;
   final GoogleSignIn _googleSignIn;
 
@@ -153,64 +148,6 @@ class AuthController extends StateNotifier<AuthState> {
       state = state.copyWith(
         isLoading: false,
         errorMessage: '${e.code}: ${e.description ?? 'Google sign-in failed'}',
-      );
-    } catch (e) {
-      state = state.copyWith(isLoading: false, errorMessage: e.toString());
-    }
-  }
-
-  Future<void> signInWithLinkedIn(BuildContext context) async {
-    state = state.copyWith(
-      isLoading: true,
-      errorMessage: null,
-      lastAction: AuthAction.linkedInSignIn,
-    );
-
-    try {
-      final result = await Navigator.push<AuthorizationSucceededAction?>(
-        context,
-        MaterialPageRoute(
-          builder: (context) => LinkedInAuthCodeWidget(
-            clientId: OAuthConfig.linkedInClientId,
-            redirectUrl: OAuthConfig.linkedInRedirectUrl,
-            onGetAuthCode: (action) => Navigator.pop(context, action),
-            onError: (error) => Navigator.pop(context, null),
-            destroySession: false,
-          ),
-        ),
-      );
-
-      if (result == null) {
-        state = state.copyWith(isLoading: false);
-        return;
-      }
-
-      final code = result.codeResponse.code;
-      if (code == null || code.isEmpty) {
-        state = state.copyWith(
-          isLoading: false,
-          errorMessage: 'LinkedIn sign-in failed to return authorization code',
-        );
-        return;
-      }
-
-      final oauthResult = await _linkedInOAuthUseCase(
-        LinkedInOAuthParams(
-          authorizationCode: code,
-          redirectUrl: OAuthConfig.linkedInRedirectUrl,
-        ),
-      );
-
-      oauthResult.fold(
-        (failure) {
-          state = state.copyWith(
-            isLoading: false,
-            errorMessage: failure.message,
-          );
-        },
-        (data) {
-          state = state.copyWith(isLoading: false, data: data);
-        },
       );
     } catch (e) {
       state = state.copyWith(isLoading: false, errorMessage: e.toString());

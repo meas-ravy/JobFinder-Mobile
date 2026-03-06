@@ -97,7 +97,6 @@ final updateConversationUseCaseProvider = Provider<UpdateConversationUseCase>((
   return UpdateConversationUseCase(ref.watch(recruiterRepositoryProvider));
 });
 
-
 final recruiterControllerProvider =
     StateNotifierProvider<RecruiterController, RecruiterState>((ref) {
       return RecruiterController(
