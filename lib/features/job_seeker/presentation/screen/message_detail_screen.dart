@@ -132,10 +132,11 @@ class _JobSeekerChatDetailScreenState
       MaterialPageRoute(
         builder: (_) => AgoraCallScreen(
           conversationId: widget.conversationId,
-          callerName: displayName,
-          callerAvatar: displayAvatar,
+          callerName: '', // Backend handles lookup
+          callerAvatar: null,
           calleeId: widget.participantId!,
-          calleeName: widget.name,
+          calleeName: displayName,
+          calleeAvatar: displayAvatar,
           isVideoCall: isVideoCall,
           isIncoming: false,
         ),
@@ -146,9 +147,9 @@ class _JobSeekerChatDetailScreenState
     AgoraService.instance.sendCallInvitation(
       conversationId: widget.conversationId,
       callerId: currentUserId,
-      callerName: displayName,
-      callerAvatar: displayAvatar ?? '',
+      calleeId: widget.participantId!,
       isVideoCall: isVideoCall,
+      callerRole: 'Job_finder',
     );
   }
 
@@ -307,32 +308,6 @@ class _JobSeekerChatDetailScreenState
 
                 final messages = snapshot.data ?? [];
 
-                // Only show empty state if we are NOT in waiting state and messages are truly empty
-                // if (messages.isEmpty &&
-                //     snapshot.connectionState != ConnectionState.waiting) {
-                //   return Center(
-                //     child: Column(
-                //       mainAxisAlignment: MainAxisAlignment.center,
-                //       children: [
-                //         Icon(
-                //           Icons.chat_bubble_outline,
-                //           size: 64,
-                //           color: colorScheme.onSurfaceVariant.withValues(
-                //             alpha: .3,
-                //           ),
-                //         ),
-                //         const SizedBox(height: 16),
-                //         Text(
-                //           "No messages yet",
-                //           style: GoogleFonts.outfit(
-                //             color: colorScheme.onSurfaceVariant,
-                //             fontSize: 16,
-                //           ),
-                //         ),
-                //       ],
-                //     ),
-                //   );
-                // }
                 if (snapshot.connectionState == ConnectionState.waiting) {
                   return Center(
                     child: CircularProgressIndicator(
@@ -487,57 +462,84 @@ class _MessageBubble extends StatelessWidget {
     final colorScheme = Theme.of(context).colorScheme;
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
+    // Deep Navy Blue for Sender (Matches the screenshot)
     final bubbleColor = isMe
-        ? colorScheme.primary
-        : (isDark ? AppColor.cardDarkSecondary : const Color(0xffF2F2F2));
+        ? const Color(0xFF2C4E70)
+        : (isDark
+              ? colorScheme.surfaceContainerHighest
+              : const Color(0xFFE8E8E8));
 
     final textColor = isMe
         ? Colors.white
         : (isDark ? Colors.white : Colors.black87);
+    final timeColor = isMe ? Colors.white70 : colorScheme.onSurfaceVariant;
 
     return Align(
       alignment: isMe ? Alignment.centerRight : Alignment.centerLeft,
-      child: Column(
-        crossAxisAlignment: isMe
-            ? CrossAxisAlignment.end
-            : CrossAxisAlignment.start,
-        children: [
-          const SizedBox(height: 10),
-          Container(
-            margin: const EdgeInsets.only(bottom: 8),
-            padding: const EdgeInsets.symmetric(vertical: 7, horizontal: 16),
-            decoration: BoxDecoration(
-              color: bubbleColor,
-              borderRadius: BorderRadius.circular(30),
-              boxShadow: [
-                if (!isMe && !isDark)
-                  BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.05),
-                    blurRadius: 5,
-                    offset: const Offset(0, 2),
+      child: Container(
+        margin: EdgeInsets.only(
+          top: 4,
+          bottom: 4,
+          left: isMe ? 64 : 0,
+          right: isMe ? 0 : 64,
+        ),
+        constraints: BoxConstraints(
+          maxWidth: MediaQuery.of(context).size.width * 0.75,
+        ),
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+        decoration: BoxDecoration(
+          color: bubbleColor,
+          borderRadius: BorderRadius.only(
+            topLeft: const Radius.circular(16),
+            topRight: const Radius.circular(16),
+            bottomLeft: Radius.circular(isMe ? 16 : 4),
+            bottomRight: Radius.circular(isMe ? 4 : 16),
+          ),
+          boxShadow: [
+            if (!isMe && !isDark)
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.05),
+                blurRadius: 2,
+                offset: const Offset(0, 1),
+              ),
+          ],
+        ),
+        child: Stack(
+          children: [
+            Padding(
+              padding: const EdgeInsets.only(bottom: 16, right: 70),
+              child: Text(
+                message.content,
+                style: GoogleFonts.inter(
+                  fontSize: 15,
+                  color: textColor,
+                  fontWeight: FontWeight.w400,
+                ),
+              ),
+            ),
+            Positioned(
+              bottom: 0,
+              right: 0,
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    _formatDate(message.timestamp),
+                    style: GoogleFonts.inter(fontSize: 10, color: timeColor),
                   ),
-              ],
-            ),
-            child: Text(
-              message.content,
-              style: GoogleFonts.inter(
-                fontSize: 15,
-                color: textColor,
-                fontWeight: FontWeight.w500,
+                  if (isMe) ...[
+                    const SizedBox(width: 4),
+                    const Icon(
+                      Icons.done_all,
+                      size: 14,
+                      color: Color(0xFF74C2FF),
+                    ),
+                  ],
+                ],
               ),
             ),
-          ),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 4),
-            child: Text(
-              _formatDate(message.timestamp),
-              style: GoogleFonts.inter(
-                fontSize: 10,
-                color: colorScheme.onSurfaceVariant,
-              ),
-            ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -547,10 +549,10 @@ class _MessageBubble extends StatelessWidget {
     try {
       if (timestamp is int) {
         final date = DateTime.fromMillisecondsSinceEpoch(timestamp);
-        return DateFormat('HH:mm').format(date);
+        return DateFormat('h:mm a').format(date);
       } else if (timestamp is String) {
         final date = DateTime.parse(timestamp);
-        return DateFormat('HH:mm').format(date);
+        return DateFormat('h:mm a').format(date);
       }
     } catch (_) {}
     return "";

@@ -1,7 +1,9 @@
 import 'dart:async';
+import 'package:agora_rtc_engine/agora_rtc_engine.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:job_finder/core/services/agora_service.dart';
+import 'package:permission_handler/permission_handler.dart';
 
 class AgoraCallScreen extends StatefulWidget {
   final String conversationId;
@@ -9,6 +11,7 @@ class AgoraCallScreen extends StatefulWidget {
   final String? callerAvatar;
   final String calleeId;
   final String calleeName;
+  final String? calleeAvatar; // New: callee's photo
   final bool isVideoCall;
   final bool isIncoming; // true = receiver, false = caller
 
@@ -19,6 +22,7 @@ class AgoraCallScreen extends StatefulWidget {
     required this.callerAvatar,
     required this.calleeId,
     required this.calleeName,
+    this.calleeAvatar,
     required this.isVideoCall,
     this.isIncoming = false,
   });
@@ -33,13 +37,17 @@ class _AgoraCallScreenState extends State<AgoraCallScreen> {
   bool _isMuted = false;
   bool _isCameraOff = false;
   bool _isSpeakerOn = true;
-  bool _isConnected = false;
-  bool _isLoading = false;
+  bool _isConnected = false; // true when remote user joins
+  bool _isJoining = false; // true only during the initial engine connection
+  bool _isClosing = false; // Guard against double-popping
 
-  int? _remoteUid;
   StreamSubscription<int>? _remoteJoinedSub;
   StreamSubscription<int>? _remoteLeftSub;
   StreamSubscription<CallState>? _callStateSub;
+
+  // Stable video controllers — must be created ONCE and reused across builds
+  VideoViewController? _localController;
+  VideoViewController? _remoteController;
 
   Duration _elapsed = Duration.zero;
   Timer? _timer;
@@ -47,19 +55,26 @@ class _AgoraCallScreenState extends State<AgoraCallScreen> {
   @override
   void initState() {
     super.initState();
+    _agoraService.watchCallStatus(widget.conversationId);
     _listenToEvents();
-    if (!widget.isIncoming) {
-      _startCall();
-    }
+    _startCall();
   }
 
   void _listenToEvents() {
     _remoteJoinedSub = _agoraService.remoteUserJoinedStream.listen((uid) {
       if (mounted) {
+        final engine = _agoraService.engine;
         setState(() {
-          _remoteUid = uid;
           _isConnected = true;
-          _isLoading = false;
+          _isJoining = false;
+          // Create remote controller exactly once when the remote user joins
+          if (widget.isVideoCall && engine != null) {
+            _remoteController = VideoViewController.remote(
+              rtcEngine: engine,
+              canvas: VideoCanvas(uid: uid),
+              connection: RtcConnection(channelId: widget.conversationId),
+            );
+          }
         });
         _startTimer();
       }
@@ -70,23 +85,64 @@ class _AgoraCallScreenState extends State<AgoraCallScreen> {
     });
 
     _callStateSub = _agoraService.callStateStream.listen((state) {
-      if (state == CallState.ended && mounted) {
-        Navigator.of(context).pop();
+      if ((state == CallState.ended ||
+              state == CallState.rejected ||
+              state == CallState.missed) &&
+          mounted) {
+        debugPrint('📡 [AgoraCall] Call state changed to $state, closing...');
+        _safePop();
       }
     });
   }
 
   Future<void> _startCall() async {
     if (!mounted) return;
-    setState(() => _isLoading = true);
+    setState(() => _isJoining = true);
     try {
+      // Request permissions FIRST — required on Android 6+ even with Manifest entries
+      if (widget.isVideoCall) {
+        final statuses = await [
+          Permission.camera,
+          Permission.microphone,
+        ].request();
+        if (statuses[Permission.camera] != PermissionStatus.granted ||
+            statuses[Permission.microphone] != PermissionStatus.granted) {
+          if (mounted) {
+            setState(() => _isJoining = false);
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('Camera & microphone permission required'),
+              ),
+            );
+            Navigator.of(context).pop();
+          }
+          return;
+        }
+      } else {
+        await Permission.microphone.request();
+      }
+
       await _agoraService.joinCall(
         conversationId: widget.conversationId,
         isVideoCall: widget.isVideoCall,
       );
       await _agoraService.setSpeakerOn(_isSpeakerOn);
+
+      // Create local video controller once after successfully joining
+      final engine = _agoraService.engine;
+      if (widget.isVideoCall && engine != null && mounted) {
+        setState(() {
+          _localController = VideoViewController(
+            rtcEngine: engine,
+            canvas: const VideoCanvas(uid: 0),
+          );
+        });
+      }
+
+      if (mounted) setState(() => _isJoining = false);
     } catch (e) {
       if (mounted) {
+        setState(() => _isJoining = false);
         ScaffoldMessenger.of(
           context,
         ).showSnackBar(SnackBar(content: Text('Failed to join call: $e')));
@@ -107,10 +163,32 @@ class _AgoraCallScreenState extends State<AgoraCallScreen> {
     return '$m:$s';
   }
 
-  Future<void> _endCall() async {
+  void _safePop() {
+    if (_isClosing || !mounted) return;
+    _isClosing = true;
     _timer?.cancel();
-    await _agoraService.endCall(widget.conversationId);
-    if (mounted) Navigator.of(context).pop();
+
+    if (Navigator.of(context).canPop()) {
+      Navigator.of(context).pop();
+    } else {
+      // If we can't pop (e.g. root page from notification),
+      // we might want to go to a default home page instead.
+      debugPrint('⚠️ [AgoraCall] Cannot pop, redirecting to home...');
+      // You can use context.go('/') if using GoRouter
+    }
+  }
+
+  Future<void> _endCall() async {
+    if (_isClosing) return;
+    debugPrint('📞 [AgoraCall] End call button pressed');
+
+    try {
+      await _agoraService.endCall(widget.conversationId);
+    } catch (e) {
+      debugPrint('⚠️ [AgoraCall] End call error: $e');
+    } finally {
+      _safePop();
+    }
   }
 
   Future<void> _toggleMute() async {
@@ -134,6 +212,8 @@ class _AgoraCallScreenState extends State<AgoraCallScreen> {
     _remoteJoinedSub?.cancel();
     _remoteLeftSub?.cancel();
     _callStateSub?.cancel();
+    _localController?.dispose();
+    _remoteController?.dispose();
     super.dispose();
   }
 
@@ -143,21 +223,53 @@ class _AgoraCallScreenState extends State<AgoraCallScreen> {
       backgroundColor: const Color(0xFF1A1A2E),
       body: Stack(
         children: [
-          // ── Background: video streams or dark gradient ──
           _buildBackground(),
-
-          // ── Top: caller info ──
           _buildCallerInfo(),
 
-          // ── Bottom: controls ──
+          // Local camera PiP — placed above callerInfo so it's fully visible
+          if (widget.isVideoCall && !_isCameraOff && _localController != null)
+            Positioned(
+              top: 80,
+              right: 16,
+              width: 110,
+              height: 160,
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(14),
+                child: AgoraVideoView(controller: _localController!),
+              ),
+            ),
+
           _buildControls(),
 
-          // ── Loading overlay ──
-          if (_isLoading)
-            Container(
-              color: Colors.black54,
-              child: const Center(
-                child: CircularProgressIndicator(color: Colors.white),
+          if (_isJoining)
+            Positioned(
+              top: 0,
+              left: 0,
+              right: 0,
+              child: SafeArea(
+                child: Padding(
+                  padding: const EdgeInsets.only(top: 8),
+                  child: Center(
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const SizedBox(
+                          width: 16,
+                          height: 16,
+                          child: CircularProgressIndicator(
+                            color: Colors.white70,
+                            strokeWidth: 2,
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        const Text(
+                          'Connecting to call...',
+                          style: TextStyle(color: Colors.white70, fontSize: 12),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
               ),
             ),
         ],
@@ -167,18 +279,12 @@ class _AgoraCallScreenState extends State<AgoraCallScreen> {
 
   Widget _buildBackground() {
     if (widget.isVideoCall) {
-      return Stack(
-        children: [
-          // Remote video (full screen)
-          if (_remoteUid != null)
-            Positioned.fill(
-              child: _agoraService.getRemoteView(
-                _remoteUid!,
-                widget.conversationId,
-              ),
+      // Show remote video full-screen when connected, gradient otherwise
+      return _remoteController != null
+          ? Positioned.fill(
+              child: AgoraVideoView(controller: _remoteController!),
             )
-          else
-            Container(
+          : Container(
               decoration: const BoxDecoration(
                 gradient: LinearGradient(
                   colors: [Color(0xFF1A1A2E), Color(0xFF16213E)],
@@ -186,24 +292,8 @@ class _AgoraCallScreenState extends State<AgoraCallScreen> {
                   end: Alignment.bottomRight,
                 ),
               ),
-            ),
-
-          // Local video (picture-in-picture)
-          if (!_isCameraOff)
-            Positioned(
-              top: 80,
-              right: 16,
-              width: 100,
-              height: 150,
-              child: ClipRRect(
-                borderRadius: BorderRadius.circular(12),
-                child: _agoraService.getLocalView(),
-              ),
-            ),
-        ],
-      );
+            );
     } else {
-      // Voice call background
       return Container(
         decoration: const BoxDecoration(
           gradient: LinearGradient(
@@ -217,7 +307,9 @@ class _AgoraCallScreenState extends State<AgoraCallScreen> {
   }
 
   Widget _buildCallerInfo() {
-    final avatarUrl = widget.isIncoming ? widget.callerAvatar : null;
+    final avatarUrl = widget.isIncoming
+        ? widget.callerAvatar
+        : widget.calleeAvatar;
     final personName = widget.isIncoming
         ? widget.callerName
         : widget.calleeName;
@@ -226,57 +318,62 @@ class _AgoraCallScreenState extends State<AgoraCallScreen> {
       top: 80,
       left: 0,
       right: 0,
-      child: Column(
-        children: [
-          // Avatar
-          Container(
-            width: 96,
-            height: 96,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              border: Border.all(color: Colors.white24, width: 3),
+      child: IgnorePointer(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // Avatar
+            Container(
+              width: 96,
+              height: 96,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                border: Border.all(color: Colors.white24, width: 3),
+              ),
+              child: CircleAvatar(
+                radius: 48,
+                backgroundImage: avatarUrl != null
+                    ? NetworkImage(avatarUrl)
+                    : null,
+                backgroundColor: const Color(0xFF0F3460),
+                child: avatarUrl == null
+                    ? Text(
+                        personName.isNotEmpty
+                            ? personName[0].toUpperCase()
+                            : '?',
+                        style: GoogleFonts.outfit(
+                          fontSize: 36,
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      )
+                    : null,
+              ),
             ),
-            child: CircleAvatar(
-              radius: 48,
-              backgroundImage: avatarUrl != null
-                  ? NetworkImage(avatarUrl)
-                  : null,
-              backgroundColor: const Color(0xFF0F3460),
-              child: avatarUrl == null
-                  ? Text(
-                      personName.isNotEmpty ? personName[0].toUpperCase() : '?',
-                      style: GoogleFonts.outfit(
-                        fontSize: 36,
-                        color: Colors.white,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    )
-                  : null,
+            const SizedBox(height: 16),
+            // Name
+            Text(
+              personName,
+              style: GoogleFonts.outfit(
+                fontSize: 24,
+                fontWeight: FontWeight.bold,
+                color: Colors.white,
+              ),
             ),
-          ),
-          const SizedBox(height: 16),
-          // Name
-          Text(
-            personName,
-            style: GoogleFonts.outfit(
-              fontSize: 24,
-              fontWeight: FontWeight.bold,
-              color: Colors.white,
+            const SizedBox(height: 8),
+            // Status
+            Text(
+              _isConnected
+                  ? _formatDuration(_elapsed)
+                  : widget.isIncoming
+                  ? 'Incoming ${widget.isVideoCall ? 'Video' : 'Voice'} Call...'
+                  : _isJoining
+                  ? 'Connecting...'
+                  : 'Calling...',
+              style: GoogleFonts.outfit(fontSize: 16, color: Colors.white70),
             ),
-          ),
-          const SizedBox(height: 8),
-          // Status
-          Text(
-            _isConnected
-                ? _formatDuration(_elapsed)
-                : _isLoading
-                ? widget.isIncoming
-                      ? 'Incoming ${widget.isVideoCall ? 'Video' : 'Voice'} Call...'
-                      : 'Calling...'
-                : 'Connecting...',
-            style: GoogleFonts.outfit(fontSize: 16, color: Colors.white70),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -288,7 +385,6 @@ class _AgoraCallScreenState extends State<AgoraCallScreen> {
       right: 0,
       child: Column(
         children: [
-          // ── Row 1: Mute / Camera / Speaker ──
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
@@ -325,42 +421,21 @@ class _AgoraCallScreenState extends State<AgoraCallScreen> {
             ],
           ),
           const SizedBox(height: 32),
-
-          // ── Row 2: Accept (incoming) / End Call ──
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              if (widget.isIncoming) ...[
-                // Accept button
-                GestureDetector(
-                  onTap: () async {
-                    await _agoraService.acceptCall(widget.conversationId);
-                    await _startCall();
-                  },
-                  child: Container(
-                    width: 70,
-                    height: 70,
-                    decoration: const BoxDecoration(
-                      color: Colors.green,
-                      shape: BoxShape.circle,
-                    ),
-                    child: const Icon(
-                      Icons.call,
-                      color: Colors.white,
-                      size: 32,
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 60),
-              ],
-              // End / Reject button
+              // ── End Call / Reject button ──
               GestureDetector(
-                onTap: widget.isIncoming && !_isConnected
-                    ? () async {
-                        await _agoraService.rejectCall(widget.conversationId);
-                        if (mounted) Navigator.of(context).pop();
-                      }
-                    : _endCall,
+                behavior: HitTestBehavior.opaque,
+                onTap: () {
+                  if (widget.isIncoming && !_isConnected) {
+                    _agoraService.rejectCall(widget.conversationId).then((_) {
+                      if (mounted) Navigator.of(context).pop();
+                    });
+                  } else {
+                    _endCall();
+                  }
+                },
                 child: Container(
                   width: 70,
                   height: 70,

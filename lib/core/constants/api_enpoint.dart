@@ -35,4 +35,5 @@ class ApiEnpoint {
   static const String firebaseCustomToken = "api/auth/firebase-custom-token";
   static String agoraToken(String channelName) =>
       "api/agora/token?channelName=$channelName";
+  static const String callInvite = "api/calls/invite";
 }

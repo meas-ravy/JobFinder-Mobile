@@ -413,7 +413,7 @@ class _ProfileProgressCard extends StatelessWidget {
                   ),
                   _VerticalDottedLine(colorScheme: colorScheme),
                   _StatItem(
-                    value: 0, // TODO: Add applied count to model if needed
+                    value: 0, 
                     label: 'Applied',
                     textTheme: textTheme,
                     colorScheme: colorScheme,
