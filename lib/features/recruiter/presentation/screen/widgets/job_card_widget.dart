@@ -285,7 +285,8 @@ class JobCard extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(height: 8),
-                if (data.salaryMin != null)
+                if (data.salaryMin != null &&
+                    (data.salaryMin! > 0 || (data.salaryMax ?? 0) > 0))
                   Text(
                     _buildSalaryString(data),
                     textAlign: TextAlign.center,
@@ -538,10 +539,17 @@ class JobCard extends StatelessWidget {
 
   String _buildSalaryString(JobCardData data) {
     if (data.salaryMin == null) return '';
+
+    // If both min and max are 0, treat as negotiable
+    if (data.salaryMin == 0 &&
+        (data.salaryMax == null || data.salaryMax == 0)) {
+      return 'Negotiable';
+    }
+
     final min = data.salaryMin! >= 1000
         ? '${(data.salaryMin! / 1000).toStringAsFixed(1)}k'
         : '${data.salaryMin}';
-    final max = data.salaryMax != null
+    final max = data.salaryMax != null && data.salaryMax! > 0
         ? (data.salaryMax! >= 1000
               ? '${(data.salaryMax! / 1000).toStringAsFixed(1)}k'
               : '${data.salaryMax}')

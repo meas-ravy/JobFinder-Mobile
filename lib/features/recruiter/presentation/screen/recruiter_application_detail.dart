@@ -1,18 +1,17 @@
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:job_finder/core/constants/assets.dart';
 import 'package:job_finder/core/helper/typedef.dart';
 import 'package:job_finder/features/recruiter/presentation/provider/recruiter_provider.dart';
 import 'package:job_finder/features/recruiter/presentation/provider/recruiter_state.dart';
-import 'package:job_finder/shared/widget/shimmer_loading.dart';
 import 'package:job_finder/shared/widget/svg_icon.dart';
 import 'package:url_launcher/url_launcher.dart';
-import 'package:job_finder/core/theme/app_color.dart';
-import 'package:job_finder/core/services/firebase_chat_service.dart';
-import 'package:job_finder/features/recruiter/data/models/chat_message_model.dart';
+import 'package:google_fonts/google_fonts.dart';
+import 'package:job_finder/features/recruiter/presentation/screen/widgets/application_action_buttons.dart';
+import 'package:job_finder/features/recruiter/presentation/screen/widgets/application_detail_dialogs.dart';
+import 'package:job_finder/features/recruiter/presentation/screen/widgets/application_detail_helpers.dart';
+import 'package:job_finder/features/recruiter/presentation/screen/widgets/application_detail_shimmer.dart';
 
 class RecruiterApplicationDetailPage extends HookConsumerWidget {
   const RecruiterApplicationDetailPage({super.key, required this.id});
@@ -24,10 +23,15 @@ class RecruiterApplicationDetailPage extends HookConsumerWidget {
     final recruiterState = ref.watch(recruiterControllerProvider);
     final colorScheme = Theme.of(context).colorScheme;
     final updatingStatus = useState<String?>(null);
+    final isLoadingDialogOpen = useState(false);
 
     useEffect(() {
+      updatingStatus.value = null;
       Future.delayed(Duration.zero, () {
         if (context.mounted) {
+          ref
+              .read(recruiterControllerProvider.notifier)
+              .clearApplicationDetails();
           ref
               .read(recruiterControllerProvider.notifier)
               .getApplicationDetails(id);
@@ -41,94 +45,44 @@ class RecruiterApplicationDetailPage extends HookConsumerWidget {
           !next.isLoading &&
           previous?.isLoading == true) {
         updatingStatus.value = null;
+
+        // Dismiss loading dialog if open
+        if (isLoadingDialogOpen.value && context.mounted) {
+          isLoadingDialogOpen.value = false;
+          Navigator.of(context, rootNavigator: true).pop();
+        }
+
         if (next.errorMessage != null) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text(next.errorMessage!),
               backgroundColor: colorScheme.error,
+              behavior: SnackBarBehavior.floating,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+              margin: const EdgeInsets.all(16),
             ),
           );
         } else {
-          _showSuccessSheet(context, ref, id);
+          showApplicationResultSheet(
+            context: context,
+            ref: ref,
+            confirmedStatus:
+                next.applicationDetails?['status']?.toString() ??
+                previous?.applicationDetails?['status']?.toString() ??
+                '',
+          );
         }
       }
     });
 
+    // --- Loading state ---
     if (recruiterState.isLoading && recruiterState.applicationDetails == null) {
-      return Scaffold(
-        backgroundColor: colorScheme.surface,
-        appBar: AppBar(
-          title: Text(
-            'Application Details',
-            style: GoogleFonts.poppins(
-              fontSize: 13,
-              fontWeight: FontWeight.w600,
-              color: colorScheme.onSurface,
-            ),
-          ),
-          elevation: 0,
-        ),
-        body: SingleChildScrollView(
-          padding: const EdgeInsets.all(20),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                children: [
-                  const ShimmerCircle(radius: 40),
-                  const SizedBox(width: 20),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: const [
-                        ShimmerLoading(width: 180, height: 28),
-                        SizedBox(height: 8),
-                        ShimmerLoading(width: 140, height: 16),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 48),
-              const ShimmerLoading(width: 120, height: 18),
-              const SizedBox(height: 12),
-              ShimmerLoading(
-                width: double.infinity,
-                height: 80,
-                borderRadius: 16,
-              ),
-              const SizedBox(height: 32),
-              const ShimmerLoading(width: 150, height: 18),
-              const SizedBox(height: 16),
-              ...List.generate(
-                3,
-                (_) => Padding(
-                  padding: const EdgeInsets.only(bottom: 16),
-                  child: Row(
-                    children: const [
-                      ShimmerCircle(radius: 10),
-                      SizedBox(width: 12),
-                      ShimmerLoading(width: 80, height: 14),
-                      Spacer(),
-                      ShimmerLoading(width: 100, height: 14),
-                    ],
-                  ),
-                ),
-              ),
-              const SizedBox(height: 48),
-              Row(
-                children: const [
-                  Expanded(child: ShimmerLoading(width: 100, height: 50)),
-                  SizedBox(width: 16),
-                  Expanded(child: ShimmerLoading(width: 100, height: 50)),
-                ],
-              ),
-            ],
-          ),
-        ),
-      );
+      return const ApplicationDetailShimmer();
     }
 
+    // --- Error state ---
     if (recruiterState.errorMessage != null &&
         recruiterState.applicationDetails == null) {
       return Scaffold(
@@ -154,6 +108,7 @@ class RecruiterApplicationDetailPage extends HookConsumerWidget {
       );
     }
 
+    // --- Empty state ---
     final application = recruiterState.applicationDetails;
     if (application == null) {
       return Scaffold(
@@ -162,30 +117,29 @@ class RecruiterApplicationDetailPage extends HookConsumerWidget {
       );
     }
 
+    // --- Parse data ---
     final jobSeekerMap = application['jobSeeker'] ?? application['user'];
     final jobSeeker = (jobSeekerMap is Map)
         ? DataMap.from(jobSeekerMap)
         : <String, dynamic>{};
-
     final profileMap = jobSeeker['profile'];
     final profile = (profileMap is Map)
         ? DataMap.from(profileMap)
         : <String, dynamic>{};
 
-    final name =
-        (profile['fullName'] ??
-                profile['name'] ??
-                jobSeeker['fullName'] ??
-                jobSeeker['name'])
-            ?.toString();
-
-    final avatarUrl = (profile['avatarUrl'] ?? jobSeeker['avatarUrl'])
+    final name = (profile['fullName'] ??
+            profile['name'] ??
+            jobSeeker['fullName'] ??
+            jobSeeker['name'])
         ?.toString();
+    final avatarUrl =
+        (profile['avatarUrl'] ?? jobSeeker['avatarUrl'])?.toString();
     final email = (profile['email'] ?? jobSeeker['email'])?.toString();
 
     final jobMap = application['job'];
     final job = (jobMap is Map) ? DataMap.from(jobMap) : <String, dynamic>{};
 
+    // --- Main UI ---
     return Scaffold(
       backgroundColor: colorScheme.surface,
       appBar: AppBar(title: const Text('Application Details'), elevation: 0),
@@ -194,7 +148,7 @@ class RecruiterApplicationDetailPage extends HookConsumerWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Candidate Header
+            // ── Candidate Header ──────────────────────────────────────────
             Row(
               children: [
                 CircleAvatar(
@@ -233,7 +187,7 @@ class RecruiterApplicationDetailPage extends HookConsumerWidget {
                         ),
                       ),
                       const SizedBox(height: 8),
-                      _buildStatusBadge(
+                      buildStatusBadge(
                         context,
                         application['status']?.toString() ?? 'Pending',
                       ),
@@ -244,14 +198,15 @@ class RecruiterApplicationDetailPage extends HookConsumerWidget {
             ),
             const SizedBox(height: 32),
 
-            // Job Applied For
-            _buildSection(
+            // ── Job Applied For ───────────────────────────────────────────
+            buildSection(
               context,
               'Applied For: ',
               child: Container(
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  color: colorScheme.secondaryContainer.withValues(alpha: 0.2),
+                  color:
+                      colorScheme.secondaryContainer.withValues(alpha: 0.2),
                   borderRadius: BorderRadius.circular(22),
                 ),
                 child: Row(
@@ -289,29 +244,29 @@ class RecruiterApplicationDetailPage extends HookConsumerWidget {
             ),
             const SizedBox(height: 24),
 
-            // Personal Information
-            _buildSection(
+            // ── Personal Information ──────────────────────────────────────
+            buildSection(
               context,
               'Personal Information: ',
               child: Column(
                 children: [
-                  _buildInfoRow(
+                  buildInfoRow(
                     context,
-                    Icon(Icons.phone_outlined),
+                    const Icon(Icons.phone_outlined),
                     'Phone',
                     jobSeeker['phone']?.toString() ?? 'N/A',
                   ),
-                  _buildInfoRow(
+                  buildInfoRow(
                     context,
-                    Icon(Icons.cake_outlined),
+                    const Icon(Icons.cake_outlined),
                     'Birthday',
-                    _formatDate(profile['dateOfBirth']),
+                    formatDate(profile['dateOfBirth']),
                   ),
-                  _buildInfoRow(
+                  buildInfoRow(
                     context,
                     AppSvgIcon(
                       assetName: AppIcon.profile,
-                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                      color: colorScheme.onSurfaceVariant,
                     ),
                     'Gender',
                     profile['gender']?.toString() ?? 'N/A',
@@ -321,14 +276,14 @@ class RecruiterApplicationDetailPage extends HookConsumerWidget {
             ),
             const SizedBox(height: 24),
 
-            // Resume
             if (application['resumeUrl'] != null)
-              _buildSection(
+              buildSection(
                 context,
                 'Attachments: ',
                 child: InkWell(
-                  onTap: () =>
-                      launchUrl(Uri.parse(application['resumeUrl'].toString())),
+                  onTap: () => launchUrl(
+                    Uri.parse(application['resumeUrl'].toString()),
+                  ),
                   borderRadius: BorderRadius.circular(12),
                   child: Container(
                     padding: const EdgeInsets.all(16),
@@ -361,467 +316,26 @@ class RecruiterApplicationDetailPage extends HookConsumerWidget {
 
             const SizedBox(height: 40),
 
-            // Actions
-            if (application['status'] == 'Hired' ||
-                application['status'] == 'Rejected')
-              Container(
-                width: double.infinity,
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color:
-                      (application['status'] == 'Hired'
-                              ? Colors.green
-                              : Colors.red)
-                          .withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(
-                    color:
-                        (application['status'] == 'Hired'
-                                ? Colors.green
-                                : Colors.red)
-                            .withValues(alpha: 0.3),
+            // ── Action Buttons / Decided Banner ───────────────────────────
+            ApplicationActionButtons(
+              application: Map<String, dynamic>.from(application),
+              recruiterState: recruiterState,
+              updatingStatus: updatingStatus,
+              isLoadingDialogOpen: isLoadingDialogOpen,
+              id: id,
+              onConfirmAction: (ctx, ref, id, status, upd, loading) =>
+                  showConfirmActionSheet(
+                    context: ctx,
+                    ref: ref,
+                    id: id,
+                    status: status,
+                    updatingStatus: upd,
+                    isLoadingDialogOpen: loading,
                   ),
-                ),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(
-                      application['status'] == 'Hired'
-                          ? Icons.check_circle
-                          : Icons.cancel,
-                      color: application['status'] == 'Hired'
-                          ? Colors.green
-                          : Colors.red,
-                    ),
-                    const SizedBox(width: 8),
-                    Text(
-                      "Candidate already ${application['status']}",
-                      style: TextStyle(
-                        color: application['status'] == 'Hired'
-                            ? Colors.green
-                            : Colors.red,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ],
-                ),
-              )
-            else
-              Row(
-                children: [
-                  Expanded(
-                    child: OutlinedButton(
-                      onPressed: recruiterState.isLoading
-                          ? null
-                          : () => _confirmAction(
-                              context,
-                              ref,
-                              id,
-                              'Rejected',
-                              updatingStatus,
-                            ),
-                      style: OutlinedButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(vertical: 16),
-                        side: BorderSide(color: colorScheme.error),
-                        foregroundColor: colorScheme.error,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                      ),
-                      child:
-                          recruiterState.isLoading &&
-                              recruiterState.lastAction ==
-                                  RecruiterAction.updateApplicationStatus &&
-                              updatingStatus.value == 'Rejected'
-                          ? const SizedBox(
-                              height: 20,
-                              width: 20,
-                              child: CircularProgressIndicator(
-                                strokeWidth: 2,
-                                color: Colors.red,
-                              ),
-                            )
-                          : const Text(
-                              'Reject Candidate',
-                              style: TextStyle(fontWeight: FontWeight.bold),
-                            ),
-                    ),
-                  ),
-                  const SizedBox(width: 16),
-                  Expanded(
-                    child: ElevatedButton(
-                      onPressed: recruiterState.isLoading
-                          ? null
-                          : () => _confirmAction(
-                              context,
-                              ref,
-                              id,
-                              'Hired',
-                              updatingStatus,
-                            ),
-                      style: ElevatedButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(vertical: 16),
-                        backgroundColor: colorScheme.primary,
-                        foregroundColor: colorScheme.onPrimary,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        elevation: 0,
-                      ),
-                      child:
-                          recruiterState.isLoading &&
-                              recruiterState.lastAction ==
-                                  RecruiterAction.updateApplicationStatus &&
-                              updatingStatus.value == 'Hired'
-                          ? const SizedBox(
-                              height: 20,
-                              width: 20,
-                              child: CircularProgressIndicator(
-                                strokeWidth: 2,
-                                color: Colors.white,
-                              ),
-                            )
-                          : const Text(
-                              'Hire Candidate',
-                              style: TextStyle(
-                                fontWeight: FontWeight.bold,
-                                color: Colors.white,
-                              ),
-                            ),
-                    ),
-                  ),
-                ],
-              ),
+            ),
           ],
         ),
       ),
     );
-  }
-
-  void _confirmAction(
-    BuildContext context,
-    WidgetRef ref,
-    String id,
-    String status,
-    ValueNotifier<String?> updatingStatus,
-  ) {
-    final application = ref
-        .read(recruiterControllerProvider)
-        .applicationDetails;
-    final jobSeekerMap = application?['jobSeeker'] ?? application?['user'];
-    final jobSeeker = (jobSeekerMap is Map)
-        ? DataMap.from(jobSeekerMap)
-        : <String, dynamic>{};
-
-    final profileMap = jobSeeker['profile'];
-    final profile = (profileMap is Map)
-        ? DataMap.from(profileMap)
-        : <String, dynamic>{};
-
-    final candidateName = profile['fullName'] ?? "this candidate";
-
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: Text(
-          status == 'Hired' ? "Hire Candidate?" : "Reject Candidate?",
-        ),
-        content: Text(
-          "Are you sure you want to ${status == 'Hired' ? 'hire' : 'reject'} $candidateName? This action will notify the candidate.",
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text("Cancel"),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              Navigator.pop(context);
-              updatingStatus.value = status;
-              ref
-                  .read(recruiterControllerProvider.notifier)
-                  .updateApplicationStatus(id, status);
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: status == 'Hired' ? Colors.green : Colors.red,
-            ),
-            child: Text(status, style: const TextStyle(color: Colors.white)),
-          ),
-        ],
-      ),
-    );
-  }
-
-  void _showSuccessSheet(BuildContext context, WidgetRef ref, String id) async {
-    final state = ref.read(recruiterControllerProvider);
-    final application = state.applicationDetails;
-    if (application == null) return;
-
-    final jobSeekerMap = application['jobSeeker'] ?? application['user'];
-    final jobSeeker = (jobSeekerMap is Map)
-        ? DataMap.from(jobSeekerMap)
-        : <String, dynamic>{};
-
-    final profileMap = jobSeeker['profile'];
-    final profile = (profileMap is Map)
-        ? DataMap.from(profileMap)
-        : <String, dynamic>{};
-
-    final jobMap = application['job'];
-    final job = (jobMap is Map) ? DataMap.from(jobMap) : <String, dynamic>{};
-    final status = application['status']?.toString() ?? 'Updated';
-    final candidateName = profile['fullName'] ?? "Candidate";
-    final isHired = status == 'Hired';
-
-    final candidateId =
-        jobSeeker['_id'] ?? jobSeeker['id'] ?? application['jobSeekerId'] ?? '';
-    final jobIdVar = job['_id'] ?? job['id'] ?? application['jobId'] ?? '';
-
-    // Send automated message
-    try {
-      final conversationId =
-          application['conversationId']?.toString() ??
-          "conv_${candidateId}_$jobIdVar";
-
-      final String jobTitle = job['title']?.toString() ?? "Job";
-
-      final content = isHired
-          ? "Congratulations $candidateName! You have been hired for the $jobTitle position. We will reach out to you shortly for the next steps."
-          : "Hi $candidateName, thank you for your interest in the $jobTitle position. Unfortunately, we have decided to move forward with other candidates at this time.";
-
-      // 1. Send the Job Card
-      final String companyName =
-          state.company?.name ?? job['company']?.toString() ?? "Company";
-      final String jobLocation =
-          job['location']?.toString() ?? state.company?.location ?? "";
-      final String salaryText =
-          job['salary']?.toString() ??
-          (job['salaryMin'] != null
-              ? "${job['salaryCurrency'] ?? '\$'} ${job['salaryMin']} - ${job['salaryMax'] ?? ''}"
-              : "Salary not specified");
-
-      FirebaseChatService.instance.sendMessage(
-        conversationId,
-        ChatMessageModel(
-          content: "Job Information Card",
-          senderId: FirebaseAuth.instance.currentUser?.uid ?? "recruiter",
-          senderType: "User",
-          type: "job_card",
-          jobData: {
-            "title": job['title']?.toString() ?? "Job Title",
-            "company": companyName,
-            "location": jobLocation,
-            "salary": salaryText,
-            "logoUrl": job['logoUrl'] ?? state.company?.logoUrl,
-            "jobType": job['jobType'] ?? job['employmentType']?.toString(),
-            "workplace": job['workplace'] ?? job['workArrangement']?.toString(),
-          },
-        ),
-      );
-
-      // 2. Send the Text Message
-      FirebaseChatService.instance.sendMessage(
-        conversationId,
-        ChatMessageModel(
-          content: content,
-          senderId: FirebaseAuth.instance.currentUser?.uid ?? "recruiter",
-          senderType: "User",
-          type: "text",
-          jobId: jobIdVar,
-        ),
-      );
-    } catch (e) {
-      debugPrint("Failed to send automated message: $e");
-    }
-
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (context) => Container(
-        height: MediaQuery.of(context).size.height * 0.45,
-        decoration: BoxDecoration(
-          color: Theme.of(context).colorScheme.surface,
-          borderRadius: const BorderRadius.vertical(top: Radius.circular(30)),
-        ),
-        padding: const EdgeInsets.all(24),
-        child: Column(
-          children: [
-            Container(
-              width: 40,
-              height: 4,
-              decoration: BoxDecoration(
-                color: Colors.grey.shade300,
-                borderRadius: BorderRadius.circular(2),
-              ),
-            ),
-            const SizedBox(height: 32),
-            Container(
-              padding: const EdgeInsets.all(20),
-              decoration: BoxDecoration(
-                color: (isHired ? Colors.green : Colors.orange).withValues(
-                  alpha: 0.1,
-                ),
-                shape: BoxShape.circle,
-              ),
-              child: Icon(
-                isHired ? Icons.check_circle : Icons.info_outline,
-                size: 64,
-                color: isHired ? Colors.green : Colors.orange,
-              ),
-            ),
-            const SizedBox(height: 24),
-            Text(
-              isHired ? "Congratulations!" : "Application Updated",
-              style: GoogleFonts.outfit(
-                fontSize: 24,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            const SizedBox(height: 12),
-            Text(
-              isHired
-                  ? "You have successfully hired $candidateName for ${job['title'] ?? 'this position'}."
-                  : "You have rejected $candidateName's application for ${job['title'] ?? 'this position'}.",
-              textAlign: TextAlign.center,
-              style: GoogleFonts.outfit(
-                fontSize: 16,
-                color: Colors.grey.shade600,
-              ),
-            ),
-            const Spacer(),
-            SizedBox(
-              width: double.infinity,
-              height: 56,
-              child: ElevatedButton(
-                onPressed: () {
-                  Navigator.pop(context);
-                  Navigator.pop(context); // Go back to list
-                },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColor.primaryLight,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(16),
-                  ),
-                  elevation: 0,
-                ),
-                child: const Text(
-                  "Done",
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontWeight: FontWeight.bold,
-                    fontSize: 16,
-                  ),
-                ),
-              ),
-            ),
-            const SizedBox(height: 16),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildSection(
-    BuildContext context,
-    String title, {
-    required Widget child,
-  }) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          title,
-          style: TextStyle(
-            fontSize: 16,
-            fontWeight: FontWeight.w600,
-            color: Theme.of(context).colorScheme.primary,
-          ),
-        ),
-        const SizedBox(height: 12),
-        child,
-      ],
-    );
-  }
-
-  Widget _buildInfoRow(
-    BuildContext context,
-    Widget icon,
-    String label,
-    String value,
-  ) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 8),
-      child: Row(
-        children: [
-          icon,
-          const SizedBox(width: 12),
-          Text(
-            label,
-            style: TextStyle(
-              color: Theme.of(context).colorScheme.onSurfaceVariant,
-              fontSize: 14,
-            ),
-          ),
-          const Spacer(),
-          Text(
-            value,
-            style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildStatusBadge(BuildContext context, String status) {
-    Color color;
-    Color bgColor;
-
-    switch (status) {
-      case 'Hired':
-        color = Colors.green;
-        bgColor = Colors.green.withValues(alpha: 0.1);
-        break;
-      case 'Rejected':
-        color = Colors.red;
-        bgColor = Colors.red.withValues(alpha: 0.1);
-        break;
-      default:
-        color = Colors.orange;
-        bgColor = Colors.orange.withValues(alpha: 0.1);
-    }
-
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-      decoration: BoxDecoration(
-        color: bgColor,
-        borderRadius: BorderRadius.circular(20),
-      ),
-      child: Text(
-        status,
-        style: GoogleFonts.inter(
-          fontSize: 12,
-          fontWeight: FontWeight.w600,
-          color: color,
-        ),
-      ),
-    );
-  }
-
-  String _formatDate(dynamic date) {
-    if (date == null) return 'N/A';
-    try {
-      if (date is DateTime) {
-        return '${date.day}/${date.month}/${date.year}';
-      }
-      if (date is int) {
-        final dt = DateTime.fromMillisecondsSinceEpoch(date);
-        return '${dt.day}/${dt.month}/${dt.year}';
-      }
-      final dt = DateTime.parse(date.toString());
-      return '${dt.day}/${dt.month}/${dt.year}';
-    } catch (_) {
-      return 'N/A';
-    }
   }
 }

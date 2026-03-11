@@ -5,7 +5,6 @@ import 'package:intl/intl.dart';
 import 'package:job_finder/core/constants/assets.dart';
 import 'package:job_finder/features/notifications/data/models/notification_model.dart';
 import 'package:job_finder/features/notifications/presentation/provider/notification_provider.dart';
-import 'package:job_finder/core/services/notification_service.dart';
 import 'package:job_finder/shared/widget/shimmer_loading.dart';
 import 'package:job_finder/shared/widget/svg_icon.dart';
 
@@ -19,11 +18,16 @@ class NotificationScreen extends HookConsumerWidget {
     final textTheme = Theme.of(context).textTheme;
 
     useEffect(() {
-      Future.microtask(() {
-        if (context.mounted) {
-          ref.read(notificationControllerProvider.notifier).getNotifications();
-        }
-      });
+      // Only fetch if not already loaded — avoids refetch on every visit
+      if (state.notifications.isEmpty) {
+        Future.microtask(() {
+          if (context.mounted) {
+            ref
+                .read(notificationControllerProvider.notifier)
+                .getNotifications();
+          }
+        });
+      }
       return null;
     }, []);
 
@@ -88,15 +92,15 @@ class NotificationScreen extends HookConsumerWidget {
         elevation: 0,
         scrolledUnderElevation: 0,
       ),
-      body: state.isLoading && state.notifications.isEmpty
-          ? const _NotificationShimmer()
-          : state.notifications.isEmpty
-          ? _buildEmptyState(context)
-          : RefreshIndicator(
-              onRefresh: () => ref
-                  .read(notificationControllerProvider.notifier)
-                  .getNotifications(),
-              child: ListView.builder(
+      body: RefreshIndicator(
+        onRefresh: () => ref
+            .read(notificationControllerProvider.notifier)
+            .getNotifications(),
+        child: state.isLoading && state.notifications.isEmpty
+            ? const _NotificationShimmer()
+            : state.notifications.isEmpty
+            ? _buildEmptyState(context, ref)
+            : ListView.builder(
                 padding: const EdgeInsets.symmetric(
                   horizontal: 20,
                   vertical: 10,
@@ -130,73 +134,81 @@ class NotificationScreen extends HookConsumerWidget {
                   );
                 },
               ),
-            ),
+      ),
     );
   }
 
-  Widget _buildEmptyState(BuildContext context) {
+  Widget _buildEmptyState(BuildContext context, WidgetRef ref) {
     final colorScheme = Theme.of(context).colorScheme;
     final textTheme = Theme.of(context).textTheme;
 
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Container(
-            padding: const EdgeInsets.all(32),
-            decoration: BoxDecoration(
-              color: colorScheme.primary.withValues(alpha: 0.05),
-              shape: BoxShape.circle,
-            ),
-            child: Icon(
-              Icons.notifications_off_outlined,
-              size: 80,
-              color: colorScheme.primary.withValues(alpha: 0.2),
-            ),
-          ),
-          const SizedBox(height: 32),
-          Text(
-            'Keep Up to Date',
-            style: textTheme.headlineSmall?.copyWith(
-              fontWeight: FontWeight.bold,
-              color: colorScheme.onSurface,
-            ),
-          ),
-          const SizedBox(height: 12),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 48),
-            child: Text(
-              'Your notifications will be listed here once you receive them.',
-              textAlign: TextAlign.center,
-              style: textTheme.bodyMedium?.copyWith(
-                color: colorScheme.onSurfaceVariant,
-                height: 1.5,
-              ),
-            ),
-          ),
-          const SizedBox(height: 32),
-          SizedBox(
-            width: 200,
-            height: 54,
-            child: ElevatedButton(
-              onPressed: () {
-                // Refresh logic
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: colorScheme.primary,
-                foregroundColor: Colors.white,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(16),
+    return SingleChildScrollView(
+      physics: const AlwaysScrollableScrollPhysics(),
+      child: SizedBox(
+        height: MediaQuery.of(context).size.height * 0.7,
+        child: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Container(
+                padding: const EdgeInsets.all(32),
+                decoration: BoxDecoration(
+                  color: colorScheme.primary.withValues(alpha: 0.05),
+                  shape: BoxShape.circle,
                 ),
-                elevation: 0,
+                child: Icon(
+                  Icons.notifications_off_outlined,
+                  size: 80,
+                  color: colorScheme.primary.withValues(alpha: 0.2),
+                ),
               ),
-              child: const Text(
-                'Refresh',
-                style: TextStyle(fontWeight: FontWeight.bold),
+              const SizedBox(height: 32),
+              Text(
+                'Keep Up to Date',
+                style: textTheme.headlineSmall?.copyWith(
+                  fontWeight: FontWeight.bold,
+                  color: colorScheme.onSurface,
+                ),
               ),
-            ),
+              const SizedBox(height: 12),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 48),
+                child: Text(
+                  'Your notifications will be listed here once you receive them.',
+                  textAlign: TextAlign.center,
+                  style: textTheme.bodyMedium?.copyWith(
+                    color: colorScheme.onSurfaceVariant,
+                    height: 1.5,
+                  ),
+                ),
+              ),
+              const SizedBox(height: 32),
+              SizedBox(
+                width: 200,
+                height: 54,
+                child: ElevatedButton(
+                  onPressed: () {
+                    ref
+                        .read(notificationControllerProvider.notifier)
+                        .getNotifications();
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: colorScheme.primary,
+                    foregroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                    elevation: 0,
+                  ),
+                  child: const Text(
+                    'Refresh',
+                    style: TextStyle(fontWeight: FontWeight.bold),
+                  ),
+                ),
+              ),
+            ],
           ),
-        ],
+        ),
       ),
     );
   }
@@ -220,10 +232,9 @@ class _NotificationCard extends ConsumerWidget {
               .read(notificationControllerProvider.notifier)
               .markAsRead(notification.id);
         }
-
-        if (notification.link != null && notification.link!.isNotEmpty) {
-          NotificationService.instance.handleLink(notification.link!);
-        }
+        // if (notification.link != null && notification.link!.isNotEmpty) {
+        //   NotificationService.instance.handleLink(notification.link!);
+        // }
       },
       borderRadius: BorderRadius.circular(20),
       child: AnimatedContainer(
@@ -295,10 +306,10 @@ class _NotificationCard extends ConsumerWidget {
                           notification.title,
                           style: textTheme.titleMedium?.copyWith(
                             fontWeight: isRead
-                                ? FontWeight.w600
+                                ? FontWeight.w500
                                 : FontWeight.w800,
                             color: isRead
-                                ? colorScheme.onSurface
+                                ? colorScheme.onSurface.withValues(alpha: 0.6)
                                 : colorScheme.onSurface,
                             fontSize: 15,
                           ),

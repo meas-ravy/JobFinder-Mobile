@@ -7,6 +7,7 @@ import 'package:form_builder_validators/form_builder_validators.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:job_finder/core/constants/assets.dart';
 import 'package:job_finder/core/services/cloudinary_service.dart';
 import 'package:job_finder/features/recruiter/presentation/provider/recruiter_provider.dart';
 import 'package:job_finder/features/recruiter/presentation/provider/recruiter_state.dart';
@@ -15,6 +16,7 @@ import 'package:job_finder/features/recruiter/presentation/shared/form_dropdown_
 import 'package:job_finder/features/recruiter/presentation/shared/form_field_label.dart';
 import 'package:job_finder/features/recruiter/presentation/shared/form_text_input.dart';
 import 'package:job_finder/shared/widget/loading_dialog.dart';
+import 'package:job_finder/shared/widget/svg_icon.dart';
 
 class CreateCompanyScreen extends HookConsumerWidget {
   const CreateCompanyScreen({super.key});
@@ -342,10 +344,15 @@ class _ImageUploadPicker extends StatelessWidget {
                               const SizedBox(width: 4),
                               IconButton(
                                 onPressed: () => onPicked(null),
-                                icon: const Icon(
-                                  Icons.delete_outline_rounded,
+                                // icon: const Icon(
+                                //   Icons.delete_outline_rounded,
+                                //   color: Colors.white,
+                                //   size: 20,
+                                // ),
+                                icon: AppSvgIcon(
+                                  assetName: AppIcon.delete,
                                   color: Colors.white,
-                                  size: 20,
+                                  size: 24,
                                 ),
                                 padding: EdgeInsets.zero,
                                 constraints: const BoxConstraints(),

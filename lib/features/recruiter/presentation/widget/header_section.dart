@@ -45,12 +45,10 @@ class HeaderSection extends ConsumerWidget {
                   ? NetworkImage(company.logoUrl)
                   : null,
               child: (company?.logoUrl == null || company!.logoUrl.isEmpty)
-                  ? Text(
-                      company?.name.characters.firstOrNull?.toUpperCase() ??
-                          'R',
-                      style: textTheme.titleMedium?.copyWith(
-                        color: colorScheme.primary,
-                        fontWeight: FontWeight.bold,
+                  ? CircleAvatar(
+                      radius: 26,
+                      backgroundImage: AssetImage(
+                        "assets/image/image_plaholder.jpg",
                       ),
                     )
                   : null,
@@ -74,7 +72,7 @@ class HeaderSection extends ConsumerWidget {
                   ),
                 ),
                 Text(
-                  company?.name ?? 'Recruiter',
+                  company?.name ?? 'N/A',
                   style: textTheme.bodyLarge?.copyWith(
                     fontWeight: FontWeight.w700,
                     color: colorScheme.onSurface,

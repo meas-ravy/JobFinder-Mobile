@@ -101,7 +101,7 @@ class ProgressRing extends StatelessWidget {
     this.count,
   });
 
-  final int percent;
+  final num percent;
   final Color color;
   final String? count;
 
@@ -113,7 +113,7 @@ class ProgressRing extends StatelessWidget {
       width: 54,
       height: 54,
       child: TweenAnimationBuilder<double>(
-        tween: Tween(begin: 0.0, end: percent / 100),
+        tween: Tween(begin: 0.0, end: percent.toDouble() / 100),
         duration: const Duration(milliseconds: 1500),
         curve: Curves.easeOutCubic,
         builder: (context, value, child) {

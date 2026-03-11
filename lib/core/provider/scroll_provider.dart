@@ -13,12 +13,3 @@ final recruiterHomeScrollControllerProvider = Provider((ref) {
   ref.onDispose(() => controller.dispose());
   return controller;
 });
-
-// tap tap refresh to refresh
-final jobSeekerRefreshKeyProvider = Provider(
-  (ref) => GlobalKey<RefreshIndicatorState>(),
-);
-
-final recruiterRefreshKeyProvider = Provider(
-  (ref) => GlobalKey<RefreshIndicatorState>(),
-);

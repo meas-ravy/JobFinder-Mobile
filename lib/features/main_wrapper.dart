@@ -78,7 +78,7 @@ class MainWrapper extends HookConsumerWidget {
                     curve: Curves.easeInOut,
                   );
                 } else {
-                  ref.read(jobSeekerRefreshKeyProvider).currentState?.show();
+                  ref.read(jobControllerProvider.notifier).fetchAll();
                 }
               }
             } else {

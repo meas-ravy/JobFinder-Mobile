@@ -46,17 +46,6 @@ class SwitchRoleDialog extends StatelessWidget {
             _buildRoleSwitchVisual(context, isDark, isSwitchingToRecruiter),
             const SizedBox(height: 24),
 
-            // Title
-            // Text(
-            //   title,
-            //   style: theme.textTheme.headlineSmall?.copyWith(
-            //     fontWeight: FontWeight.bold,
-            //     color: isDark ? Colors.white : const Color(0xFF1E293B),
-            //   ),
-            //   textAlign: TextAlign.center,
-            // ),
-            // const SizedBox(height: 12),
-
             // Content
             Text(
               content,

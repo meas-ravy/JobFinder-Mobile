@@ -267,11 +267,6 @@ class EditProfilePage extends HookConsumerWidget {
                                 );
                           if (context.mounted) {
                             if (success) {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(
-                                  content: Text('Profile saved successfully!'),
-                                ),
-                              );
                               if (isSetup) {
                                 context.go(AppPath.jobSeekerHome);
                               } else {

@@ -97,31 +97,7 @@ class ApplyJobPage extends HookConsumerWidget {
             );
 
         if (context.mounted) {
-          // Success feedback
-          showDialog(
-            context: context,
-            barrierDismissible: false,
-            builder: (context) => AlertDialog(
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(24),
-              ),
-              title: const Text('Application Sent!'),
-              content: const Text(
-                'Your application has been submitted successfully. Good luck!',
-              ),
-              actions: [
-                TextButton(
-                  onPressed: () {
-                    // Navigate to applications tab and refresh list
-                    ref.invalidate(myApplicationsProvider);
-                    ref.read(mainWrapperIndexProvider.notifier).state = 2;
-                    context.go(AppPath.jobSeekerHome);
-                  },
-                  child: const Text('OK'),
-                ),
-              ],
-            ),
-          );
+          _showSuccessDialog(context, ref);
         }
       } catch (e) {
         if (context.mounted) {
@@ -486,6 +462,112 @@ class ApplyJobPage extends HookConsumerWidget {
       ),
     );
   }
+
+  void _showSuccessDialog(BuildContext context, WidgetRef ref) {
+    final colorScheme = Theme.of(context).colorScheme;
+    final textTheme = Theme.of(context).textTheme;
+    const successGreen = Color(0xFF10B981);
+
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      isDismissible: false,
+      enableDrag: false,
+      isScrollControlled: true,
+      builder: (context) => Container(
+        decoration: BoxDecoration(
+          color: colorScheme.surface,
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
+          border: Border.all(color: successGreen.withValues(alpha: 0.1)),
+        ),
+        padding: const EdgeInsets.fromLTRB(24, 12, 24, 32),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // Drag handle (visual only as we disabled dragging to force interaction)
+            Container(
+              width: 40,
+              height: 4,
+              margin: const EdgeInsets.only(bottom: 24),
+              decoration: BoxDecoration(
+                color: colorScheme.outlineVariant.withValues(alpha: 0.4),
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+
+            // Glowing success icon
+            Container(
+              width: 72,
+              height: 72,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: successGreen.withValues(alpha: 0.12),
+                boxShadow: [
+                  BoxShadow(
+                    color: successGreen.withValues(alpha: 0.2),
+                    blurRadius: 20,
+                    spreadRadius: 2,
+                  ),
+                ],
+              ),
+              child: const Icon(
+                Icons.check_circle_rounded,
+                color: successGreen,
+                size: 36,
+              ),
+            ),
+            const SizedBox(height: 20),
+
+            // Title
+            Text(
+              'Application Sent!',
+              style: textTheme.titleLarge?.copyWith(
+                fontWeight: FontWeight.w800,
+                color: colorScheme.onSurface,
+              ),
+            ),
+            const SizedBox(height: 12),
+
+            // Subtitle
+            Text(
+              'Your application has been submitted successfully. Good luck!',
+              textAlign: TextAlign.center,
+              style: textTheme.bodyMedium?.copyWith(
+                color: colorScheme.onSurface.withValues(alpha: 0.55),
+                height: 1.5,
+              ),
+            ),
+            const SizedBox(height: 28),
+
+            // Action button
+            SizedBox(
+              width: double.infinity,
+              height: 52,
+              child: FilledButton(
+                style: FilledButton.styleFrom(
+                  backgroundColor: successGreen,
+                  foregroundColor: Colors.white,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                  elevation: 0,
+                ),
+                onPressed: () {
+                  ref.invalidate(myApplicationsProvider);
+                  ref.read(mainWrapperIndexProvider.notifier).state = 2;
+                  context.go(AppPath.jobSeekerHome);
+                },
+                child: const Text(
+                  'View My Applications',
+                  style: TextStyle(fontWeight: FontWeight.w700, fontSize: 16),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
 }
 
 class DashedBorderPainter extends CustomPainter {
@@ -535,27 +617,108 @@ class DashedBorderPainter extends CustomPainter {
 }
 
 void _showErrorDialog(BuildContext context, String message) {
-  showDialog(
+  final colorScheme = Theme.of(context).colorScheme;
+  final textTheme = Theme.of(context).textTheme;
+  const errorRed = Color(0xFFF43F5E);
+
+  showModalBottomSheet(
     context: context,
-    builder: (context) => AlertDialog(
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
-      title: const Row(
+    backgroundColor: Colors.transparent,
+    isScrollControlled: true,
+    builder: (context) => Container(
+      decoration: BoxDecoration(
+        color: colorScheme.surface,
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
+        border: Border.all(color: errorRed.withValues(alpha: 0.1)),
+      ),
+      padding: const EdgeInsets.fromLTRB(24, 12, 24, 32),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(Icons.error_outline, color: Colors.redAccent, size: 28),
-          SizedBox(width: 12),
-          Text('Application Error'),
+          // Drag handle
+          Container(
+            width: 40,
+            height: 4,
+            margin: const EdgeInsets.only(bottom: 24),
+            decoration: BoxDecoration(
+              color: colorScheme.outlineVariant.withValues(alpha: 0.4),
+              borderRadius: BorderRadius.circular(2),
+            ),
+          ),
+
+          // Glowing error icon
+          Container(
+            width: 72,
+            height: 72,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: errorRed.withValues(alpha: 0.12),
+              boxShadow: [
+                BoxShadow(
+                  color: errorRed.withValues(alpha: 0.2),
+                  blurRadius: 20,
+                  spreadRadius: 2,
+                ),
+              ],
+            ),
+            child: const Icon(
+              Icons.error_outline_rounded,
+              color: errorRed,
+              size: 36,
+            ),
+          ),
+          const SizedBox(height: 20),
+
+          // Title
+          Text(
+            'Application Error',
+            style: textTheme.titleLarge?.copyWith(
+              fontWeight: FontWeight.w800,
+              color: colorScheme.onSurface,
+            ),
+          ),
+          const SizedBox(height: 12),
+
+          // Message
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: colorScheme.surfaceContainerHighest.withValues(alpha: 0.4),
+              borderRadius: BorderRadius.circular(16),
+            ),
+            child: Text(
+              message,
+              textAlign: TextAlign.center,
+              style: textTheme.bodyMedium?.copyWith(
+                color: colorScheme.onSurface.withValues(alpha: 0.7),
+                height: 1.5,
+              ),
+            ),
+          ),
+          const SizedBox(height: 28),
+
+          // Action button
+          SizedBox(
+            width: double.infinity,
+            height: 52,
+            child: FilledButton(
+              style: FilledButton.styleFrom(
+                backgroundColor: errorRed,
+                foregroundColor: Colors.white,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                elevation: 0,
+              ),
+              onPressed: () => Navigator.pop(context),
+              child: const Text(
+                'Got it',
+                style: TextStyle(fontWeight: FontWeight.w700, fontSize: 16),
+              ),
+            ),
+          ),
         ],
       ),
-      content: Text(message),
-      actions: [
-        TextButton(
-          onPressed: () => context.pop(),
-          child: const Text(
-            'OK',
-            style: TextStyle(fontWeight: FontWeight.bold),
-          ),
-        ),
-      ],
     ),
   );
 }

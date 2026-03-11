@@ -2,9 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
+import 'package:job_finder/core/constants/assets.dart';
 import 'package:job_finder/core/routes/app_path.dart';
 import 'package:job_finder/features/recruiter/data/models/conversation_list_model.dart';
 import 'package:job_finder/features/recruiter/presentation/provider/recruiter_provider.dart';
+import 'package:job_finder/features/recruiter/presentation/provider/recruiter_state.dart';
+import 'package:job_finder/shared/widget/svg_icon.dart';
 
 class RecruiterMessagePage extends ConsumerStatefulWidget {
   const RecruiterMessagePage({super.key});
@@ -54,6 +57,13 @@ class _RecruiterMessagePageState extends ConsumerState<RecruiterMessagePage> {
               )
               .toList();
 
+    // Use lastAction to isolate the loading to conversations only,
+    // avoiding false positive when other operations set isLoading=true
+    final isConversationsLoading =
+        state.isLoading &&
+        (state.lastAction == RecruiterAction.getConversations ||
+            conversations.isEmpty);
+
     return Scaffold(
       appBar: AppBar(
         title: Text(
@@ -65,12 +75,6 @@ class _RecruiterMessagePageState extends ConsumerState<RecruiterMessagePage> {
           ),
         ),
         elevation: 0,
-        actions: [
-          IconButton(
-            icon: Icon(Icons.more_horiz, color: colorScheme.onSurface),
-            onPressed: () {},
-          ),
-        ],
       ),
       body: Column(
         children: [
@@ -82,9 +86,12 @@ class _RecruiterMessagePageState extends ConsumerState<RecruiterMessagePage> {
               decoration: InputDecoration(
                 hintText: "Search messages...",
                 hintStyle: TextStyle(color: colorScheme.onSurfaceVariant),
-                prefixIcon: Icon(
-                  Icons.search,
-                  color: colorScheme.onSurfaceVariant,
+                prefixIcon: Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: AppSvgIcon(
+                    assetName: AppIcon.search,
+                    color: colorScheme.onSurfaceVariant,
+                  ),
                 ),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
@@ -107,37 +114,70 @@ class _RecruiterMessagePageState extends ConsumerState<RecruiterMessagePage> {
                     .read(recruiterControllerProvider.notifier)
                     .getConversations();
               },
-              child: state.isLoading && conversations.isEmpty
-                  ? Center(
-                      child: CircularProgressIndicator(
-                        color: colorScheme.primary,
-                      ),
-                    )
-                  : filteredConversations.isEmpty
-                  ? (conversations.isEmpty
-                        ? _buildEmptyState(colorScheme)
-                        : Center(
-                            child: Text(
-                              "No messages match your search.",
-                              style: GoogleFonts.outfit(
-                                color: colorScheme.onSurfaceVariant,
-                                fontSize: 16,
-                              ),
-                            ),
-                          ))
-                  : ListView.separated(
-                      itemCount: filteredConversations.length,
-                      separatorBuilder: (context, index) =>
-                          const SizedBox(height: 16),
-                      itemBuilder: (context, index) {
-                        final conversation = filteredConversations[index];
-                        return _ConversationTile(conversation: conversation);
-                      },
-                    ),
+              child: _buildContent(
+                context: context,
+                colorScheme: colorScheme,
+                isLoading: isConversationsLoading,
+                conversations: conversations,
+                filteredConversations: filteredConversations,
+              ),
             ),
           ),
         ],
       ),
+    );
+  }
+
+  Widget _buildContent({
+    required BuildContext context,
+    required ColorScheme colorScheme,
+    required bool isLoading,
+    required List<ConversationListModel> conversations,
+    required List<ConversationListModel> filteredConversations,
+  }) {
+    // Always use scrollable physics so RefreshIndicator gesture fires in ALL states
+    const physics = AlwaysScrollableScrollPhysics();
+
+    if (isLoading) {
+      return SingleChildScrollView(
+        physics: physics,
+        child: SizedBox(
+          height: 400,
+          child: Center(
+            child: CircularProgressIndicator(color: colorScheme.primary),
+          ),
+        ),
+      );
+    }
+
+    if (filteredConversations.isEmpty) {
+      return SingleChildScrollView(
+        physics: physics,
+        child: SizedBox(
+          height: 400,
+          child: conversations.isEmpty
+              ? _buildEmptyState(colorScheme)
+              : Center(
+                  child: Text(
+                    "No messages match your search.",
+                    style: GoogleFonts.outfit(
+                      color: colorScheme.onSurfaceVariant,
+                      fontSize: 16,
+                    ),
+                  ),
+                ),
+        ),
+      );
+    }
+
+    return ListView.separated(
+      physics: physics,
+      itemCount: filteredConversations.length,
+      separatorBuilder: (context, index) => const SizedBox(height: 16),
+      itemBuilder: (context, index) {
+        final conversation = filteredConversations[index];
+        return _ConversationTile(conversation: conversation);
+      },
     );
   }
 

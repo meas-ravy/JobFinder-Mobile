@@ -28,13 +28,16 @@ class RecruiterStatsPage extends HookConsumerWidget {
     final jobs = dashboardData?['jobs'] as List<dynamic>? ?? [];
 
     useEffect(() {
-      Future.delayed(Duration.zero, () {
-        if (context.mounted) {
-          ref
-              .read(recruiterControllerProvider.notifier)
-              .getRecruiterDashboard();
-        }
-      });
+      // Only fetch if data is not already loaded → avoids re-fetching on every tab switch
+      if (ref.read(recruiterControllerProvider).dashboardData == null) {
+        Future.delayed(Duration.zero, () {
+          if (context.mounted) {
+            ref
+                .read(recruiterControllerProvider.notifier)
+                .getRecruiterDashboard();
+          }
+        });
+      }
       return null;
     }, []);
 
@@ -53,100 +56,98 @@ class RecruiterStatsPage extends HookConsumerWidget {
       ),
       body: recruiterState.isLoading && dashboardData == null
           ? const _StatsShimmer()
-          : SingleChildScrollView(
-              padding: const EdgeInsets.fromLTRB(20, 16, 20, 24),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(
-                        'Last 1 Year',
-                        style: textTheme.titleLarge?.copyWith(
-                          fontWeight: FontWeight.w800,
-                          fontSize: 18,
-                          color: colorScheme.onSurface,
-                        ),
+          : RefreshIndicator(
+              onRefresh: () async {
+                await ref
+                    .read(recruiterControllerProvider.notifier)
+                    .getRecruiterDashboard();
+              },
+              child: SingleChildScrollView(
+                physics: const AlwaysScrollableScrollPhysics(),
+                padding: const EdgeInsets.fromLTRB(20, 16, 20, 24),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Last 1 Year',
+                      style: textTheme.titleLarge?.copyWith(
+                        fontWeight: FontWeight.w800,
+                        fontSize: 18,
+                        color: colorScheme.onSurface,
                       ),
-                      InkWell(
-                        onTap: () {},
-                        child: Row(
-                          children: [
-                            Text(
-                              'Select Year',
-                              style: textTheme.bodyMedium?.copyWith(
-                                fontWeight: FontWeight.bold,
-                                color: colorScheme.primary,
-                              ),
-                            ),
-                            const SizedBox(width: 4),
-                            Icon(
-                              Icons.keyboard_arrow_down_rounded,
-                              color: colorScheme.primary,
-                              size: 20,
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 20),
-                  _buildRadarCard(colorScheme, textTheme, chartData),
-                  const SizedBox(height: 16),
-                  _buildLegend(colorScheme, summary),
-                  const SizedBox(height: 20),
-                  TabBar(
-                    controller: tabController,
-                    dividerColor: colorScheme.outline.withValues(alpha: 0.05),
-                    indicatorColor: colorScheme.primary,
-                    indicatorSize: TabBarIndicatorSize.tab,
-                    labelColor: colorScheme.primary,
-                    unselectedLabelColor: colorScheme.onSurfaceVariant,
-                    labelStyle: textTheme.bodyMedium?.copyWith(
-                      fontWeight: FontWeight.w700,
                     ),
-                    unselectedLabelStyle: textTheme.bodyMedium?.copyWith(
-                      fontWeight: FontWeight.w600,
-                    ),
-                    tabs: const [
-                      Tab(text: 'Applied'),
-                      Tab(text: 'Interview'),
-                      Tab(text: 'Confirm'),
-                    ],
-                  ),
-                  const SizedBox(height: 16),
-                  if (jobs.isEmpty)
-                    const Center(
-                      child: Padding(
-                        padding: EdgeInsets.symmetric(vertical: 24),
-                        child: Text('No job statistics available'),
+                    const SizedBox(height: 20),
+                    _buildRadarCard(colorScheme, textTheme, chartData),
+                    const SizedBox(height: 16),
+                    _buildLegend(colorScheme, summary),
+                    const SizedBox(height: 20),
+                    TabBar(
+                      controller: tabController,
+                      dividerColor: colorScheme.outline.withValues(alpha: 0.05),
+                      indicatorColor: colorScheme.primary,
+                      indicatorSize: TabBarIndicatorSize.tab,
+                      labelColor: colorScheme.primary,
+                      unselectedLabelColor: colorScheme.onSurfaceVariant,
+                      labelStyle: textTheme.bodyMedium?.copyWith(
+                        fontWeight: FontWeight.w700,
                       ),
-                    )
-                  else
-                    ...jobs.map((item) {
-                      final type = tabIndex == 0
-                          ? 'applied'
-                          : (tabIndex == 1 ? 'interview' : 'confirm');
-                      final count = (item[type] as num? ?? 0).toInt();
-                      if (count == 0 && jobs.length > 3) {
-                        return const SizedBox.shrink();
-                      }
-                      // Hide zero stats if too many entries
-
-                      return Padding(
-                        padding: const EdgeInsets.only(bottom: 12),
-                        child: _buildJobStatTile(
-                          item['title']?.toString() ?? 'Unknown Job',
-                          count,
-                          type.capitalize(),
-                          colorScheme,
-                          textTheme,
-                          context,
+                      unselectedLabelStyle: textTheme.bodyMedium?.copyWith(
+                        fontWeight: FontWeight.w600,
+                      ),
+                      tabs: const [
+                        Tab(text: 'Applied'),
+                        Tab(text: 'Interview'),
+                        Tab(text: 'Confirm'),
+                      ],
+                    ),
+                    const SizedBox(height: 16),
+                    if (jobs.isEmpty)
+                      const Center(
+                        child: Padding(
+                          padding: EdgeInsets.symmetric(vertical: 24),
+                          child: Text('No job statistics available'),
                         ),
-                      );
-                    }),
-                ],
+                      )
+                    else
+                      Builder(
+                        builder: (context) {
+                          final type = tabIndex == 0
+                              ? 'applied'
+                              : (tabIndex == 1 ? 'interview' : 'confirm');
+                          // Compute max to show relative progress rings
+                          final maxCount = jobs.fold<int>(0, (prev, item) {
+                            final v = (item[type] as num? ?? 0).toInt();
+                            return v > prev ? v : prev;
+                          });
+                          return Column(
+                            children: [
+                              ...jobs.map((item) {
+                                final count = (item[type] as num? ?? 0).toInt();
+                                if (count == 0 && jobs.length > 3) {
+                                  return const SizedBox.shrink();
+                                }
+                                final percent = maxCount > 0
+                                    ? (count / maxCount) * 100
+                                    : 0.0;
+                                return Padding(
+                                  padding: const EdgeInsets.only(bottom: 12),
+                                  child: _buildJobStatTile(
+                                    item['title']?.toString() ?? 'Unknown Job',
+                                    count,
+                                    percent,
+                                    type.capitalize(),
+                                    colorScheme,
+                                    textTheme,
+                                    context,
+                                  ),
+                                );
+                              }),
+                            ],
+                          );
+                        },
+                      ),
+                  ],
+                ),
               ),
             ),
     );
@@ -155,6 +156,7 @@ class RecruiterStatsPage extends HookConsumerWidget {
   Widget _buildJobStatTile(
     String title,
     int count,
+    double percent,
     String label,
     ColorScheme colorScheme,
     TextTheme textTheme,
@@ -193,7 +195,7 @@ class RecruiterStatsPage extends HookConsumerWidget {
             ),
           ),
           ProgressRing(
-            percent: 100, // Static for now as count is absolute
+            percent: percent,
             color: colorScheme.primary,
             count: '+$count',
           ),

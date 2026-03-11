@@ -150,6 +150,10 @@ class JobDetailInfoCard extends StatelessWidget {
 
   String _formatSalaryRange(JobEntity job) {
     if (job.salaryMin != null && job.salaryMax != null) {
+      // Both 0 → treat as negotiable
+      if (job.salaryMin! == 0 && job.salaryMax! == 0) {
+        return 'Salary Negotiable';
+      }
       final period = job.salaryPeriod?.toLowerCase() ?? 'month';
       return '\$${job.salaryMin!.toInt()} - \$${job.salaryMax!.toInt()} /$period';
     }

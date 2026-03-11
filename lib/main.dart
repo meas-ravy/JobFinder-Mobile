@@ -70,9 +70,11 @@ Future<void> main() async {
     }
   }
 
-  // 4️⃣ Initialize Notifications (AFTER auth)
-  await NotificationService.instance.initialize();
-  await AgoraService.instance.initialize(AgoraConfig.appId);
+  // 4️⃣ Initialize Notifications + Agora in parallel (AFTER auth)
+  await Future.wait([
+    NotificationService.instance.initialize(),
+    AgoraService.instance.initialize(AgoraConfig.appId),
+  ]);
 
   // 5️⃣ Decide initial route
   String initialRoute = AppPath.splash;
@@ -115,6 +117,14 @@ class MyApp extends StatefulWidget {
 class _MyAppState extends State<MyApp> {
   late final AppRouter _appRouter;
 
+  // Cache font families so they are not re-allocated on every rebuild
+  static final _interFont = GoogleFonts.inter().fontFamily;
+  static final _battambangFont = GoogleFonts.battambang().fontFamily;
+  static final _notoJpFont = GoogleFonts.notoSansJp().fontFamily;
+  static final _notoScFont = GoogleFonts.notoSansSc().fontFamily;
+  static final _notoLaoFont = GoogleFonts.notoSansLao().fontFamily;
+  static final _notoKrFont = GoogleFonts.notoSansKr().fontFamily;
+
   @override
   void initState() {
     super.initState();
@@ -153,20 +163,20 @@ class _MyAppState extends State<MyApp> {
   }
 
   String? _getFontFamily(Locale? locale) {
-    if (locale == null) return GoogleFonts.inter().fontFamily;
+    if (locale == null) return _interFont;
     switch (locale.languageCode) {
       case 'km':
-        return GoogleFonts.battambang().fontFamily;
+        return _battambangFont;
       case 'ja':
-        return GoogleFonts.notoSansJp().fontFamily;
+        return _notoJpFont;
       case 'zh':
-        return GoogleFonts.notoSansSc().fontFamily;
+        return _notoScFont;
       case 'lo':
-        return GoogleFonts.notoSansLao().fontFamily;
+        return _notoLaoFont;
       case 'ko':
-        return GoogleFonts.notoSansKr().fontFamily;
+        return _notoKrFont;
       default:
-        return GoogleFonts.inter().fontFamily;
+        return _interFont;
     }
   }
 }

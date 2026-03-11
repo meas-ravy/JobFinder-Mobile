@@ -126,7 +126,6 @@ class JobSeekerHomePage extends HookConsumerWidget {
     return Scaffold(
       body: SafeArea(
         child: RefreshIndicator(
-          key: ref.watch(jobSeekerRefreshKeyProvider),
           onRefresh: () async {
             await Future.wait([
               ref.read(profileControllerProvider.notifier).fetchProfile(),

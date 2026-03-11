@@ -25,7 +25,7 @@ class JobSeekerCard extends StatelessWidget {
     final period = job.salaryPeriod ?? 'month';
 
     if (job.salaryMin == null || job.salaryMax == null) {
-      if (job.salaryFixed != null) {
+      if (job.salaryFixed != null && job.salaryFixed! > 0) {
         final fixedFormatted = job.salaryFixed!
             .toInt()
             .toString()
@@ -35,6 +35,11 @@ class JobSeekerCard extends StatelessWidget {
             );
         return '$currency$fixedFormatted /$period';
       }
+      return 'Salary negotiable';
+    }
+
+    // Both min and max are 0 → treat as negotiable
+    if (job.salaryMin! == 0 && job.salaryMax! == 0) {
       return 'Salary negotiable';
     }
 

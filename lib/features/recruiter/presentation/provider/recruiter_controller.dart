@@ -273,6 +273,7 @@ class RecruiterController extends StateNotifier<RecruiterState> {
   }
 
   Future<void> refreshAllJobs() async {
+    state = state.copyWith(isRefreshing: true);
     await Future.wait([
       getJobs(status: 'Active'),
       getJobs(status: 'Draft'),
@@ -280,6 +281,7 @@ class RecruiterController extends StateNotifier<RecruiterState> {
       getJobs(status: 'Rejected'),
       getJobs(status: 'Closed'),
     ]);
+    state = state.copyWith(isRefreshing: false);
   }
 
   Future<void> updateJobStatus(String jobId, String status) async {
@@ -405,6 +407,10 @@ class RecruiterController extends StateNotifier<RecruiterState> {
         );
       },
     );
+  }
+
+  void clearApplicationDetails() {
+    state = state.copyWith(applicationDetails: null);
   }
 
   Future<void> getApplicationDetails(String id, {bool refresh = false}) async {

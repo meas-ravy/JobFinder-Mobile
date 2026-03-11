@@ -12,6 +12,7 @@ import 'package:job_finder/features/recruiter/presentation/screen/recruiter_stat
 import 'package:job_finder/l10n/app_localizations.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:job_finder/core/provider/scroll_provider.dart';
+import 'package:job_finder/features/recruiter/presentation/provider/recruiter_provider.dart';
 
 class ButonNavRecruiter extends HookConsumerWidget {
   final int? initialIndex;
@@ -68,7 +69,9 @@ class ButonNavRecruiter extends HookConsumerWidget {
                     curve: Curves.easeInOut,
                   );
                 } else {
-                  ref.read(recruiterRefreshKeyProvider).currentState?.show();
+                  ref
+                      .read(recruiterControllerProvider.notifier)
+                      .refreshAllJobs();
                 }
               }
             } else {

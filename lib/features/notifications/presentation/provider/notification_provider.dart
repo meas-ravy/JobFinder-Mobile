@@ -50,9 +50,7 @@ class NotificationController extends StateNotifier<NotificationState> {
   }) : _getNotificationsUseCase = getNotificationsUseCase,
        _markAsReadUseCase = markAsReadUseCase,
        _ref = ref,
-       super(NotificationState.initial()) {
-    getNotifications();
-  }
+       super(NotificationState.initial());
 
   Future<void> getNotifications() async {
     state = state.copyWith(isLoading: true, errorMessage: null);

@@ -1,10 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:lottie/lottie.dart';
 import 'package:job_finder/core/constants/assets.dart';
-import 'package:job_finder/core/helper/secure_storage.dart';
 import 'package:job_finder/core/routes/app_path.dart';
 import 'package:job_finder/shared/widget/svg_icon.dart';
 
@@ -93,42 +91,13 @@ class _SplashScreenState extends State<SplashScreen>
   }
 
   Future<void> _checkAuthAndNavigate() async {
-    // Wait for splash animations to show (minimum 2 seconds)
-    await Future.delayed(const Duration(seconds: 2));
+    // Wait just long enough for the intro animation to finish (~900ms)
+    // main() has already calculated the correct initial route and routed
+    // here only for first-time users, so we always go to onboarding.
+    await Future.delayed(const Duration(milliseconds: 1200));
 
     if (!mounted) return;
-
-    // Check stored token, role, and first-time flag
-    final storage = TokenStorageImpl(const FlutterSecureStorage());
-    final token = await storage.read();
-    final role = await storage.readRole();
-    final hasSeenOnboarding = await storage.readHasSeenOnboarding();
-
-    if (!mounted) return;
-
-    // Route based on auth state and first-time flag
-    if (token == null || token.isEmpty) {
-      if (!hasSeenOnboarding) {
-        // Very first time using the app → go to onboarding
-        context.go(AppPath.wellcomescreen);
-      } else {
-        // Not first time but not logged in → go straight to login (Send OTP)
-        context.go(AppPath.sendOtp);
-      }
-    } else if (role == null || role.isEmpty) {
-      // Has token but no role → go to role selection
-      context.go(AppPath.selectRole);
-    } else {
-      // Has token + role → go to appropriate home
-      if (role == 'Job_finder') {
-        context.go(AppPath.jobSeekerHome);
-      } else if (role == 'Recruiter') {
-        context.go(AppPath.recruiterHome);
-      } else {
-        // Unknown role → go to role selection
-        context.go(AppPath.selectRole);
-      }
-    }
+    context.go(AppPath.wellcomescreen);
   }
 
   @override

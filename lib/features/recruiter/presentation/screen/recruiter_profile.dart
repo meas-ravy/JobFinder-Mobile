@@ -340,13 +340,10 @@ class _ProfileProgressCard extends StatelessWidget {
                         : null,
                     child:
                         (company?.logoUrl == null || company!.logoUrl.isEmpty)
-                        ? Text(
-                            company?.name.characters.firstOrNull
-                                    ?.toUpperCase() ??
-                                'C',
-                            style: textTheme.headlineMedium?.copyWith(
-                              color: colorScheme.primary,
-                              fontWeight: FontWeight.bold,
+                        ? CircleAvatar(
+                            radius: 50,
+                            backgroundImage: AssetImage(
+                              "assets/image/image_plaholder.jpg",
                             ),
                           )
                         : null,
@@ -413,7 +410,7 @@ class _ProfileProgressCard extends StatelessWidget {
                   ),
                   _VerticalDottedLine(colorScheme: colorScheme),
                   _StatItem(
-                    value: 0, 
+                    value: 0,
                     label: 'Applied',
                     textTheme: textTheme,
                     colorScheme: colorScheme,

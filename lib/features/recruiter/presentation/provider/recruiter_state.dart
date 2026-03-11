@@ -25,6 +25,7 @@ enum RecruiterAction {
 class RecruiterState {
   const RecruiterState({
     this.isLoading = false,
+    this.isRefreshing = false,
     this.errorMessage,
     this.data,
     this.lastAction,
@@ -45,6 +46,7 @@ class RecruiterState {
   });
 
   final bool isLoading;
+  final bool isRefreshing;
   final String? errorMessage;
   final DataMap? data;
   final RecruiterAction? lastAction;
@@ -67,6 +69,7 @@ class RecruiterState {
 
   RecruiterState copyWith({
     bool? isLoading,
+    bool? isRefreshing,
     String? errorMessage,
     DataMap? data,
     RecruiterAction? lastAction,
@@ -78,7 +81,7 @@ class RecruiterState {
     List<dynamic>? rejectedJobs,
     List<dynamic>? previousJobs,
     List<dynamic>? applicants,
-    DataMap? applicationDetails,
+    Object? applicationDetails = _sentinel,
     DataMap? dashboardData,
     List<dynamic>? conversations,
     String? agoraToken,
@@ -87,6 +90,7 @@ class RecruiterState {
   }) {
     return RecruiterState(
       isLoading: isLoading ?? this.isLoading,
+      isRefreshing: isRefreshing ?? this.isRefreshing,
       errorMessage: errorMessage,
       data: data ?? this.data,
       lastAction: lastAction ?? this.lastAction,
@@ -100,7 +104,9 @@ class RecruiterState {
       rejectedJobs: rejectedJobs ?? this.rejectedJobs,
       previousJobs: previousJobs ?? this.previousJobs,
       applicants: applicants ?? this.applicants,
-      applicationDetails: applicationDetails ?? this.applicationDetails,
+      applicationDetails: applicationDetails == _sentinel
+          ? this.applicationDetails
+          : applicationDetails as DataMap?,
       dashboardData: dashboardData ?? this.dashboardData,
       conversations: conversations ?? this.conversations,
       agoraToken: agoraToken ?? this.agoraToken,
