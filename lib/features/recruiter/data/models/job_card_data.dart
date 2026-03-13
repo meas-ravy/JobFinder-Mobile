@@ -1,3 +1,4 @@
+import 'package:job_finder/core/helper/typedef.dart';
 import 'package:job_finder/features/recruiter/data/models/company_model.dart';
 
 class JobCardData {
@@ -38,7 +39,7 @@ class JobCardData {
   });
 
   factory JobCardData.fromJson(
-    Map<String, dynamic> json, {
+    DataMap json, {
     CompanyModel? fallbackCompany,
   }) {
     // Determine company name and logo

@@ -8,14 +8,12 @@ import 'package:go_router/go_router.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:job_finder/core/services/cloudinary_service.dart';
-import 'package:job_finder/features/recruiter/presentation/provider/recruiter_provider.dart';
-import 'package:job_finder/features/recruiter/presentation/provider/recruiter_state.dart';
+import 'package:job_finder/features/recruiter/presentation/provider/company/company_profile_controller.dart';
 import 'package:job_finder/features/recruiter/presentation/shared/dashed_rectpainter.dart';
 import 'package:job_finder/features/recruiter/presentation/shared/form_dropdown_input.dart';
 import 'package:job_finder/features/recruiter/presentation/shared/form_field_label.dart';
 import 'package:job_finder/features/recruiter/presentation/shared/form_text_input.dart';
 import 'package:job_finder/shared/widget/loading_dialog.dart';
-
 import 'package:job_finder/shared/widget/shimmer_loading.dart';
 
 class EditCompanyScreen extends HookConsumerWidget {
@@ -27,7 +25,7 @@ class EditCompanyScreen extends HookConsumerWidget {
     final colorScheme = Theme.of(context).colorScheme;
     final textTheme = Theme.of(context).textTheme;
 
-    final recruiterState = ref.watch(recruiterControllerProvider);
+    final recruiterState = ref.watch(companyProfileProvider);
     final company = recruiterState.company;
 
     final selectedImage = useState<File?>(null);
@@ -183,26 +181,15 @@ class EditCompanyScreen extends HookConsumerWidget {
                       }
 
                       await ref
-                          .read(recruiterControllerProvider.notifier)
+                          .read(companyProfileProvider.notifier)
                           .updateCompany(values);
 
                       if (!context.mounted) return;
                       LoadingDialog.hide(context);
 
-                      final updatedState = ref.read(
-                        recruiterControllerProvider,
-                      );
+                      final updatedState = ref.read(companyProfileProvider);
 
-                      if (updatedState.errorMessage == null &&
-                          updatedState.lastAction ==
-                              RecruiterAction.updateCompany) {
-                        // ScaffoldMessenger.of(context).showSnackBar(
-                        //   const SnackBar(
-                        //     content: Text(
-                        //       'Company profile updated successfully!',
-                        //     ),
-                        //   ),
-                        // );
+                      if (updatedState.errorMessage == null) {
                         context.pop();
                       } else {
                         final error = updatedState.errorMessage;

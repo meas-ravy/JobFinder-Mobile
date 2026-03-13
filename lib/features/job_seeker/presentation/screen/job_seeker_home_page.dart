@@ -15,7 +15,7 @@ import 'package:job_finder/features/job_seeker/presentation/provider/tip_provide
 import 'package:job_finder/features/job_seeker/presentation/provider/job_provider.dart';
 import 'package:job_finder/features/job_seeker/presentation/widget/job_seeker_home_shimmer.dart';
 import 'package:job_finder/features/notifications/presentation/provider/notification_provider.dart';
-import 'package:job_finder/core/provider/scroll_provider.dart';
+import 'package:job_finder/shared/provider/scroll_provider.dart';
 
 class JobSeekerHomePage extends HookConsumerWidget {
   const JobSeekerHomePage({super.key});

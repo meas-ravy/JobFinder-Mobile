@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
-import 'package:job_finder/features/recruiter/presentation/provider/recruiter_state.dart';
+import 'package:job_finder/features/recruiter/domain/entity/application_detail_entity.dart';
+import 'package:job_finder/features/recruiter/presentation/provider/applications/recruiter_applications_state.dart';
 
-/// Shows either the hired/rejected status banner OR the Hire/Reject action buttons.
 class ApplicationActionButtons extends StatelessWidget {
   const ApplicationActionButtons({
     super.key,
@@ -14,8 +14,8 @@ class ApplicationActionButtons extends StatelessWidget {
     required this.onConfirmAction,
   });
 
-  final Map<String, dynamic> application;
-  final RecruiterState recruiterState;
+  final ApplicationDetailEntity application;
+  final RecruiterApplicationsState recruiterState;
   final ValueNotifier<String?> updatingStatus;
   final ValueNotifier<bool> isLoadingDialogOpen;
   final String id;
@@ -30,13 +30,13 @@ class ApplicationActionButtons extends StatelessWidget {
   onConfirmAction;
 
   bool get _isDecided =>
-      application['status'] == 'Hired' ||
-      application['status'] == 'Rejected' ||
+      application.status == 'Hired' ||
+      application.status == 'Rejected' ||
       updatingStatus.value == 'Hired' ||
       updatingStatus.value == 'Rejected';
 
   bool get _isHired =>
-      application['status'] == 'Hired' || updatingStatus.value == 'Hired';
+      application.status == 'Hired' || updatingStatus.value == 'Hired';
 
   @override
   Widget build(BuildContext context) {
@@ -76,8 +76,6 @@ class ApplicationActionButtons extends StatelessWidget {
               ),
               child:
                   recruiterState.isLoading &&
-                      recruiterState.lastAction ==
-                          RecruiterAction.updateApplicationStatus &&
                       updatingStatus.value == 'Rejected'
                   ? const SizedBox(
                       height: 20,
@@ -118,8 +116,6 @@ class ApplicationActionButtons extends StatelessWidget {
               ),
               child:
                   recruiterState.isLoading &&
-                      recruiterState.lastAction ==
-                          RecruiterAction.updateApplicationStatus &&
                       updatingStatus.value == 'Hired'
                   ? const SizedBox(
                       height: 20,
@@ -153,7 +149,7 @@ class _DecidedBanner extends StatelessWidget {
 
   final bool isHired;
   final ValueNotifier<String?> updatingStatus;
-  final Map<String, dynamic> application;
+  final ApplicationDetailEntity application;
 
   @override
   Widget build(BuildContext context) {
@@ -172,7 +168,7 @@ class _DecidedBanner extends StatelessWidget {
           Icon(isHired ? Icons.check_circle : Icons.cancel, color: color),
           const SizedBox(width: 8),
           Text(
-            'Candidate already ${updatingStatus.value ?? application['status']}',
+            'Candidate already ${updatingStatus.value ?? application.status}',
             style: TextStyle(color: color, fontWeight: FontWeight.bold),
           ),
         ],

@@ -70,7 +70,7 @@ class AppRouter {
         builder: (context, state) {
           final tabStr = state.uri.queryParameters['tab'];
           final initialIndex = int.tryParse(tabStr ?? '');
-          return MainWrapper(initialIndex: initialIndex);
+          return MainWrapper(initIndex: initialIndex);
         },
       ),
       GoRoute(
@@ -78,7 +78,7 @@ class AppRouter {
         builder: (context, state) {
           final tabStr = state.uri.queryParameters['tab'];
           final initialIndex = int.tryParse(tabStr ?? '');
-          return ButonNavRecruiter(initialIndex: initialIndex);
+          return ButtonNavRecruit(initIndex: initialIndex);
         },
       ),
       GoRoute(

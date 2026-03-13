@@ -1,6 +1,11 @@
+import 'package:dartz/dartz.dart';
 import 'package:job_finder/core/helper/typedef.dart';
+import 'package:job_finder/features/recruiter/data/models/application_detail_model.dart';
+import 'package:job_finder/features/recruiter/data/models/application_model.dart';
 import 'package:job_finder/features/recruiter/data/models/company_model.dart';
 import 'package:job_finder/features/recruiter/data/server/recruiter_server.dart';
+import 'package:job_finder/features/recruiter/domain/entity/application_detail_entity.dart';
+import 'package:job_finder/features/recruiter/domain/entity/application_entity.dart';
 import 'package:job_finder/features/recruiter/domain/repository/repository.dart';
 
 class RecruiterRepositoryImpl implements RecruiterRepository {
@@ -54,23 +59,74 @@ class RecruiterRepositoryImpl implements RecruiterRepository {
   }
 
   @override
-  ResultFuture<DataMap> getJobApplications(String jobId) {
-    return _server.getJobApplications(jobId);
+  ResultFuture<List<ApplicationEntity>> getJobApplications(String jobId) async {
+    final result = await _server.getJobApplications(jobId);
+    return result.fold(
+      (failure) => Left(failure),
+      (data) {
+        final List<dynamic> list = data['applicants'] ??
+            data['applications'] ??
+            data['data']?['applicants'] ??
+            data['data']?['applications'] ??
+            data['data'] ??
+            [];
+        final applications = list
+            .map((e) => ApplicationModel.fromJson(Map<String, dynamic>.from(e)))
+            .toList();
+        return Right(applications);
+      },
+    );
   }
 
   @override
-  ResultFuture<DataMap> getAllApplications() {
-    return _server.getAllApplications();
+  ResultFuture<List<ApplicationEntity>> getAllApplications() async {
+    final result = await _server.getAllApplications();
+    return result.fold(
+      (failure) => Left(failure),
+      (data) {
+        final List<dynamic> list = data['applicants'] ??
+            data['applications'] ??
+            data['data']?['applicants'] ??
+            data['data']?['applications'] ??
+            data['data'] ??
+            [];
+        final applications = list
+            .map((e) => ApplicationModel.fromJson(Map<String, dynamic>.from(e)))
+            .toList();
+        return Right(applications);
+      },
+    );
   }
 
   @override
-  ResultFuture<DataMap> getApplicationDetails(String id) {
-    return _server.getApplicationDetails(id);
+  ResultFuture<ApplicationDetailEntity> getApplicationDetails(String id) async {
+    final result = await _server.getApplicationDetails(id);
+    return result.fold(
+      (failure) => Left(failure),
+      (data) {
+        final application = data['application'] ?? data['data'] ?? data;
+        return Right(
+          ApplicationDetailModel.fromJson(Map<String, dynamic>.from(application)),
+        );
+      },
+    );
   }
 
   @override
-  ResultFuture<DataMap> updateApplicationStatus(String id, String status) {
-    return _server.updateApplicationStatus(id, status);
+  ResultFuture<ApplicationDetailEntity> updateApplicationStatus(
+    String id,
+    String status,
+  ) async {
+    final result = await _server.updateApplicationStatus(id, status);
+    return result.fold(
+      (failure) => Left(failure),
+      (data) {
+        final application = data['application'] ?? data['data'] ?? data;
+        return Right(
+          ApplicationDetailModel.fromJson(Map<String, dynamic>.from(application)),
+        );
+      },
+    );
   }
 
   @override

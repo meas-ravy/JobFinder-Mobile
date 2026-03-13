@@ -7,6 +7,7 @@ enum AuthAction {
   googleSignIn,
   linkedInSignIn,
   selectRole,
+  logout,
 }
 
 class AuthState {

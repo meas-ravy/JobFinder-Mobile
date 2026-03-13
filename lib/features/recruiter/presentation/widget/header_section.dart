@@ -4,7 +4,7 @@ import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:job_finder/core/constants/assets.dart';
 import 'package:job_finder/core/routes/app_path.dart';
 import 'package:job_finder/features/notifications/presentation/provider/notification_provider.dart';
-import 'package:job_finder/features/recruiter/presentation/provider/recruiter_provider.dart';
+import 'package:job_finder/features/recruiter/presentation/provider/company/company_profile_controller.dart';
 import 'package:job_finder/shared/widget/shimmer_loading.dart';
 import 'package:job_finder/shared/widget/svg_icon.dart';
 
@@ -15,7 +15,7 @@ class HeaderSection extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final colorScheme = Theme.of(context).colorScheme;
     final textTheme = Theme.of(context).textTheme;
-    final recruiterState = ref.watch(recruiterControllerProvider);
+    final recruiterState = ref.watch(companyProfileProvider);
     final notificationState = ref.watch(notificationControllerProvider);
     final company = recruiterState.company;
     final isLoading = recruiterState.isLoading && company == null;

@@ -2,6 +2,7 @@ import 'package:dotted_line/dotted_line.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_form_builder/flutter_form_builder.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
+import 'package:job_finder/features/recruiter/presentation/provider/company/company_profile_controller.dart';
 import 'package:job_finder/features/recruiter/presentation/provider/recruiter_provider.dart';
 import 'package:job_finder/features/recruiter/presentation/screen/post_job_steps/job_details_step.dart';
 import 'package:job_finder/features/recruiter/presentation/screen/post_job_steps/job_description_step.dart';
@@ -147,7 +148,7 @@ class _PostJobScreenState extends ConsumerState<PostJobScreen> {
       LoadingDialog.show(context, message: 'Posting job...');
 
       try {
-        final controller = ref.read(recruiterControllerProvider.notifier);
+        final controller = ref.read(recruiterJobsControllerProvider.notifier);
 
         if (_isEditing) {
           final jobId =
@@ -159,7 +160,7 @@ class _PostJobScreenState extends ConsumerState<PostJobScreen> {
 
         if (mounted) LoadingDialog.hide(context);
 
-        final state = ref.read(recruiterControllerProvider);
+        final state = ref.read(recruiterJobsControllerProvider);
         if (state.errorMessage != null) {
           if (mounted) {
             _showErrorDialog('Post Failed', state.errorMessage!);
@@ -186,9 +187,10 @@ class _PostJobScreenState extends ConsumerState<PostJobScreen> {
     final colorScheme = Theme.of(context).colorScheme;
     final textTheme = Theme.of(context).textTheme;
 
-    final recruiterState = ref.watch(recruiterControllerProvider);
+    final recruiterState = ref.watch(recruiterJobsControllerProvider);
+    final companyState = ref.watch(companyProfileProvider);
 
-    if (recruiterState.isLoading && recruiterState.company == null) {
+    if (recruiterState.isLoading && companyState.company == null) {
       return Scaffold(
         appBar: AppBar(
           title: Text(_isEditing ? 'Edit Job Post' : 'Add Job Post'),
@@ -197,7 +199,7 @@ class _PostJobScreenState extends ConsumerState<PostJobScreen> {
       );
     }
 
-    if (!recruiterState.isLoading && recruiterState.company == null) {
+    if (!recruiterState.isLoading && companyState.company == null) {
       return Scaffold(
         appBar: AppBar(
           title: Text(_isEditing ? 'Edit Job Post' : 'Add Job Post'),

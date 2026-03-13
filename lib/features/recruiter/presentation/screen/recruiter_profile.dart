@@ -12,14 +12,15 @@ import 'package:job_finder/features/job_seeker/data/model/policy_services.dart';
 import 'package:job_finder/features/job_seeker/presentation/screen/security_settings_screen.dart';
 import 'package:job_finder/features/job_seeker/presentation/widget/dialogs/show_doc.dart';
 import 'package:job_finder/features/recruiter/data/models/company_model.dart';
+import 'package:job_finder/features/recruiter/presentation/provider/company/company_profile_controller.dart';
 import 'package:job_finder/l10n/app_localizations.dart';
 import 'package:job_finder/shared/widget/danger_tile.dart';
 import 'package:job_finder/shared/widget/loading_dialog.dart';
 import 'package:job_finder/shared/widget/section_title.dart';
 import 'package:job_finder/shared/widget/shimmer_loading.dart';
 import 'package:job_finder/shared/widget/svg_icon.dart';
+import 'package:job_finder/shared/widget/logout_confirm_dialog.dart';
 import 'package:job_finder/features/job_seeker/presentation/widget/dialogs/switch_role_dialog.dart';
-import 'package:job_finder/features/recruiter/presentation/provider/recruiter_provider.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 class RecruiterProfilePage extends HookConsumerWidget {
@@ -31,7 +32,7 @@ class RecruiterProfilePage extends HookConsumerWidget {
     final textTheme = Theme.of(context).textTheme;
     final l10n = AppLocalizations.of(context);
 
-    final recruiterState = ref.watch(recruiterControllerProvider);
+    final recruiterState = ref.watch(companyProfileProvider);
     final company = recruiterState.company;
 
     return Scaffold(
@@ -239,43 +240,49 @@ class RecruiterProfilePage extends HookConsumerWidget {
                     icon: AppIcon.logout,
                     title: 'Logout',
                     onTap: () async {
-                      // Show confirmation dialog
+                      // Show premium confirmation dialog
                       final confirmed = await showDialog<bool>(
                         context: context,
-                        builder: (context) => AlertDialog(
-                          title: const Text('Logout'),
-                          content: const Text(
-                            'Are you sure you want to logout?',
-                          ),
-                          actions: [
-                            TextButton(
-                              onPressed: () => Navigator.pop(context, false),
-                              child: const Text('Cancel'),
-                            ),
-                            FilledButton(
-                              onPressed: () => Navigator.pop(context, true),
-                              style: FilledButton.styleFrom(
-                                backgroundColor: Theme.of(
-                                  context,
-                                ).colorScheme.error,
-                              ),
-                              child: const Text('Logout'),
-                            ),
-                          ],
-                        ),
+                        barrierDismissible: true,
+                        builder: (context) => const LogoutConfirmDialog(),
                       );
 
                       if (confirmed != true || !context.mounted) return;
 
-                      // Clear token and role, then navigate to login
-                      final storage = TokenStorageImpl(
-                        const FlutterSecureStorage(),
+                      // Show loading dialog
+                      LoadingDialog.show(
+                        context,
+                        message: 'Logging out safely...',
                       );
-                      await storage.delete();
-                      await storage.deleteRole();
+
+                      final success =
+                          await ref.read(authControllerProvider.notifier).logout();
 
                       if (!context.mounted) return;
-                      context.go(AppPath.sendOtp);
+                      LoadingDialog.hide(context);
+
+                      if (success) {
+                        // Clear storage only after successful server logout
+                        final storage =
+                            TokenStorageImpl(const FlutterSecureStorage());
+                        await storage.delete();
+                        await storage.deleteRole();
+
+                        if (!context.mounted) return;
+                        context.go(AppPath.sendOtp);
+                      } else {
+                        final error = ref.read(authControllerProvider).errorMessage;
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text(error ?? 'Logout failed'),
+                            backgroundColor: colorScheme.error,
+                            behavior: SnackBarBehavior.floating,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                          ),
+                        );
+                      }
                     },
                   ),
                 ],

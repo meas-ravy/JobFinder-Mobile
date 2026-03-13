@@ -2,10 +2,10 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
-import 'package:job_finder/core/helper/typedef.dart';
 import 'package:job_finder/core/services/firebase_chat_service.dart';
 import 'package:job_finder/core/theme/app_color.dart';
 import 'package:job_finder/features/recruiter/data/models/chat_message_model.dart';
+import 'package:job_finder/features/recruiter/presentation/provider/company/company_profile_controller.dart';
 import 'package:job_finder/features/recruiter/presentation/provider/recruiter_provider.dart';
 
 /// Shows the premium confirm bottom sheet (Hire / Reject).
@@ -17,16 +17,13 @@ void showConfirmActionSheet({
   required ValueNotifier<String?> updatingStatus,
   required ValueNotifier<bool> isLoadingDialogOpen,
 }) {
-  final application = ref.read(recruiterControllerProvider).applicationDetails;
-  final jobSeekerMap = application?['jobSeeker'] ?? application?['user'];
-  final jobSeeker = (jobSeekerMap is Map)
-      ? DataMap.from(jobSeekerMap)
-      : <String, dynamic>{};
-  final profileMap = jobSeeker['profile'];
-  final profile = (profileMap is Map)
-      ? DataMap.from(profileMap)
-      : <String, dynamic>{};
-  final candidateName = profile['fullName'] ?? 'this candidate';
+  final application = ref
+      .read(recruiterApplicationsControllerProvider)
+      .applicationDetails;
+  
+  if (application == null) return;
+
+  final candidateName = application.jobSeeker.fullName;
 
   final isHire = status == 'Hired';
   final actionColor = isHire
@@ -148,7 +145,7 @@ void showConfirmActionSheet({
                 showStatusLoadingDialog(context, isHire);
                 updatingStatus.value = status;
                 ref
-                    .read(recruiterControllerProvider.notifier)
+                    .read(recruiterApplicationsControllerProvider.notifier)
                     .updateApplicationStatus(id, status);
               },
               child: Text(
@@ -251,47 +248,30 @@ Future<void> showApplicationResultSheet({
   required WidgetRef ref,
   required String confirmedStatus,
 }) async {
-  final state = ref.read(recruiterControllerProvider);
+  final state = ref.read(recruiterApplicationsControllerProvider);
+  final companyState = ref.read(companyProfileProvider);
   final application = state.applicationDetails;
   if (application == null) return;
 
-  final jobSeekerMap = application['jobSeeker'] ?? application['user'];
-  final jobSeeker = (jobSeekerMap is Map)
-      ? DataMap.from(jobSeekerMap)
-      : <String, dynamic>{};
-  final profileMap = jobSeeker['profile'];
-  final profile = (profileMap is Map)
-      ? DataMap.from(profileMap)
-      : <String, dynamic>{};
-  final jobMap = application['job'];
-  final job = (jobMap is Map) ? DataMap.from(jobMap) : <String, dynamic>{};
+  final jobSeeker = application.jobSeeker;
+  final job = application.job;
 
   final isHired = confirmedStatus == 'Hired';
-  final candidateName = profile['fullName'] ?? 'Candidate';
-  final candidateId =
-      jobSeeker['_id'] ?? jobSeeker['id'] ?? application['jobSeekerId'] ?? '';
-  final jobIdVar = job['_id'] ?? job['id'] ?? application['jobId'] ?? '';
+  final candidateName = jobSeeker.fullName;
+  final candidateId = jobSeeker.id;
+  final jobIdVar = job.id;
 
   // --- Send automated Firebase chat messages ---
   try {
-    final conversationId =
-        application['conversationId']?.toString() ??
-        'conv_${candidateId}_$jobIdVar';
-    final String jobTitle = job['title']?.toString() ?? 'Job';
+    final conversationId = 'conv_${candidateId}_$jobIdVar';
+    final String jobTitle = job.title;
     final content = isHired
         ? 'Congratulations $candidateName! You have been hired for the $jobTitle position. We will reach out to you shortly for the next steps.'
         : 'Hi $candidateName, thank you for your interest in the $jobTitle position. Unfortunately, we have decided to move forward with other candidates at this time.';
 
-    final String companyName =
-        state.company?.name ?? job['company']?.toString() ?? 'Company';
-    final String jobLocation =
-        job['location']?.toString() ?? state.company?.location ?? '';
-    final String salaryText =
-        job['salary']?.toString() ??
-        (job['salaryMin'] != null
-            ? "${job['salaryCurrency'] ?? '\$'} ${job['salaryMin']} - ${job['salaryMax'] ?? ''}"
-            : 'Salary not specified');
-
+    final String companyName = companyState.company?.name ?? 'Company';
+    final String jobLocation = job.location;
+    
     FirebaseChatService.instance.sendMessage(
       conversationId,
       ChatMessageModel(
@@ -300,13 +280,11 @@ Future<void> showApplicationResultSheet({
         senderType: 'User',
         type: 'job_card',
         jobData: {
-          'title': job['title']?.toString() ?? 'Job Title',
+          'title': job.title,
           'company': companyName,
           'location': jobLocation,
-          'salary': salaryText,
-          'logoUrl': job['logoUrl'] ?? state.company?.logoUrl,
-          'jobType': job['jobType'] ?? job['employmentType']?.toString(),
-          'workplace': job['workplace'] ?? job['workArrangement']?.toString(),
+          'salary': 'Salary not specified', // We don't have salary in ApplicationJobEntity yet
+          'logoUrl': companyState.company?.logoUrl,
         },
       ),
     );
@@ -374,8 +352,8 @@ Future<void> showApplicationResultSheet({
           const SizedBox(height: 12),
           Text(
             isHired
-                ? 'You have successfully hired $candidateName for ${job['title'] ?? 'this position'}.'
-                : "You have rejected $candidateName's application for ${job['title'] ?? 'this position'}.",
+                ? 'You have successfully hired $candidateName for ${job.title}.'
+                : "You have rejected $candidateName's application for ${job.title}.",
             textAlign: TextAlign.center,
             style: GoogleFonts.outfit(
               fontSize: 16,

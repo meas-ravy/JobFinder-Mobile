@@ -40,6 +40,10 @@ final selectRoleUseCaseProvider = Provider<SelectRoleUseCase>((ref) {
   return SelectRoleUseCase(ref.watch(authRepositoryProvider));
 });
 
+final logoutUseCaseProvider = Provider<LogoutUseCase>((ref) {
+  return LogoutUseCase(ref.watch(authRepositoryProvider));
+});
+
 final googleSignInProvider = Provider<GoogleSignIn>((ref) {
   return GoogleSignIn.instance;
 });
@@ -53,6 +57,7 @@ final authControllerProvider = StateNotifierProvider<AuthController, AuthState>(
       googleOAuthUseCase: ref.watch(googleOAuthUseCaseProvider),
       linkedInOAuthUseCase: ref.watch(linkedInOAuthUseCaseProvider),
       selectRoleUseCase: ref.watch(selectRoleUseCaseProvider),
+      logoutUseCase: ref.watch(logoutUseCaseProvider),
       googleSignIn: ref.watch(googleSignInProvider),
     );
   },

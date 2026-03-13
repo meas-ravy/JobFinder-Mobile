@@ -3,8 +3,14 @@ import 'package:job_finder/features/recruiter/data/repository_imp/repository_imp
 import 'package:job_finder/features/recruiter/data/server/recruiter_server.dart';
 import 'package:job_finder/features/recruiter/domain/repository/repository.dart';
 import 'package:job_finder/features/recruiter/domain/usecase/recruiter_usecase.dart';
-import 'package:job_finder/features/recruiter/presentation/provider/recruiter_controller.dart';
-import 'package:job_finder/features/recruiter/presentation/provider/recruiter_state.dart';
+import 'package:job_finder/features/recruiter/presentation/provider/jobs/recruiter_jobs_controller.dart';
+import 'package:job_finder/features/recruiter/presentation/provider/jobs/recruiter_jobs_state.dart';
+import 'package:job_finder/features/recruiter/presentation/provider/applications/recruiter_applications_controller.dart';
+import 'package:job_finder/features/recruiter/presentation/provider/applications/recruiter_applications_state.dart';
+import 'package:job_finder/features/recruiter/presentation/provider/dashboard/recruiter_dashboard_controller.dart';
+import 'package:job_finder/features/recruiter/presentation/provider/dashboard/recruiter_dashboard_state.dart';
+import 'package:job_finder/features/recruiter/presentation/provider/conversations/recruiter_conversations_controller.dart';
+import 'package:job_finder/features/recruiter/presentation/provider/conversations/recruiter_conversations_state.dart';
 
 final recruiterServerProvider = Provider<RecruiterServer>((ref) {
   return RecruiterServerImpl();
@@ -97,18 +103,26 @@ final updateConversationUseCaseProvider = Provider<UpdateConversationUseCase>((
   return UpdateConversationUseCase(ref.watch(recruiterRepositoryProvider));
 });
 
-final recruiterControllerProvider =
-    StateNotifierProvider<RecruiterController, RecruiterState>((ref) {
-      return RecruiterController(
-        createCompanyUseCase: ref.watch(createCompanyUseCaseProvider),
-        getCompanyProfileUseCase: ref.watch(getCompanyProfileUseCaseProvider),
-        updateCompanyUseCase: ref.watch(updateCompanyUseCaseProvider),
+// --- NEW SPECIALIZED CONTROLLERS ---
+
+final recruiterJobsControllerProvider =
+    StateNotifierProvider<RecruiterJobsController, RecruiterJobsState>((ref) {
+      return RecruiterJobsController(
         createJobUseCase: ref.watch(createJobUseCaseProvider),
         submitJobUseCase: ref.watch(submitJobUseCaseProvider),
         getJobsUseCase: ref.watch(getJobsUseCaseProvider),
         updateJobStatusUseCase: ref.watch(updateJobStatusUseCaseProvider),
         updateJobUseCase: ref.watch(updateJobUseCaseProvider),
         deleteJobUseCase: ref.watch(deleteJobUseCaseProvider),
+      );
+    });
+
+final recruiterApplicationsControllerProvider =
+    StateNotifierProvider<
+      RecruiterApplicationsController,
+      RecruiterApplicationsState
+    >((ref) {
+      return RecruiterApplicationsController(
         getJobApplicationsUseCase: ref.watch(getJobApplicationsUseCaseProvider),
         getAllApplicationsUseCase: ref.watch(getAllApplicationsUseCaseProvider),
         getApplicationDetailsUseCase: ref.watch(
@@ -117,9 +131,27 @@ final recruiterControllerProvider =
         updateApplicationStatusUseCase: ref.watch(
           updateApplicationStatusUseCaseProvider,
         ),
+      );
+    });
+
+final recruiterDashboardControllerProvider =
+    StateNotifierProvider<
+      RecruiterDashboardController,
+      RecruiterDashboardState
+    >((ref) {
+      return RecruiterDashboardController(
         getRecruiterDashboardUseCase: ref.watch(
           getRecruiterDashboardUseCaseProvider,
         ),
+      );
+    });
+
+final recruiterConversationsControllerProvider =
+    StateNotifierProvider<
+      RecruiterConversationsController,
+      RecruiterConversationsState
+    >((ref) {
+      return RecruiterConversationsController(
         getConversationsUseCase: ref.watch(getConversationsUseCaseProvider),
         updateConversationUseCase: ref.watch(updateConversationUseCaseProvider),
       );

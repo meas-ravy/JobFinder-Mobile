@@ -12,12 +12,14 @@ class AuthController extends StateNotifier<AuthState> {
     required GoogleOAuthUseCase googleOAuthUseCase,
     required LinkedInOAuthUseCase linkedInOAuthUseCase,
     required SelectRoleUseCase selectRoleUseCase,
+    required LogoutUseCase logoutUseCase,
     required GoogleSignIn googleSignIn,
   }) : _sendOtpUseCase = sendOtpUseCase,
        _resendOtpUseCase = resendOtpUseCase,
        _verifyOtpUseCase = verifyOtpUseCase,
        _googleOAuthUseCase = googleOAuthUseCase,
        _selectRoleUseCase = selectRoleUseCase,
+       _logoutUseCase = logoutUseCase,
        _googleSignIn = googleSignIn,
        super(const AuthState());
 
@@ -26,6 +28,7 @@ class AuthController extends StateNotifier<AuthState> {
   final VerifyOtpUseCase _verifyOtpUseCase;
   final GoogleOAuthUseCase _googleOAuthUseCase;
   final SelectRoleUseCase _selectRoleUseCase;
+  final LogoutUseCase _logoutUseCase;
   final GoogleSignIn _googleSignIn;
 
   Future<void> sendOtp(String phoneNumber) async {
@@ -169,6 +172,26 @@ class AuthController extends StateNotifier<AuthState> {
       },
       (data) {
         state = state.copyWith(isLoading: false, data: data);
+        return true;
+      },
+    );
+  }
+
+  Future<bool> logout() async {
+    state = state.copyWith(
+      isLoading: true,
+      errorMessage: null,
+      lastAction: AuthAction.logout,
+    );
+
+    final result = await _logoutUseCase();
+    return result.fold(
+      (failure) {
+        state = state.copyWith(isLoading: false, errorMessage: failure.message);
+        return false;
+      },
+      (data) {
+        state = const AuthState(); // Reset state on success
         return true;
       },
     );

@@ -16,7 +16,7 @@ class RecruiterStatsPage extends HookConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final colorScheme = Theme.of(context).colorScheme;
     final textTheme = Theme.of(context).textTheme;
-    final recruiterState = ref.watch(recruiterControllerProvider);
+    final recruiterState = ref.watch(recruiterDashboardControllerProvider);
     final dashboardData = recruiterState.dashboardData;
     final summary = dashboardData?['summary'] as Map<String, dynamic>? ?? {};
     final chartData =
@@ -29,11 +29,11 @@ class RecruiterStatsPage extends HookConsumerWidget {
 
     useEffect(() {
       // Only fetch if data is not already loaded → avoids re-fetching on every tab switch
-      if (ref.read(recruiterControllerProvider).dashboardData == null) {
+      if (ref.read(recruiterDashboardControllerProvider).dashboardData == null) {
         Future.delayed(Duration.zero, () {
           if (context.mounted) {
             ref
-                .read(recruiterControllerProvider.notifier)
+                .read(recruiterDashboardControllerProvider.notifier)
                 .getRecruiterDashboard();
           }
         });
@@ -59,7 +59,7 @@ class RecruiterStatsPage extends HookConsumerWidget {
           : RefreshIndicator(
               onRefresh: () async {
                 await ref
-                    .read(recruiterControllerProvider.notifier)
+                    .read(recruiterDashboardControllerProvider.notifier)
                     .getRecruiterDashboard();
               },
               child: SingleChildScrollView(

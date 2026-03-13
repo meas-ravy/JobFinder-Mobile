@@ -6,7 +6,6 @@ import 'package:job_finder/core/constants/assets.dart';
 import 'package:job_finder/core/routes/app_path.dart';
 import 'package:job_finder/features/recruiter/data/models/conversation_list_model.dart';
 import 'package:job_finder/features/recruiter/presentation/provider/recruiter_provider.dart';
-import 'package:job_finder/features/recruiter/presentation/provider/recruiter_state.dart';
 import 'package:job_finder/shared/widget/svg_icon.dart';
 
 class RecruiterMessagePage extends ConsumerStatefulWidget {
@@ -31,14 +30,14 @@ class _RecruiterMessagePageState extends ConsumerState<RecruiterMessagePage> {
     });
     Future.microtask(() {
       if (mounted) {
-        ref.read(recruiterControllerProvider.notifier).getConversations();
+        ref.read(recruiterConversationsControllerProvider.notifier).getConversations();
       }
     });
   }
 
   @override
   Widget build(BuildContext context) {
-    final state = ref.watch(recruiterControllerProvider);
+    final state = ref.watch(recruiterConversationsControllerProvider);
     final colorScheme = Theme.of(context).colorScheme;
     final conversations = state.conversations.map((e) {
       final mapData = (e is Map)
@@ -57,12 +56,9 @@ class _RecruiterMessagePageState extends ConsumerState<RecruiterMessagePage> {
               )
               .toList();
 
-    // Use lastAction to isolate the loading to conversations only,
-    // avoiding false positive when other operations set isLoading=true
+    // Isolate loading state
     final isConversationsLoading =
-        state.isLoading &&
-        (state.lastAction == RecruiterAction.getConversations ||
-            conversations.isEmpty);
+        state.isLoading && conversations.isEmpty;
 
     return Scaffold(
       appBar: AppBar(
@@ -111,7 +107,7 @@ class _RecruiterMessagePageState extends ConsumerState<RecruiterMessagePage> {
             child: RefreshIndicator(
               onRefresh: () async {
                 await ref
-                    .read(recruiterControllerProvider.notifier)
+                    .read(recruiterConversationsControllerProvider.notifier)
                     .getConversations();
               },
               child: _buildContent(

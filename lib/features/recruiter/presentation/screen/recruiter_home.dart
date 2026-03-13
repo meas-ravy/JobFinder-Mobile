@@ -5,11 +5,13 @@ import 'package:job_finder/core/helper/typedef.dart';
 import 'package:job_finder/core/routes/app_path.dart';
 import 'package:job_finder/core/theme/app_color.dart';
 import 'package:job_finder/features/recruiter/data/models/job_card_data.dart';
+import 'package:job_finder/features/recruiter/presentation/provider/company/company_profile_controller.dart';
+import 'package:job_finder/features/recruiter/presentation/provider/company/company_profile_state.dart';
 import 'package:job_finder/features/recruiter/presentation/provider/recruiter_provider.dart';
 import 'package:job_finder/features/recruiter/presentation/screen/widgets/job_card_widget.dart';
 import 'package:job_finder/features/recruiter/presentation/screen/widgets/recruiter_home_shimmer.dart';
 import 'package:job_finder/features/recruiter/presentation/widget/header_section.dart';
-import 'package:job_finder/core/provider/scroll_provider.dart';
+import 'package:job_finder/shared/provider/scroll_provider.dart';
 
 class RecruiterHomePage extends ConsumerWidget {
   const RecruiterHomePage({super.key});
@@ -33,10 +35,11 @@ class RecruiterHomePage extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final recruiterState = ref.watch(recruiterControllerProvider);
+    final jobsState = ref.watch(recruiterJobsControllerProvider);
+    final companyState = ref.watch(companyProfileProvider);
     final activeTab = ref.watch(recruiterHomeTabProvider);
 
-    final currentJobs = _getJobsForTab(activeTab, recruiterState);
+    final currentJobs = _getJobsForTab(activeTab, jobsState);
     final emptyMessages = [
       'No active jobs yet',
       'No draft jobs yet',
@@ -80,14 +83,19 @@ class RecruiterHomePage extends ConsumerWidget {
           ),
         ),
       ),
-      body: recruiterState.isLoading
+      body: jobsState.isLoading
           ? const RecruiterHomeShimmer()
-          : recruiterState.isRefreshing
+          : jobsState.isRefreshing
           ? const RecruiterHomeShimmer()
-          : _buildJobsList(ref, currentJobs, emptyMessages[activeTab]),
+          : _buildJobsList(
+              ref,
+              currentJobs,
+              emptyMessages[activeTab],
+              companyState,
+            ),
       floatingActionButton: FloatingActionButton(
         onPressed: () {
-          if (recruiterState.company == null) {
+          if (companyState.company == null) {
             _showProfileRestrictionDialog(context);
           } else {
             context.push(AppPath.postJob);
@@ -209,12 +217,13 @@ class RecruiterHomePage extends ConsumerWidget {
     WidgetRef ref,
     List<dynamic> jobs,
     String emptyMessage,
+    CompanyProfileState companyState,
   ) {
-    final recruiterState = ref.watch(recruiterControllerProvider);
+    final jobsState = ref.watch(recruiterJobsControllerProvider);
 
     return RefreshIndicator(
       onRefresh: () =>
-          ref.read(recruiterControllerProvider.notifier).refreshAllJobs(),
+          ref.read(recruiterJobsControllerProvider.notifier).refreshAllJobs(),
       child: jobs.isEmpty
           ? SingleChildScrollView(
               controller: ref.watch(recruiterHomeScrollControllerProvider),
@@ -278,9 +287,9 @@ class RecruiterHomePage extends ConsumerWidget {
                 return JobCard(
                   data: JobCardData.fromJson(
                     job,
-                    fallbackCompany: recruiterState.company,
+                    fallbackCompany: companyState.company,
                   ),
-                  isLoading: recruiterState.activeJobId == jobId,
+                  isLoading: jobsState.activeJobId == jobId,
                   onStatusUpdate: (status) {
                     if (status == 'edit') {
                       context.push(AppPath.postJob, extra: job);
@@ -292,13 +301,13 @@ class RecruiterHomePage extends ConsumerWidget {
                       );
                     } else if (status == 'submit' || status == 'resubmit') {
                       ref
-                          .read(recruiterControllerProvider.notifier)
+                          .read(recruiterJobsControllerProvider.notifier)
                           .submitJob(job['_id'] ?? job['id']);
                     } else if (status == 'view_candidates') {
                       context.push('${AppPath.viewApplicants}/$jobId');
                     } else {
                       ref
-                          .read(recruiterControllerProvider.notifier)
+                          .read(recruiterJobsControllerProvider.notifier)
                           .updateJobStatus(job['_id'] ?? job['id'], status);
                     }
                   },
@@ -445,7 +454,7 @@ class RecruiterHomePage extends ConsumerWidget {
                       ),
                       onPressed: () {
                         ref
-                            .read(recruiterControllerProvider.notifier)
+                            .read(recruiterJobsControllerProvider.notifier)
                             .deleteJob(jobId);
                         Navigator.pop(context);
                       },

@@ -1,3 +1,5 @@
+import 'package:job_finder/core/helper/typedef.dart';
+
 class CompanyModel {
   final String? id;
   final String name;
@@ -23,7 +25,7 @@ class CompanyModel {
     this.hireRating = 0.0,
   });
 
-  factory CompanyModel.fromJson(Map<String, dynamic> json) {
+  factory CompanyModel.fromJson(DataMap json) {
     return CompanyModel(
       id: json['id']?.toString(),
       name: json['name']?.toString() ?? '',
@@ -38,7 +40,7 @@ class CompanyModel {
     );
   }
 
-  Map<String, dynamic> toJson() {
+  DataMap toJson() {
     return {
       'name': name,
       'contactEmail': contactEmail,

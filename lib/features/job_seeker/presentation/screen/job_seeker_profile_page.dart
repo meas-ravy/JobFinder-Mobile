@@ -19,6 +19,7 @@ import 'package:job_finder/l10n/app_localizations.dart';
 import 'package:job_finder/shared/widget/loading_dialog.dart';
 import 'package:job_finder/shared/widget/danger_tile.dart';
 import 'package:job_finder/shared/widget/section_title.dart';
+import 'package:job_finder/shared/widget/logout_confirm_dialog.dart';
 import 'package:job_finder/features/job_seeker/presentation/provider/profile_provider.dart';
 import 'package:job_finder/shared/widget/svg_icon.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -272,44 +273,48 @@ class JobSeekerProfilePage extends HookConsumerWidget {
                       icon: AppIcon.logout,
                       title: l10n.logout,
                       onTap: () async {
-                        // Show confirmation dialog
+                        // Show premium confirmation dialog
                         final confirmed = await showDialog<bool>(
                           context: context,
-                          builder: (context) => AlertDialog(
-                            title: Text(l10n.logoutConfirmTitle),
-                            content: Text(l10n.logoutConfirmContent),
-                            actions: [
-                              TextButton(
-                                onPressed: () => Navigator.pop(context, false),
-                                child: Text(l10n.cancel),
-                              ),
-                              FilledButton(
-                                onPressed: () => Navigator.pop(context, true),
-                                style: FilledButton.styleFrom(
-                                  backgroundColor: Theme.of(
-                                    context,
-                                  ).colorScheme.error,
-                                ),
-                                child: Text(
-                                  l10n.logout,
-                                  style: const TextStyle(color: Colors.white),
-                                ),
-                              ),
-                            ],
-                          ),
+                          barrierDismissible: true,
+                          builder: (context) => const LogoutConfirmDialog(),
                         );
 
                         if (confirmed != true || !context.mounted) return;
 
-                        // Clear token and role, then navigate to login
-                        final storage = TokenStorageImpl(
-                          const FlutterSecureStorage(),
-                        );
-                        await storage.delete();
-                        await storage.deleteRole();
+                        LoadingDialog.show(context, message: l10n.logout);
+
+                        final success = await ref
+                            .read(authControllerProvider.notifier)
+                            .logout();
 
                         if (!context.mounted) return;
-                        context.go(AppPath.sendOtp);
+                        LoadingDialog.hide(context);
+
+                        if (success) {
+                          // Clear token and role, then navigate to login
+                          final storage = TokenStorageImpl(
+                            const FlutterSecureStorage(),
+                          );
+                          await storage.delete();
+                          await storage.deleteRole();
+
+                          if (!context.mounted) return;
+                          context.go(AppPath.sendOtp);
+                        } else {
+                          final error =
+                              ref.read(authControllerProvider).errorMessage;
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text(error ?? 'Logout failed'),
+                              backgroundColor: colorScheme.error,
+                              behavior: SnackBarBehavior.floating,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                            ),
+                          );
+                        }
                       },
                     ),
                   ],

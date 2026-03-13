@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:job_finder/core/constants/assets.dart';
 import 'package:job_finder/core/theme/app_color.dart';
@@ -12,36 +11,71 @@ import 'package:job_finder/features/job_seeker/presentation/screen/job_seeker_sa
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:job_finder/features/job_seeker/presentation/provider/job_provider.dart';
 import 'package:job_finder/l10n/app_localizations.dart';
-import 'package:job_finder/core/provider/scroll_provider.dart';
+import 'package:job_finder/shared/provider/scroll_provider.dart';
 
-class MainWrapper extends HookConsumerWidget {
-  final int? initialIndex;
-  const MainWrapper({super.key, this.initialIndex});
+class MainWrapper extends ConsumerStatefulWidget {
+  final int? initIndex;
+  const MainWrapper({super.key, this.initIndex});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final currentIndex = ref.watch(mainWrapperIndexProvider);
-    final pressedIndex = useState(-1);
+  ConsumerState<MainWrapper> createState() => _MainWrapper();
+}
 
-    void animateTap(int index) {
-      pressedIndex.value = index;
-      Future.delayed(const Duration(milliseconds: 120), () {
-        pressedIndex.value = -1;
+class _MainWrapper extends ConsumerState<MainWrapper> {
+  late PageController pageController;
+  int presIndex = -1;
+
+  @override
+  void initState() {
+    super.initState();
+    // Use widget.initIndex if provided, otherwise default to current provider value
+    final int initialIndex = widget.initIndex ?? ref.read(mainWrapperIndexProvider);
+    pageController = PageController(initialPage: initialIndex);
+    
+    // Ensure the provider is synced with the initial index
+    if (widget.initIndex != null) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        ref.read(mainWrapperIndexProvider.notifier).state = widget.initIndex!;
       });
     }
+  }
 
-    useEffect(() {
-      if (initialIndex != null) {
-        Future.microtask(() {
-          ref.read(mainWrapperIndexProvider.notifier).state = initialIndex!;
+  @override
+  void dispose() {
+    pageController.dispose();
+    super.dispose();
+  }
+
+  void animateTap(int index) {
+    if (!mounted) return;
+    setState(() {
+      presIndex = index;
+    });
+
+    Future.delayed(const Duration(milliseconds: 120), () {
+      if (mounted) {
+        setState(() {
+          presIndex = -1;
         });
       }
-      return null;
-    }, [initialIndex]);
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final currentIndex = ref.watch(mainWrapperIndexProvider);
+
+    // Listen to provider changes to sync PageView (e.g. when navigated via GoRouter)
+    ref.listen(mainWrapperIndexProvider, (prev, next) {
+      if (pageController.hasClients && pageController.page?.round() != next) {
+        pageController.jumpToPage(next);
+      }
+    });
 
     return Scaffold(
-      body: IndexedStack(
-        index: currentIndex,
+      body: PageView(
+        controller: pageController,
+        physics: const NeverScrollableScrollPhysics(),
         children: const [
           JobSeekerHomePage(),
           JobSeekerSavePage(),
@@ -83,6 +117,7 @@ class MainWrapper extends HookConsumerWidget {
               }
             } else {
               ref.read(mainWrapperIndexProvider.notifier).state = index;
+              pageController.jumpToPage(index);
             }
           },
 
@@ -90,7 +125,7 @@ class MainWrapper extends HookConsumerWidget {
             BottomNavigationBarItem(
               label: AppLocalizations.of(context).homeLabel,
               icon: AnimatedScale(
-                scale: pressedIndex.value == 0 ? 0.92 : 1,
+                scale: presIndex == 0 ? 0.92 : 1,
                 duration: const Duration(milliseconds: 120),
                 curve: Curves.easeOut,
                 child: SvgPicture.asset(
@@ -103,7 +138,7 @@ class MainWrapper extends HookConsumerWidget {
                 ),
               ),
               activeIcon: AnimatedScale(
-                scale: pressedIndex.value == 0 ? 0.92 : 1,
+                scale: presIndex == 0 ? 0.92 : 1,
                 duration: const Duration(milliseconds: 120),
                 curve: Curves.easeOut,
                 child: SvgPicture.asset(
@@ -120,7 +155,7 @@ class MainWrapper extends HookConsumerWidget {
             BottomNavigationBarItem(
               label: AppLocalizations.of(context).saveJobLabel,
               icon: AnimatedScale(
-                scale: pressedIndex.value == 1 ? 0.92 : 1,
+                scale: presIndex == 1 ? 0.92 : 1,
                 duration: const Duration(milliseconds: 120),
                 curve: Curves.easeOut,
                 child: SvgPicture.asset(
@@ -133,7 +168,7 @@ class MainWrapper extends HookConsumerWidget {
                 ),
               ),
               activeIcon: AnimatedScale(
-                scale: pressedIndex.value == 1 ? 0.92 : 1,
+                scale: presIndex == 1 ? 0.92 : 1,
                 duration: const Duration(milliseconds: 120),
                 curve: Curves.easeOut,
                 child: SvgPicture.asset(
@@ -150,7 +185,7 @@ class MainWrapper extends HookConsumerWidget {
             BottomNavigationBarItem(
               label: AppLocalizations.of(context).applicationLabel,
               icon: AnimatedScale(
-                scale: pressedIndex.value == 2 ? 0.92 : 1,
+                scale: presIndex == 2 ? 0.92 : 1,
                 duration: const Duration(milliseconds: 120),
                 curve: Curves.easeOut,
                 child: SvgPicture.asset(
@@ -163,7 +198,7 @@ class MainWrapper extends HookConsumerWidget {
                 ),
               ),
               activeIcon: AnimatedScale(
-                scale: pressedIndex.value == 2 ? 0.92 : 1,
+                scale: presIndex == 2 ? 0.92 : 1,
                 duration: const Duration(milliseconds: 120),
                 curve: Curves.easeOut,
                 child: SvgPicture.asset(
@@ -180,7 +215,7 @@ class MainWrapper extends HookConsumerWidget {
             BottomNavigationBarItem(
               label: AppLocalizations.of(context).messageLabel,
               icon: AnimatedScale(
-                scale: pressedIndex.value == 3 ? 0.92 : 1,
+                scale: presIndex == 3 ? 0.92 : 1,
                 duration: const Duration(milliseconds: 120),
                 curve: Curves.easeOut,
                 child: SvgPicture.asset(
@@ -193,7 +228,7 @@ class MainWrapper extends HookConsumerWidget {
                 ),
               ),
               activeIcon: AnimatedScale(
-                scale: pressedIndex.value == 3 ? 0.92 : 1,
+                scale: presIndex == 3 ? 0.92 : 1,
                 duration: const Duration(milliseconds: 120),
                 curve: Curves.easeOut,
                 child: SvgPicture.asset(
@@ -210,7 +245,7 @@ class MainWrapper extends HookConsumerWidget {
             BottomNavigationBarItem(
               label: AppLocalizations.of(context).profileLabel,
               icon: AnimatedScale(
-                scale: pressedIndex.value == 4 ? 0.92 : 1,
+                scale: presIndex == 4 ? 0.92 : 1,
                 duration: const Duration(milliseconds: 120),
                 curve: Curves.easeOut,
                 child: SvgPicture.asset(
@@ -223,7 +258,7 @@ class MainWrapper extends HookConsumerWidget {
                 ),
               ),
               activeIcon: AnimatedScale(
-                scale: pressedIndex.value == 4 ? 0.92 : 1,
+                scale: presIndex == 4 ? 0.92 : 1,
                 duration: const Duration(milliseconds: 120),
                 curve: Curves.easeOut,
                 child: SvgPicture.asset(

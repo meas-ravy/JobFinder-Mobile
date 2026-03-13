@@ -1,3 +1,5 @@
+import 'package:job_finder/core/helper/typedef.dart';
+
 class ConversationListModel {
   final String id;
   final String? lastMessageContent;
@@ -13,7 +15,7 @@ class ConversationListModel {
     this.unreadCount = 0,
   });
 
-  factory ConversationListModel.fromJson(Map<String, dynamic> json) {
+  factory ConversationListModel.fromJson(DataMap json) {
     return ConversationListModel(
       id: json['id']?.toString() ?? json['_id']?.toString() ?? '',
       lastMessageContent: json['lastMessageContent']?.toString(),
@@ -38,7 +40,7 @@ class OtherParticipant {
 
   OtherParticipant({required this.id, required this.name, this.avatar});
 
-  factory OtherParticipant.fromJson(Map<String, dynamic> json) {
+  factory OtherParticipant.fromJson(DataMap json) {
     return OtherParticipant(
       id: json['id']?.toString() ?? json['_id']?.toString() ?? '',
       name: json['name']?.toString() ?? json['fullName']?.toString() ?? 'User',

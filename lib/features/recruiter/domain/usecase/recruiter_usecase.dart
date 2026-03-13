@@ -1,5 +1,7 @@
 import 'package:job_finder/core/helper/typedef.dart';
 import 'package:job_finder/core/helper/usecase.dart';
+import 'package:job_finder/features/recruiter/domain/entity/application_detail_entity.dart';
+import 'package:job_finder/features/recruiter/domain/entity/application_entity.dart';
 import 'package:job_finder/features/recruiter/domain/repository/repository.dart';
 
 class CreateCompanyParams {
@@ -137,32 +139,32 @@ class DeleteJobUseCase extends UseCaseWithParams<DataMap, DeleteJobParams> {
   }
 }
 
-class GetJobApplicationsUseCase extends UseCaseWithParams<DataMap, String> {
+class GetJobApplicationsUseCase extends UseCaseWithParams<List<ApplicationEntity>, String> {
   const GetJobApplicationsUseCase(this._repository);
   final RecruiterRepository _repository;
 
   @override
-  ResultFuture<DataMap> call(String params) {
+  ResultFuture<List<ApplicationEntity>> call(String params) {
     return _repository.getJobApplications(params);
   }
 }
 
-class GetAllApplicationsUseCase extends UseCaseWithOutParams<DataMap> {
+class GetAllApplicationsUseCase extends UseCaseWithOutParams<List<ApplicationEntity>> {
   const GetAllApplicationsUseCase(this._repository);
   final RecruiterRepository _repository;
 
   @override
-  ResultFuture<DataMap> call() {
+  ResultFuture<List<ApplicationEntity>> call() {
     return _repository.getAllApplications();
   }
 }
 
-class GetApplicationDetailsUseCase extends UseCaseWithParams<DataMap, String> {
+class GetApplicationDetailsUseCase extends UseCaseWithParams<ApplicationDetailEntity, String> {
   const GetApplicationDetailsUseCase(this._repository);
   final RecruiterRepository _repository;
 
   @override
-  ResultFuture<DataMap> call(String params) {
+  ResultFuture<ApplicationDetailEntity> call(String params) {
     return _repository.getApplicationDetails(params);
   }
 }
@@ -174,12 +176,12 @@ class UpdateApplicationStatusParams {
 }
 
 class UpdateApplicationStatusUseCase
-    extends UseCaseWithParams<DataMap, UpdateApplicationStatusParams> {
+    extends UseCaseWithParams<ApplicationDetailEntity, UpdateApplicationStatusParams> {
   const UpdateApplicationStatusUseCase(this._repository);
   final RecruiterRepository _repository;
 
   @override
-  ResultFuture<DataMap> call(UpdateApplicationStatusParams params) {
+  ResultFuture<ApplicationDetailEntity> call(UpdateApplicationStatusParams params) {
     return _repository.updateApplicationStatus(params.id, params.status);
   }
 }

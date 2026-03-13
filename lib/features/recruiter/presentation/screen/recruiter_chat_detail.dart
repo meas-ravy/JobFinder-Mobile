@@ -46,9 +46,9 @@ class _RecruiterChatDetailScreenState
 
     // Initial fetch of conversations if empty, to recover name/avatar from notification navigation
     Future.microtask(() {
-      final state = ref.read(recruiterControllerProvider);
+      final state = ref.read(recruiterConversationsControllerProvider);
       if (state.conversations.isEmpty) {
-        ref.read(recruiterControllerProvider.notifier).getConversations();
+        ref.read(recruiterConversationsControllerProvider.notifier).getConversations();
       }
     });
   }
@@ -83,7 +83,7 @@ class _RecruiterChatDetailScreenState
       );
 
       // 2. Sync to Backend
-      ref.read(recruiterControllerProvider.notifier).updateConversation(
+      ref.read(recruiterConversationsControllerProvider.notifier).updateConversation(
         widget.conversationId,
         {"lastMessageContent": content},
       );
@@ -153,7 +153,7 @@ class _RecruiterChatDetailScreenState
     final currentRecruiterId = FirebaseAuth.instance.currentUser?.uid ?? "";
 
     // Try to find conversation in state to get name and avatar if missing (from notification)
-    final recruiterState = ref.watch(recruiterControllerProvider);
+    final recruiterState = ref.watch(recruiterConversationsControllerProvider);
     ConversationListModel? conversation;
     try {
       final convData = recruiterState.conversations.firstWhere(

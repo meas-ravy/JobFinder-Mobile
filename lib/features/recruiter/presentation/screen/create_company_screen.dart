@@ -9,8 +9,7 @@ import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:job_finder/core/constants/assets.dart';
 import 'package:job_finder/core/services/cloudinary_service.dart';
-import 'package:job_finder/features/recruiter/presentation/provider/recruiter_provider.dart';
-import 'package:job_finder/features/recruiter/presentation/provider/recruiter_state.dart';
+import 'package:job_finder/features/recruiter/presentation/provider/company/company_profile_controller.dart';
 import 'package:job_finder/features/recruiter/presentation/shared/dashed_rectpainter.dart';
 import 'package:job_finder/features/recruiter/presentation/shared/form_dropdown_input.dart';
 import 'package:job_finder/features/recruiter/presentation/shared/form_field_label.dart';
@@ -163,19 +162,15 @@ class CreateCompanyScreen extends HookConsumerWidget {
                           .uploadImage(selectedImage.value!, 'company-logo');
 
                       await ref
-                          .read(recruiterControllerProvider.notifier)
+                          .read(companyProfileProvider.notifier)
                           .createCompany({...values, 'logoUrl': logoUrl});
 
                       if (!context.mounted) return;
                       LoadingDialog.hide(context);
 
-                      final updatedState = ref.read(
-                        recruiterControllerProvider,
-                      );
+                      final updatedState = ref.read(companyProfileProvider);
 
-                      if (updatedState.errorMessage == null &&
-                          updatedState.lastAction ==
-                              RecruiterAction.createCompany) {
+                      if (updatedState.errorMessage == null) {
                         // ScaffoldMessenger.of(context).showSnackBar(
                         //   const SnackBar(
                         //     content: Text(

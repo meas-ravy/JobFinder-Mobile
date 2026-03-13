@@ -1,10 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:job_finder/features/recruiter/presentation/provider/recruiter_provider.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:job_finder/core/constants/assets.dart';
-import 'package:job_finder/core/helper/typedef.dart';
-import 'package:job_finder/features/recruiter/presentation/provider/recruiter_provider.dart';
-import 'package:job_finder/features/recruiter/presentation/provider/recruiter_state.dart';
 import 'package:job_finder/shared/widget/svg_icon.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -20,7 +18,7 @@ class RecruiterApplicationDetailPage extends HookConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final recruiterState = ref.watch(recruiterControllerProvider);
+    final recruiterState = ref.watch(recruiterApplicationsControllerProvider);
     final colorScheme = Theme.of(context).colorScheme;
     final updatingStatus = useState<String?>(null);
     final isLoadingDialogOpen = useState(false);
@@ -30,20 +28,19 @@ class RecruiterApplicationDetailPage extends HookConsumerWidget {
       Future.delayed(Duration.zero, () {
         if (context.mounted) {
           ref
-              .read(recruiterControllerProvider.notifier)
+              .read(recruiterApplicationsControllerProvider.notifier)
               .clearApplicationDetails();
           ref
-              .read(recruiterControllerProvider.notifier)
+              .read(recruiterApplicationsControllerProvider.notifier)
               .getApplicationDetails(id);
         }
       });
       return null;
     }, [id]);
 
-    ref.listen(recruiterControllerProvider, (previous, next) {
-      if (next.lastAction == RecruiterAction.updateApplicationStatus &&
-          !next.isLoading &&
-          previous?.isLoading == true) {
+    ref.listen(recruiterApplicationsControllerProvider, (previous, next) {
+      if (!next.isLoading && previous?.isLoading == true) {
+        final wasUpdatingStatus = updatingStatus.value;
         updatingStatus.value = null;
 
         // Dismiss loading dialog if open
@@ -64,14 +61,11 @@ class RecruiterApplicationDetailPage extends HookConsumerWidget {
               margin: const EdgeInsets.all(16),
             ),
           );
-        } else {
+        } else if (wasUpdatingStatus != null) {
           showApplicationResultSheet(
             context: context,
             ref: ref,
-            confirmedStatus:
-                next.applicationDetails?['status']?.toString() ??
-                previous?.applicationDetails?['status']?.toString() ??
-                '',
+            confirmedStatus: wasUpdatingStatus,
           );
         }
       }
@@ -98,7 +92,7 @@ class RecruiterApplicationDetailPage extends HookConsumerWidget {
               const SizedBox(height: 16),
               ElevatedButton(
                 onPressed: () => ref
-                    .read(recruiterControllerProvider.notifier)
+                    .read(recruiterApplicationsControllerProvider.notifier)
                     .getApplicationDetails(id),
                 child: const Text('Retry'),
               ),
@@ -117,27 +111,11 @@ class RecruiterApplicationDetailPage extends HookConsumerWidget {
       );
     }
 
-    // --- Parse data ---
-    final jobSeekerMap = application['jobSeeker'] ?? application['user'];
-    final jobSeeker = (jobSeekerMap is Map)
-        ? DataMap.from(jobSeekerMap)
-        : <String, dynamic>{};
-    final profileMap = jobSeeker['profile'];
-    final profile = (profileMap is Map)
-        ? DataMap.from(profileMap)
-        : <String, dynamic>{};
-
-    final name = (profile['fullName'] ??
-            profile['name'] ??
-            jobSeeker['fullName'] ??
-            jobSeeker['name'])
-        ?.toString();
-    final avatarUrl =
-        (profile['avatarUrl'] ?? jobSeeker['avatarUrl'])?.toString();
-    final email = (profile['email'] ?? jobSeeker['email'])?.toString();
-
-    final jobMap = application['job'];
-    final job = (jobMap is Map) ? DataMap.from(jobMap) : <String, dynamic>{};
+    final jobSeeker = application.jobSeeker;
+    final name = jobSeeker.fullName;
+    final avatarUrl = jobSeeker.avatarUrl;
+    final email = jobSeeker.email;
+    final job = application.job;
 
     // --- Main UI ---
     return Scaffold(
@@ -148,7 +126,6 @@ class RecruiterApplicationDetailPage extends HookConsumerWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // ── Candidate Header ──────────────────────────────────────────
             Row(
               children: [
                 CircleAvatar(
@@ -158,8 +135,8 @@ class RecruiterApplicationDetailPage extends HookConsumerWidget {
                       : null,
                   child: (avatarUrl == null || avatarUrl.isEmpty)
                       ? Text(
-                          (name?.isNotEmpty == true)
-                              ? name!.substring(0, 1).toUpperCase()
+                          name.isNotEmpty
+                              ? name.substring(0, 1).toUpperCase()
                               : 'U',
                           style: const TextStyle(fontSize: 32),
                         )
@@ -171,7 +148,7 @@ class RecruiterApplicationDetailPage extends HookConsumerWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        name ?? 'Unknown Candidate',
+                        name,
                         style: GoogleFonts.inter(
                           fontSize: 24,
                           fontWeight: FontWeight.bold,
@@ -180,17 +157,14 @@ class RecruiterApplicationDetailPage extends HookConsumerWidget {
                       ),
                       const SizedBox(height: 4),
                       Text(
-                        email ?? 'No email provided',
+                        email,
                         style: GoogleFonts.inter(
                           fontSize: 14,
                           color: colorScheme.onSurfaceVariant,
                         ),
                       ),
                       const SizedBox(height: 8),
-                      buildStatusBadge(
-                        context,
-                        application['status']?.toString() ?? 'Pending',
-                      ),
+                      buildStatusBadge(context, application.status),
                     ],
                   ),
                 ),
@@ -205,8 +179,7 @@ class RecruiterApplicationDetailPage extends HookConsumerWidget {
               child: Container(
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  color:
-                      colorScheme.secondaryContainer.withValues(alpha: 0.2),
+                  color: colorScheme.secondaryContainer.withValues(alpha: 0.2),
                   borderRadius: BorderRadius.circular(22),
                 ),
                 child: Row(
@@ -222,14 +195,14 @@ class RecruiterApplicationDetailPage extends HookConsumerWidget {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            job['title']?.toString() ?? 'Unknown Job',
+                            job.title,
                             style: const TextStyle(
                               fontWeight: FontWeight.bold,
                               fontSize: 16,
                             ),
                           ),
                           Text(
-                            '${job['category'] ?? ''} • ${job['employmentType'] ?? ''} • ${job['location'] ?? ''}',
+                            job.location,
                             style: TextStyle(
                               color: colorScheme.onSurfaceVariant,
                               fontSize: 13,
@@ -254,13 +227,15 @@ class RecruiterApplicationDetailPage extends HookConsumerWidget {
                     context,
                     const Icon(Icons.phone_outlined),
                     'Phone',
-                    jobSeeker['phone']?.toString() ?? 'N/A',
+                    jobSeeker.phone ?? 'N/A',
                   ),
                   buildInfoRow(
                     context,
                     const Icon(Icons.cake_outlined),
                     'Birthday',
-                    formatDate(profile['dateOfBirth']),
+                    jobSeeker.dateOfBirth != null
+                        ? '${jobSeeker.dateOfBirth!.day}/${jobSeeker.dateOfBirth!.month}/${jobSeeker.dateOfBirth!.year}'
+                        : 'N/A',
                   ),
                   buildInfoRow(
                     context,
@@ -269,21 +244,19 @@ class RecruiterApplicationDetailPage extends HookConsumerWidget {
                       color: colorScheme.onSurfaceVariant,
                     ),
                     'Gender',
-                    profile['gender']?.toString() ?? 'N/A',
+                    jobSeeker.gender ?? 'N/A',
                   ),
                 ],
               ),
             ),
             const SizedBox(height: 24),
 
-            if (application['resumeUrl'] != null)
+            if (application.resumeUrl.isNotEmpty)
               buildSection(
                 context,
                 'Attachments: ',
                 child: InkWell(
-                  onTap: () => launchUrl(
-                    Uri.parse(application['resumeUrl'].toString()),
-                  ),
+                  onTap: () => launchUrl(Uri.parse(application.resumeUrl)),
                   borderRadius: BorderRadius.circular(12),
                   child: Container(
                     padding: const EdgeInsets.all(16),
@@ -316,9 +289,8 @@ class RecruiterApplicationDetailPage extends HookConsumerWidget {
 
             const SizedBox(height: 40),
 
-            // ── Action Buttons / Decided Banner ───────────────────────────
             ApplicationActionButtons(
-              application: Map<String, dynamic>.from(application),
+              application: application,
               recruiterState: recruiterState,
               updatingStatus: updatingStatus,
               isLoadingDialogOpen: isLoadingDialogOpen,
