@@ -16,7 +16,7 @@ enum CallState { idle, ringing, ongoing, ended, missed, rejected }
 class CallInvitation {
   final String callerId;
   final String callerName;
-  final String? callerAvatar; // nullable — caller may not have a photo
+  final String? callerAvatar;
   final String calleeId;
   final String conversationId;
   final bool isVideoCall;
@@ -42,8 +42,8 @@ class CallInvitation {
   }
 }
 
-/// AgoraService manages video/voice calls via Agora RTC Engine.
-/// Firebase Realtime Database is used for the signaling (ringing/accept/reject).
+// AgoraService manages video/voice calls via Agora RTC Engine.
+// Firebase Realtime Database is used for the signaling (ringing/accept/reject).
 class AgoraService {
   AgoraService._();
   static final AgoraService instance = AgoraService._();
@@ -176,7 +176,6 @@ class AgoraService {
       _logger.e('FCM: Failed to register device token: $e');
     }
   }
-
 
   // ─────────────────────────────────────────────────────────────────────
   // SIGNALING via Firebase (the "Ringing" phase)
@@ -312,9 +311,9 @@ class AgoraService {
   // ─────────────────────────────────────────────────────────────────────
 
   /// Join an Agora channel.
-  /// - If your Agora project is in **Testing Mode** (no App Certificate),
+  /// - If Agora project is in **Testing Mode** (no App Certificate),
   ///   no token is required and we join directly.
-  /// - If your backend has a token endpoint, we fetch it and use it.
+  /// - If backend has a token endpoint, we fetch it and use it.
   Future<void> joinCall({
     required String conversationId,
     required bool isVideoCall,
@@ -446,7 +445,6 @@ class AgoraService {
   /// Enable Speaker/Earpiece
   /// Uses the modern API recommended by Agora SDK 6.x
   Future<void> setSpeakerOn(bool speakerOn) async {
-    // ✅ setDefaultAudioRouteToSpeakerphone is the correct API in SDK 6.x
     await _engine?.setDefaultAudioRouteToSpeakerphone(speakerOn);
   }
 

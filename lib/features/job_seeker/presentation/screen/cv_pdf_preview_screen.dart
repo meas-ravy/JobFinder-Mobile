@@ -86,7 +86,7 @@ class CvPdfPreviewScreen extends StatelessWidget {
             child: Container(
               margin: const EdgeInsets.symmetric(horizontal: 10),
               decoration: BoxDecoration(color: Colors.white),
-              child: PdfPreviewCustom(
+              child: PdfPreview(
                 scrollViewDecoration: BoxDecoration(color: colorTheme.surface),
                 pdfPreviewPageDecoration: BoxDecoration(
                   color: Colors.white,
@@ -95,7 +95,7 @@ class CvPdfPreviewScreen extends StatelessWidget {
                       color: Colors.black26.withValues(alpha: 0.1),
                       blurRadius: 10,
                       spreadRadius: 2,
-                      offset: Offset(0, 4),
+                      offset: const Offset(0, 4),
                     ),
                   ],
                 ),
@@ -162,18 +162,26 @@ class CvPdfPreviewScreen extends StatelessWidget {
   /// Download PDF to device
   Future<void> _downloadPdf(BuildContext context) async {
     try {
-      final bytes = await _generatePdf(PdfPageFormat.a4);
+      final fileName = '${cv.fullName.replaceAll(' ', '_')}_CV.pdf';
+      final filePath = await resolveDownloadPath(fileName);
 
-      final directory = Directory('/storage/emulated/0/Download');
-
-      if (!directory.existsSync()) {
-        directory.createSync(recursive: true);
+      if (filePath == null) {
+        if (context.mounted) {
+          _showErrorSnackBar(
+            context,
+            'Storage permission denied. Cannot save PDF.',
+          );
+        }
+        return;
       }
 
-      final fileName = '${cv.fullName.replaceAll(' ', '_')}_CV.pdf';
-      final filePath = '${directory.path}/$fileName';
-
+      final bytes = await _generatePdf(PdfPageFormat.a4);
       final file = File(filePath);
+
+      // Ensure directory exists
+      if (!file.parent.existsSync()) {
+        file.parent.createSync(recursive: true);
+      }
 
       await file.writeAsBytes(bytes, flush: true);
 
@@ -189,25 +197,32 @@ class CvPdfPreviewScreen extends StatelessWidget {
 
   Future<String?> resolveDownloadPath(String fileName) async {
     if (Platform.isAndroid) {
-      // Request storage permission
+      // For Android 13+ (API 33), Permission.storage is deprecated.
+      // We request it but handle failures by falling back to app-specific storage.
       final status = await Permission.storage.request();
 
       if (status.isGranted) {
-        // Public Downloads directory
         final downloadsDir = Directory('/storage/emulated/0/Download');
-
-        if (await downloadsDir.exists()) {
+        try {
+          if (!downloadsDir.existsSync()) {
+            downloadsDir.createSync(recursive: true);
+          }
           return '${downloadsDir.path}/$fileName';
+        } catch (e) {
+          debugPrint('Could not write to public downloads: $e');
+          // Fall through to fallback directories
         }
       }
 
-      // Fallback: app-specific external directory
-      final dir = await getExternalStorageDirectory();
-      if (dir != null) {
-        return '${dir.path}/$fileName';
+      // Fallback 1: App-specific external directory (No permission required)
+      final externalDir = await getExternalStorageDirectory();
+      if (externalDir != null) {
+        return '${externalDir.path}/$fileName';
       }
 
-      return null;
+      // Fallback 2: Internal documents directory
+      final internalDir = await getApplicationDocumentsDirectory();
+      return '${internalDir.path}/$fileName';
     }
 
     if (Platform.isIOS) {
