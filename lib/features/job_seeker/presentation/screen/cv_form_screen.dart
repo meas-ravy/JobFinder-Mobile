@@ -601,7 +601,7 @@ class _CvFormScreenState extends ConsumerState<CvFormScreen> {
       cv.ref.addAll(_references);
 
       // Save to database
-      ref.read(cvRepositoryProvider).saveCv(cv);
+      ref.read(cvListProvider.notifier).saveCv(cv);
 
       _navigateToTemplate(cv);
     } else {

@@ -9,8 +9,8 @@ import 'package:job_finder/features/job_seeker/presentation/widget/application_c
 import 'package:job_finder/features/job_seeker/presentation/widget/filter_bottom_sheet.dart';
 import 'package:job_finder/shared/widget/svg_icon.dart';
 import 'package:shimmer/shimmer.dart';
-import 'package:go_router/go_router.dart';
-import 'package:job_finder/core/routes/app_path.dart';
+// import 'package:go_router/go_router.dart';
+// import 'package:job_finder/core/routes/app_path.dart';
 
 class JobSeekerAplicatPage extends HookConsumerWidget {
   const JobSeekerAplicatPage({super.key});
@@ -148,8 +148,9 @@ class JobSeekerAplicatPage extends HookConsumerWidget {
                     if (!(job.location?.toLowerCase().contains(
                           filters.location!.toLowerCase(),
                         ) ??
-                        false))
+                        false)) {
                       return false;
+                    }
                   }
                   if (filters.category != null &&
                       filters.category!.isNotEmpty &&
@@ -158,18 +159,21 @@ class JobSeekerAplicatPage extends HookConsumerWidget {
                   }
                   if (filters.workArrangement != null &&
                       filters.workArrangement!.isNotEmpty) {
-                    if (job.workArrangement != filters.workArrangement)
+                    if (job.workArrangement != filters.workArrangement) {
                       return false;
+                    }
                   }
                   if (filters.experienceLevel != null &&
                       filters.experienceLevel!.isNotEmpty) {
-                    if (job.experienceLevel != filters.experienceLevel)
+                    if (job.experienceLevel != filters.experienceLevel) {
                       return false;
+                    }
                   }
                   if (filters.employmentType != null &&
                       filters.employmentType!.isNotEmpty) {
-                    if (job.employmentType != filters.employmentType)
+                    if (job.employmentType != filters.employmentType) {
                       return false;
+                    }
                   }
 
                   return true;
@@ -195,11 +199,11 @@ class JobSeekerAplicatPage extends HookConsumerWidget {
                     ),
                     itemBuilder: (context, index) => InkWell(
                       onTap: () async {
-                        await context.push(
-                          '${AppPath.jobSeekerApplicationDetail}/${filteredApps[index].id}',
-                        );
+                        // await context.push(
+                        //   '${AppPath.jobSeekerApplicationDetail}/${filteredApps[index].id}',
+                        // );
                         // Refresh the list when returning to ensure latest status
-                        ref.invalidate(myApplicationsProvider);
+                        //ref.invalidate(myApplicationsProvider);
                       },
                       child: ApplicationCard(
                         key: ValueKey(filteredApps[index].id),

@@ -1,9 +1,12 @@
+import 'package:dotted_line/dotted_line.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
+import 'package:job_finder/core/constants/assets.dart';
 import 'package:job_finder/features/auth/presentation/provider/auth_provider.dart';
 import 'package:job_finder/features/auth/presentation/provider/auth_state.dart';
 import 'package:job_finder/features/auth/presentation/screen/veriffy_otp.dart';
+import 'package:job_finder/features/auth/presentation/widget/social_icon_button.dart';
 import 'package:job_finder/shared/components/primary_button.dart';
 import 'package:job_finder/shared/widget/svg_icon.dart';
 import 'package:go_router/go_router.dart';
@@ -168,7 +171,7 @@ class _SendOtpScreenState extends ConsumerState<SendOtpScreen> {
         child: SingleChildScrollView(
           physics: NeverScrollableScrollPhysics(),
           child: Padding(
-            padding: const EdgeInsets.fromLTRB(20, 125, 20, 10),
+            padding: const EdgeInsets.fromLTRB(20, 70, 20, 10),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
@@ -299,46 +302,46 @@ class _SendOtpScreenState extends ConsumerState<SendOtpScreen> {
                               .sendOtp(phone);
                         },
                 ),
-                // const SizedBox(height: 28),
-                // Row(
-                //   children: [
-                //     Expanded(
-                //       child: DottedLine(
-                //         dashColor: colorScheme.onSurface.withValues(alpha: 0.2),
-                //       ),
-                //     ),
-                //     const SizedBox(width: 8),
-                //     Text(
-                //       'OR',
-                //       style: TextStyle(
-                //         color: colorScheme.onSurface.withValues(alpha: 0.4),
-                //         fontWeight: FontWeight.w500,
-                //       ),
-                //     ),
-                //     const SizedBox(width: 8),
-                //     Expanded(
-                //       child: DottedLine(
-                //         dashColor: colorScheme.onSurface.withValues(alpha: 0.2),
-                //       ),
-                //     ),
-                //   ],
-                // ),
-                // const SizedBox(height: 28),
-                // SocialIconButton(
-                //   assetName: AppIcon.google,
-                //   backgroundColor: colorScheme.surfaceContainerHighest,
-                //   onTap: authState.isLoading
-                //       ? () {}
-                //       : () {
-                //           setState(() {
-                //             _socialError = null;
-                //             _socialMessage = null;
-                //           });
-                //           ref
-                //               .read(authControllerProvider.notifier)
-                //               .signInWithGoogle();
-                //         },
-                // ),
+                const SizedBox(height: 28),
+                Row(
+                  children: [
+                    Expanded(
+                      child: DottedLine(
+                        dashColor: colorScheme.onSurface.withValues(alpha: 0.2),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Text(
+                      'OR',
+                      style: TextStyle(
+                        color: colorScheme.onSurface.withValues(alpha: 0.4),
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: DottedLine(
+                        dashColor: colorScheme.onSurface.withValues(alpha: 0.2),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 28),
+                SocialIconButton(
+                  assetName: AppIcon.google,
+                  backgroundColor: colorScheme.surfaceContainerHighest,
+                  onTap: authState.isLoading
+                      ? () {}
+                      : () {
+                          setState(() {
+                            _socialError = null;
+                            _socialMessage = null;
+                          });
+                          ref
+                              .read(authControllerProvider.notifier)
+                              .signInWithGoogle();
+                        },
+                ),
 
                 // Row(
                 //   mainAxisAlignment: MainAxisAlignment.center,

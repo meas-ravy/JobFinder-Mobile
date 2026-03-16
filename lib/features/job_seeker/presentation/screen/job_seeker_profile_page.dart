@@ -22,6 +22,7 @@ import 'package:job_finder/shared/widget/section_title.dart';
 import 'package:job_finder/shared/widget/logout_confirm_dialog.dart';
 import 'package:job_finder/features/job_seeker/presentation/provider/profile_provider.dart';
 import 'package:job_finder/shared/widget/svg_icon.dart';
+import 'package:job_finder/features/job_seeker/presentation/provider/ai_assistant_provider.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 class JobSeekerProfilePage extends HookConsumerWidget {
@@ -68,8 +69,6 @@ class JobSeekerProfilePage extends HookConsumerWidget {
                         role: 'Job Seeker',
                         email: profile?.email ?? 'No email provided',
                         imageUrl: profile?.avatarUrl,
-                        colorScheme: colorScheme,
-                        textTheme: textTheme,
                       ),
                       const SizedBox(height: 18),
                     ],
@@ -302,8 +301,9 @@ class JobSeekerProfilePage extends HookConsumerWidget {
                           if (!context.mounted) return;
                           context.go(AppPath.sendOtp);
                         } else {
-                          final error =
-                              ref.read(authControllerProvider).errorMessage;
+                          final error = ref
+                              .read(authControllerProvider)
+                              .errorMessage;
                           ScaffoldMessenger.of(context).showSnackBar(
                             SnackBar(
                               content: Text(error ?? 'Logout failed'),
@@ -412,28 +412,26 @@ class JobSeekerProfilePage extends HookConsumerWidget {
   }
 }
 
-class ProfileProgressCard extends StatelessWidget {
+class ProfileProgressCard extends ConsumerWidget {
   const ProfileProgressCard({
     super.key,
     required this.name,
     required this.role,
     required this.email,
     this.imageUrl,
-    required this.colorScheme,
-    required this.textTheme,
   });
 
   final String name;
   final String role;
   final String email;
   final String? imageUrl;
-  final ColorScheme colorScheme;
-  final TextTheme textTheme;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final colorScheme = Theme.of(context).colorScheme;
     final textTheme = Theme.of(context).textTheme;
+    final healthScore = ref.watch(cvHealthScoreProvider);
+
     return Column(
       children: [
         Container(
@@ -446,13 +444,37 @@ class ProfileProgressCard extends StatelessWidget {
           child: Row(
             children: [
               Stack(
+                alignment: Alignment.center,
                 children: [
+                  // Premium AI Health Score Ring
+                  SizedBox(
+                    width: 105,
+                    height: 105,
+                    child: CircularProgressIndicator(
+                      value: (healthScore ?? 0) / 100,
+                      strokeWidth: 6,
+                      backgroundColor: colorScheme.surfaceContainerHighest,
+                      valueColor: AlwaysStoppedAnimation<Color>(
+                        healthScore == null
+                            ? colorScheme.primary.withValues(alpha: 0.3)
+                            : (healthScore > 70 ? Colors.green : Colors.orange),
+                      ),
+                    ),
+                  ),
+                  // Avatar with Shadow
                   Container(
-                    width: 90,
-                    height: 90,
+                    width: 88,
+                    height: 88,
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
-                      color: colorScheme.surfaceContainerHighest,
+                      color: colorScheme.surface,
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withValues(alpha: 0.1),
+                          blurRadius: 10,
+                          offset: const Offset(0, 4),
+                        ),
+                      ],
                     ),
                     child: imageUrl != null && imageUrl!.isNotEmpty
                         ? ClipOval(
@@ -461,23 +483,42 @@ class ProfileProgressCard extends StatelessWidget {
                         : Center(
                             child: AppSvgIcon(
                               assetName: AppIcon.profileBold,
-                              size: 40,
-                              color: colorScheme.onSurface,
+                              size: 42,
+                              color: colorScheme.primary,
                             ),
                           ),
                   ),
-                  Positioned(
-                    bottom: 4,
-                    right: 4,
-                    child: Container(
-                      padding: const EdgeInsets.all(4),
-                      decoration: BoxDecoration(
-                        color: colorScheme.primary,
-                        shape: BoxShape.circle,
+                  if (healthScore != null)
+                    Positioned(
+                      bottom: 0,
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 10,
+                          vertical: 3,
+                        ),
+                        decoration: BoxDecoration(
+                          color: (healthScore > 70
+                              ? Colors.green
+                              : Colors.orange),
+                          borderRadius: BorderRadius.circular(12),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withValues(alpha: 0.2),
+                              blurRadius: 4,
+                              offset: const Offset(0, 2),
+                            ),
+                          ],
+                        ),
+                        child: Text(
+                          '$healthScore%',
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 11,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
                       ),
-                      child: Icon(Icons.check, color: Colors.white, size: 14),
                     ),
-                  ),
                 ],
               ),
               const SizedBox(width: 20),
@@ -490,24 +531,49 @@ class ProfileProgressCard extends StatelessWidget {
                       style: textTheme.titleLarge?.copyWith(
                         fontWeight: FontWeight.bold,
                         color: colorScheme.onSurface,
-                        fontSize: 20,
+                        fontSize: 22,
                       ),
                     ),
                     const SizedBox(height: 4),
                     Text(
                       role,
                       style: textTheme.bodyMedium?.copyWith(
-                        color: colorScheme.onSurface.withValues(alpha: 0.8),
+                        color: colorScheme.onSurface.withValues(alpha: 0.6),
                         fontSize: 16,
                       ),
                     ),
-                    const SizedBox(height: 4),
-                    Text(
-                      email,
-                      style: textTheme.bodyMedium?.copyWith(
-                        color: colorScheme.onSurface.withValues(alpha: 0.8),
-                        fontSize: 13,
-                      ),
+                    const SizedBox(height: 10),
+                    Row(
+                      children: [
+                        Icon(
+                          Icons.bolt_rounded,
+                          size: 16,
+                          color: healthScore == null
+                              ? AppColor.primaryDark
+                              : (healthScore > 70
+                                    ? Colors.green
+                                    : Colors.orange),
+                        ),
+                        const SizedBox(width: 4),
+                        Expanded(
+                          child: Text(
+                            healthScore == null
+                                ? 'Analyze Match to get Score'
+                                : 'Resume Score: ${healthScore > 70 ? "Strong" : "Improving"}',
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: TextStyle(
+                              color: healthScore == null
+                                  ? AppColor.primaryDark
+                                  : (healthScore > 70
+                                        ? const Color.fromARGB(255, 89, 101, 90)
+                                        : Colors.orange),
+                              fontSize: 13,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
                   ],
                 ),
@@ -519,46 +585,19 @@ class ProfileProgressCard extends StatelessWidget {
         Row(
           children: [
             const SizedBox(width: 16),
-            // Expanded(
-            //   child: ElevatedButton(
-            //     onPressed: () {},
-            //     style: ButtonStyle(
-            //       backgroundColor: WidgetStateProperty.all(
-            //         AppColor.primaryDark,
-            //       ),
-            //       overlayColor: WidgetStateProperty.all(Colors.transparent),
-            //       elevation: WidgetStateProperty.all(0),
-            //       minimumSize: WidgetStateProperty.all(const Size(0, 48)),
-            //       shape: WidgetStateProperty.all(
-            //         RoundedRectangleBorder(
-            //           borderRadius: BorderRadius.circular(26),
-            //         ),
-            //       ),
-            //     ),
-            //     child: const Text(
-            //       'View Profile',
-            //       style: TextStyle(
-            //         fontWeight: FontWeight.bold,
-            //         fontSize: 15,
-            //         color: Colors.white,
-            //       ),
-            //     ),
-            //   ),
-            // ),
-            const SizedBox(width: 16),
             Expanded(
               child: ElevatedButton(
                 onPressed: () => context.push(AppPath.editProfile),
                 style: ButtonStyle(
                   backgroundColor: WidgetStateProperty.all(
-                    AppColor.primaryDark.withValues(alpha: 0.08),
+                    AppColor.primaryDark,
                   ),
                   overlayColor: WidgetStateProperty.all(Colors.transparent),
                   elevation: WidgetStateProperty.all(0),
-                  minimumSize: WidgetStateProperty.all(const Size(0, 48)),
+                  minimumSize: WidgetStateProperty.all(const Size(0, 56)),
                   shape: WidgetStateProperty.all(
                     RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(26),
+                      borderRadius: BorderRadius.circular(28),
                     ),
                   ),
                 ),
@@ -566,8 +605,8 @@ class ProfileProgressCard extends StatelessWidget {
                   'Edit Profile',
                   style: TextStyle(
                     fontWeight: FontWeight.bold,
-                    fontSize: 15,
-                    color: AppColor.primaryLight,
+                    fontSize: 16,
+                    color: Colors.white,
                   ),
                 ),
               ),

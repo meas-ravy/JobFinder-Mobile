@@ -18,8 +18,15 @@ import 'package:form_builder_validators/form_builder_validators.dart';
 
 class ApplyJobPage extends HookConsumerWidget {
   final String jobId;
+  final String jobTitle;
+  final String jobDescription;
 
-  const ApplyJobPage({super.key, required this.jobId});
+  const ApplyJobPage({
+    super.key,
+    required this.jobId,
+    this.jobTitle = 'Job Application',
+    this.jobDescription = '',
+  });
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -539,29 +546,64 @@ class ApplyJobPage extends HookConsumerWidget {
             ),
             const SizedBox(height: 28),
 
-            // Action button
-            SizedBox(
-              width: double.infinity,
-              height: 52,
-              child: FilledButton(
-                style: FilledButton.styleFrom(
-                  backgroundColor: successGreen,
-                  foregroundColor: Colors.white,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(16),
+            // Action buttons
+            Column(
+              children: [
+                SizedBox(
+                  width: double.infinity,
+                  height: 52,
+                  child: FilledButton.icon(
+                    style: FilledButton.styleFrom(
+                      backgroundColor: AppColor.primaryDark,
+                      foregroundColor: Colors.white,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                    ),
+                    onPressed: () {
+                      Navigator.pop(context);
+                      context.push(
+                        AppPath.interviewCoach,
+                        extra: {
+                          'jobTitle': jobTitle,
+                          'jobDescription': jobDescription,
+                        },
+                      );
+                    },
+                    icon: const Icon(Icons.auto_awesome, size: 20),
+                    label: const Text(
+                      'Practice Interview with AI',
+                      style: TextStyle(fontWeight: FontWeight.w700, fontSize: 16),
+                    ),
                   ),
-                  elevation: 0,
                 ),
-                onPressed: () {
-                  ref.invalidate(myApplicationsProvider);
-                  ref.read(mainWrapperIndexProvider.notifier).state = 2;
-                  context.go(AppPath.jobSeekerHome);
-                },
-                child: const Text(
-                  'View My Applications',
-                  style: TextStyle(fontWeight: FontWeight.w700, fontSize: 16),
+                const SizedBox(height: 12),
+                SizedBox(
+                  width: double.infinity,
+                  height: 52,
+                  child: OutlinedButton(
+                    style: OutlinedButton.styleFrom(
+                      side: BorderSide(color: successGreen.withValues(alpha: 0.5)),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                    ),
+                    onPressed: () {
+                      ref.invalidate(myApplicationsProvider);
+                      ref.read(mainWrapperIndexProvider.notifier).state = 2;
+                      context.go(AppPath.jobSeekerHome);
+                    },
+                    child: const Text(
+                      'View My Applications',
+                      style: TextStyle(
+                        fontWeight: FontWeight.w700,
+                        fontSize: 16,
+                        color: successGreen,
+                      ),
+                    ),
+                  ),
                 ),
-              ),
+              ],
             ),
           ],
         ),

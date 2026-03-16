@@ -97,16 +97,23 @@ class ApplicantCard extends StatelessWidget {
                             height: 1.35,
                           ),
                         ),
-                        Text(
-                          data.role,
-                          style: GoogleFonts.inter(
-                            fontSize: 14,
-                            color: textPrimary,
-                            fontWeight: FontWeight.w600,
-                            height: 1.35,
+
+                        Expanded(
+                          child: Text(
+                            data.role,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: GoogleFonts.inter(
+                              fontSize: 12,
+                              color: textPrimary,
+                              fontWeight: FontWeight.w600,
+                              height: 1.35,
+                            ),
                           ),
                         ),
-                        const Spacer(),
+
+                        const SizedBox(width: 8),
+
                         Icon(
                           Icons.arrow_forward_ios,
                           color: textMuted,

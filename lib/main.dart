@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_native_splash/flutter_native_splash.dart';
 import 'package:google_sign_in/google_sign_in.dart';
@@ -29,54 +30,60 @@ Future<void> main() async {
   // Preserve native splash
   FlutterNativeSplash.preserve(widgetsBinding: widgetsBinding);
 
-  // 1️⃣ Initialize Firebase
-  try {
-    if (Firebase.apps.isEmpty) {
-      await Firebase.initializeApp(
-        options: DefaultFirebaseOptions.currentPlatform,
-      );
-    }
-  } catch (e) {
-    if (e.toString().contains('duplicate-app')) {
-      debugPrint('Firebase already initialized, skipping...');
-    } else {
-      rethrow;
-    }
-  }
-
-  // 2️⃣ Local storage & services
-  objectBox = await ObjectBox.create();
-  await GoogleSignIn.instance.initialize(
-    serverClientId: OAuthConfig.googleServerClientId,
-  );
-
+  // 1️⃣ Initialize core services and read storage in parallel
+  // This significantly reduces startup time by not waiting for each service one by one.
   final storage = TokenStorageImpl(const FlutterSecureStorage());
-  final token = await storage.read();
-  final role = await storage.readRole();
-  final hasSeenOnboarding = await storage.readHasSeenOnboarding();
 
-  // 3️⃣ Firebase re-auth (VERY IMPORTANT before notifications)
-  if (token != null && token.isNotEmpty) {
-    try {
-      final firebaseToken = await storage.readFirebaseToken();
-      if (firebaseToken != null &&
-          firebaseToken.isNotEmpty &&
-          FirebaseAuth.instance.currentUser == null) {
-        await FirebaseAuth.instance.signInWithCustomToken(firebaseToken);
-        debugPrint('Firebase re-auth successful on startup');
+  final results = await Future.wait([
+    // 1. Initialize Firebase
+    (() async {
+      try {
+        return await Firebase.initializeApp(
+          options: DefaultFirebaseOptions.currentPlatform,
+        );
+      } catch (e) {
+        if (e.toString().contains('duplicate-app')) {
+          debugPrint('Firebase already initialized, skipping...');
+        } else {
+          debugPrint('Firebase initialization error: $e');
+        }
+        return Firebase.app(); // Return existing app if failed/duplicate
       }
-    } catch (e) {
-      debugPrint('Firebase re-auth failed on startup: $e');
-    }
-  }
-
-  // 4️⃣ Initialize Notifications + Agora in parallel (AFTER auth)
-  await Future.wait([
-    NotificationService.instance.initialize(),
-    AgoraService.instance.initialize(AgoraConfig.appId),
+    })(),
+    // 2. Local storage
+    ObjectBox.create(),
+    // 3. Google Sign-In
+    GoogleSignIn.instance.initialize(
+      serverClientId: OAuthConfig.googleServerClientId,
+    ),
+    // 4. Read storage keys
+    storage.read(),
+    // 5. Read role
+    storage.readRole(),
+    // 6. Read onboarding status
+    storage.readHasSeenOnboarding(),
   ]);
 
-  // 5️⃣ Decide initial route
+  objectBox = results[1] as ObjectBox;
+  final String? token = results[3] as String?;
+  final String? role = results[4] as String?;
+  final bool hasSeenOnboarding = (results[5] as bool?) ?? false;
+
+  // 2️⃣ Background tasks (Don't await these to speed up UI presentation)
+  // Initialize Notifications + Agora in parallel
+  unawaited(
+    Future.wait([
+      NotificationService.instance.initialize(),
+      AgoraService.instance.initialize(AgoraConfig.appId),
+    ]),
+  );
+
+  // Firebase re-auth (Handle in background so it doesn't block the UI)
+  if (token != null && token.isNotEmpty) {
+    _handleBackgroundFirebaseReauth(storage);
+  }
+
+  // 3️⃣ Decide initial route
   String initialRoute = AppPath.splash;
 
   if (hasSeenOnboarding) {
@@ -91,7 +98,7 @@ Future<void> main() async {
     }
   }
 
-  // 6️⃣ Remove splash only when app is ready
+  // 4️⃣ Remove splash only when app is ready
   FlutterNativeSplash.remove();
 
   runApp(
@@ -100,6 +107,21 @@ Future<void> main() async {
       child: MyApp(initialRoute: initialRoute),
     ),
   );
+}
+
+/// Handles Firebase re-authentication in the background to avoid blocking app startup.
+void _handleBackgroundFirebaseReauth(TokenStorageImpl storage) async {
+  try {
+    final firebaseToken = await storage.readFirebaseToken();
+    if (firebaseToken != null &&
+        firebaseToken.isNotEmpty &&
+        FirebaseAuth.instance.currentUser == null) {
+      await FirebaseAuth.instance.signInWithCustomToken(firebaseToken);
+      debugPrint('Firebase re-auth successful on startup');
+    }
+  } catch (e) {
+    debugPrint('Firebase re-auth failed on startup: $e');
+  }
 }
 
 final objectBoxProvider = Provider<ObjectBox>((ref) {

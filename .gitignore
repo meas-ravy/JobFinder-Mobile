@@ -46,6 +46,7 @@ app.*.map.json
 /android/app/release
 
 lib/core/constants/oauth_config.dart
+lib/core/provider/gemini_service_provider.dart
 
 # Heap dump
 *.hprof
@@ -55,3 +56,4 @@ build/
 *.hprof
 *.log
 android/.gradle
+

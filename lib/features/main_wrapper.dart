@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:job_finder/core/constants/assets.dart';
 import 'package:job_finder/core/theme/app_color.dart';
@@ -11,7 +10,7 @@ import 'package:job_finder/features/job_seeker/presentation/screen/job_seeker_sa
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:job_finder/features/job_seeker/presentation/provider/job_provider.dart';
 import 'package:job_finder/l10n/app_localizations.dart';
-import 'package:job_finder/shared/provider/scroll_provider.dart';
+import 'package:job_finder/core/provider/scroll_provider.dart';
 
 class MainWrapper extends ConsumerStatefulWidget {
   final int? initIndex;
@@ -22,28 +21,25 @@ class MainWrapper extends ConsumerStatefulWidget {
 }
 
 class _MainWrapper extends ConsumerState<MainWrapper> {
-  late PageController pageController;
   int presIndex = -1;
+  late List<bool> activatedTabs;
 
   @override
   void initState() {
     super.initState();
     // Use widget.initIndex if provided, otherwise default to current provider value
-    final int initialIndex = widget.initIndex ?? ref.read(mainWrapperIndexProvider);
-    pageController = PageController(initialPage: initialIndex);
-    
+    final int initialIndex =
+        widget.initIndex ?? ref.read(mainWrapperIndexProvider);
+
+    // Initial activation
+    activatedTabs = List.generate(5, (index) => index == initialIndex);
+
     // Ensure the provider is synced with the initial index
     if (widget.initIndex != null) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         ref.read(mainWrapperIndexProvider.notifier).state = widget.initIndex!;
       });
     }
-  }
-
-  @override
-  void dispose() {
-    pageController.dispose();
-    super.dispose();
   }
 
   void animateTap(int index) {
@@ -64,31 +60,30 @@ class _MainWrapper extends ConsumerState<MainWrapper> {
   @override
   Widget build(BuildContext context) {
     final currentIndex = ref.watch(mainWrapperIndexProvider);
-
-    // Listen to provider changes to sync PageView (e.g. when navigated via GoRouter)
-    ref.listen(mainWrapperIndexProvider, (prev, next) {
-      if (pageController.hasClients && pageController.page?.round() != next) {
-        pageController.jumpToPage(next);
-      }
-    });
+    const pages = [
+      JobSeekerHomePage(),
+      JobSeekerSavePage(),
+      JobSeekerAplicatPage(),
+      JobSeekerMessagePage(),
+      JobSeekerProfilePage(),
+    ];
 
     return Scaffold(
-      body: PageView(
-        controller: pageController,
-        physics: const NeverScrollableScrollPhysics(),
-        children: const [
-          JobSeekerHomePage(),
-          JobSeekerSavePage(),
-          JobSeekerAplicatPage(),
-          JobSeekerMessagePage(),
-          JobSeekerProfilePage(),
-        ],
+      body: IndexedStack(
+        index: currentIndex,
+        children: List.generate(pages.length, (index) {
+          if (activatedTabs[index]) {
+            return pages[index];
+          } else {
+            return const SizedBox.shrink();
+          }
+        }),
       ),
       bottomNavigationBar: Container(
         decoration: BoxDecoration(
           border: Border(
             top: BorderSide(
-              color: Colors.grey.withValues(alpha: 0.2),
+              color: Colors.grey.withValues(alpha: 0.1),
               width: 1,
             ),
           ),
@@ -98,7 +93,6 @@ class _MainWrapper extends ConsumerState<MainWrapper> {
           iconSize: 22,
           currentIndex: currentIndex,
           onTap: (index) {
-            HapticFeedback.selectionClick();
             animateTap(index);
             if (currentIndex == index && index == 0) {
               final scrollController = ref.read(
@@ -116,8 +110,13 @@ class _MainWrapper extends ConsumerState<MainWrapper> {
                 }
               }
             } else {
-              ref.read(mainWrapperIndexProvider.notifier).state = index;
-              pageController.jumpToPage(index);
+              setState(() {
+                ref.read(mainWrapperIndexProvider.notifier).state = index;
+                // Activate the tab if it hasn't been yet
+                if (!activatedTabs[index]) {
+                  activatedTabs[index] = true;
+                }
+              });
             }
           },
 

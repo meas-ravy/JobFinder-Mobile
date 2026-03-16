@@ -47,11 +47,19 @@ class CompanyProfileController extends StateNotifier<CompanyProfileState> {
     final result = await _getCompanyProfileUseCase();
     result.fold(
       (failure) {
-        state = state.copyWith(isLoading: false, errorMessage: failure.message);
+        state = state.copyWith(
+          isLoading: false,
+          isInitial: false,
+          errorMessage: failure.message,
+        );
       },
       (data) {
         final parsed = _parseCompany(data);
-        state = state.copyWith(isLoading: false, company: parsed);
+        state = state.copyWith(
+          isLoading: false,
+          isInitial: false,
+          company: parsed,
+        );
       },
     );
   }
@@ -63,11 +71,19 @@ class CompanyProfileController extends StateNotifier<CompanyProfileState> {
     );
     result.fold(
       (failure) {
-        state = state.copyWith(isLoading: false, errorMessage: failure.message);
+        state = state.copyWith(
+          isLoading: false,
+          isInitial: false,
+          errorMessage: failure.message,
+        );
       },
       (data) {
         final parsed = _parseCompany(data);
-        state = state.copyWith(isLoading: false, company: parsed);
+        state = state.copyWith(
+          isLoading: false,
+          isInitial: false,
+          company: parsed,
+        );
       },
     );
   }
@@ -79,11 +95,19 @@ class CompanyProfileController extends StateNotifier<CompanyProfileState> {
     );
     result.fold(
       (failure) {
-        state = state.copyWith(isLoading: false, errorMessage: failure.message);
+        state = state.copyWith(
+          isLoading: false,
+          isInitial: false,
+          errorMessage: failure.message,
+        );
       },
       (data) {
         final parsed = _parseCompany(data);
-        state = state.copyWith(isLoading: false, company: parsed);
+        state = state.copyWith(
+          isLoading: false,
+          isInitial: false,
+          company: parsed,
+        );
       },
     );
   }

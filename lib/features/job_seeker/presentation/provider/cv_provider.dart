@@ -22,6 +22,12 @@ class CvListNotifier extends AutoDisposeAsyncNotifier<List<CvEntity>> {
     return repository.getAllCvs();
   }
 
+  Future<void> saveCv(CvEntity cv) async {
+    final repository = ref.read(cvRepositoryProvider);
+    await repository.saveCv(cv);
+    ref.invalidateSelf();
+  }
+
   Future<void> deleteCv(int id) async {
     final repository = ref.read(cvRepositoryProvider);
 

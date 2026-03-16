@@ -6,10 +6,10 @@ import 'package:job_finder/core/constants/assets.dart';
 import 'package:job_finder/shared/widget/svg_icon.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:job_finder/features/recruiter/presentation/screen/widgets/application_action_buttons.dart';
-import 'package:job_finder/features/recruiter/presentation/screen/widgets/application_detail_dialogs.dart';
-import 'package:job_finder/features/recruiter/presentation/screen/widgets/application_detail_helpers.dart';
-import 'package:job_finder/features/recruiter/presentation/screen/widgets/application_detail_shimmer.dart';
+import 'package:job_finder/features/recruiter/presentation/widget/application_action_buttons.dart';
+import 'package:job_finder/features/recruiter/presentation/widget/application_detail_dialogs.dart';
+import 'package:job_finder/features/recruiter/presentation/widget/application_detail_helpers.dart';
+import 'package:job_finder/features/recruiter/presentation/widget/application_detail_shimmer.dart';
 
 class RecruiterApplicationDetailPage extends HookConsumerWidget {
   const RecruiterApplicationDetailPage({super.key, required this.id});

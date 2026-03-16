@@ -1,5 +1,5 @@
 import 'package:hooks_riverpod/hooks_riverpod.dart';
-import 'package:job_finder/core/helper/typedef.dart';
+import 'package:job_finder/features/recruiter/domain/entity/job_entity.dart';
 import 'package:job_finder/features/recruiter/domain/usecase/recruiter_usecase.dart';
 import 'package:job_finder/features/recruiter/presentation/provider/jobs/recruiter_jobs_state.dart';
 
@@ -95,7 +95,7 @@ class RecruiterJobsController extends StateNotifier<RecruiterJobsState> {
     state = state.copyWith(isRefreshing: false);
   }
 
-  Future<void> createJob(DataMap job) async {
+  Future<void> createJob(JobEntity job) async {
     state = state.copyWith(isLoading: true, errorMessage: null);
     final result = await _createJobUseCase(CreateJobParams(job: job));
     result.fold(
@@ -145,7 +145,7 @@ class RecruiterJobsController extends StateNotifier<RecruiterJobsState> {
     );
   }
 
-  Future<void> updateJob(String jobId, DataMap job) async {
+  Future<void> updateJob(String jobId, JobEntity job) async {
     state = state.copyWith(isLoading: true, errorMessage: null);
     final result = await _updateJobUseCase(
       UpdateJobParams(jobId: jobId, job: job),

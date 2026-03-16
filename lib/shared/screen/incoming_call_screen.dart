@@ -140,31 +140,27 @@ class _IncomingCallScreenState extends State<IncomingCallScreen>
     return Scaffold(
       body: Stack(
         children: [
-          // /// Background Avatar
-          // Positioned.fill(
-          //   child: IgnorePointer(
-          //     child: inv.callerAvatar != null
-          //         ? Image.network(inv.callerAvatar!, fit: BoxFit.cover)
-          //         : Container(color: const Color(0xFF0F2027)),
-          //   ),
-          // ),
-
-          /// Blur + Gradient
+          /// Background Avatar (Blurred)
           Positioned.fill(
-            child: IgnorePointer(
-              child: BackdropFilter(
-                filter: ImageFilter.blur(sigmaX: 40, sigmaY: 40),
-                child: Container(
-                  decoration: const BoxDecoration(
-                    gradient: LinearGradient(
-                      colors: [
-                        Color(0xFF0F2027),
-                        Color(0xFF203A43),
-                        Color(0xFF2C5364),
-                      ],
-                      begin: Alignment.topCenter,
-                      end: Alignment.bottomCenter,
-                    ),
+            child: inv.callerAvatar != null && inv.callerAvatar!.isNotEmpty
+                ? Image.network(inv.callerAvatar!, fit: BoxFit.cover)
+                : Container(color: const Color(0xFF0F2027)),
+          ),
+
+          /// Blur + Animated Gradient Overlay
+          Positioned.fill(
+            child: BackdropFilter(
+              filter: ImageFilter.blur(sigmaX: 30, sigmaY: 30),
+              child: Container(
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [
+                      Colors.black.withValues(alpha: 0.8),
+                      Colors.black.withValues(alpha: 0.4),
+                      Colors.black.withValues(alpha: 0.8),
+                    ],
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
                   ),
                 ),
               ),
@@ -185,30 +181,30 @@ class _IncomingCallScreenState extends State<IncomingCallScreen>
                   /// Incoming badge
                   Container(
                     padding: const EdgeInsets.symmetric(
-                      horizontal: 18,
-                      vertical: 8,
+                      horizontal: 20,
+                      vertical: 10,
                     ),
                     decoration: BoxDecoration(
                       borderRadius: BorderRadius.circular(30),
-                      color: Colors.white10,
-                      border: Border.all(color: Colors.white12),
+                      color: Colors.white.withValues(alpha: 0.1),
+                      border: Border.all(
+                        color: Colors.white.withValues(alpha: 0.1),
+                      ),
                     ),
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        Icon(
-                          isVideo ? Icons.videocam : Icons.call,
-                          color: Colors.white,
-                          size: 18,
-                        ),
-                        const SizedBox(width: 8),
+                        _AnimatedBlinkingDot(),
+                        const SizedBox(width: 10),
                         Text(
                           isVideo
-                              ? "Incoming Video Call"
-                              : "Incoming Voice Call",
-                          style: GoogleFonts.outfit(
-                            color: Colors.white,
-                            fontSize: 14,
+                              ? "INCOMING VIDEO CALL"
+                              : "INCOMING VOICE CALL",
+                          style: GoogleFonts.inter(
+                            color: Colors.white.withValues(alpha: 0.9),
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
+                            letterSpacing: 1.2,
                           ),
                         ),
                       ],
@@ -236,31 +232,22 @@ class _IncomingCallScreenState extends State<IncomingCallScreen>
                     inv.callerName,
                     style: GoogleFonts.outfit(
                       color: Colors.white,
-                      fontSize: 32,
+                      fontSize: 36,
                       fontWeight: FontWeight.bold,
+                      letterSpacing: -0.5,
                     ),
                   ),
 
                   const SizedBox(height: 10),
 
                   /// ringing text
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      const Icon(
-                        Icons.graphic_eq,
-                        color: Colors.white70,
-                        size: 18,
-                      ),
-                      const SizedBox(width: 6),
-                      Text(
-                        "Ringing...",
-                        style: GoogleFonts.outfit(
-                          color: Colors.white70,
-                          fontSize: 15,
-                        ),
-                      ),
-                    ],
+                  Text(
+                    "Job Finder Professional Call",
+                    style: GoogleFonts.inter(
+                      color: Colors.white.withValues(alpha: 0.6),
+                      fontSize: 16,
+                      fontWeight: FontWeight.w400,
+                    ),
                   ),
 
                   const Spacer(),
@@ -268,24 +255,27 @@ class _IncomingCallScreenState extends State<IncomingCallScreen>
                   /// Action buttons
                   Padding(
                     padding: const EdgeInsets.symmetric(
-                      horizontal: 50,
-                      vertical: 40,
+                      horizontal: 40,
+                      vertical: 60,
                     ),
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         _CallButton(
-                          icon: Icons.call_end,
+                          icon: Icons.close_rounded,
                           color: Colors.redAccent,
                           label: "Decline",
                           onTap: _decline,
                         ),
                         _CallButton(
-                          icon: isVideo ? Icons.videocam : Icons.call,
-                          color: Colors.green,
+                          icon: isVideo
+                              ? Icons.videocam_rounded
+                              : Icons.call_rounded,
+                          color: const Color(0xFF00FFB2),
                           label: "Accept",
                           onTap: _accept,
                           isPrimary: true,
+                          iconColor: Colors.black87,
                         ),
                       ],
                     ),
@@ -295,6 +285,49 @@ class _IncomingCallScreenState extends State<IncomingCallScreen>
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+class _AnimatedBlinkingDot extends StatefulWidget {
+  @override
+  _AnimatedBlinkingDotState createState() => _AnimatedBlinkingDotState();
+}
+
+class _AnimatedBlinkingDotState extends State<_AnimatedBlinkingDot>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(seconds: 1),
+    )..repeat(reverse: true);
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return FadeTransition(
+      opacity: _controller,
+      child: Container(
+        width: 8,
+        height: 8,
+        decoration: const BoxDecoration(
+          color: Colors.redAccent,
+          shape: BoxShape.circle,
+          boxShadow: [
+            BoxShadow(color: Colors.redAccent, blurRadius: 4, spreadRadius: 1),
+          ],
+        ),
       ),
     );
   }
@@ -442,6 +475,7 @@ class _CallButton extends StatelessWidget {
   final String label;
   final VoidCallback onTap;
   final bool isPrimary;
+  final Color iconColor;
 
   const _CallButton({
     required this.icon,
@@ -449,16 +483,16 @@ class _CallButton extends StatelessWidget {
     required this.label,
     required this.onTap,
     this.isPrimary = false,
+    this.iconColor = Colors.white,
   });
 
   @override
   Widget build(BuildContext context) {
-    final size = isPrimary ? 90.0 : 75.0;
+    final size = isPrimary ? 80.0 : 70.0;
 
     return Column(
       children: [
         GestureDetector(
-          behavior: HitTestBehavior.opaque,
           onTap: onTap,
           child: Container(
             width: size,
@@ -467,16 +501,28 @@ class _CallButton extends StatelessWidget {
               color: color,
               shape: BoxShape.circle,
               boxShadow: [
-                BoxShadow(color: color.withOpacity(0.5), blurRadius: 20),
+                BoxShadow(
+                  color: color.withValues(alpha: 0.4),
+                  blurRadius: 25,
+                  offset: const Offset(0, 8),
+                ),
               ],
+              border: Border.all(
+                color: Colors.white.withValues(alpha: 0.1),
+                width: 2,
+              ),
             ),
-            child: Icon(icon, color: Colors.white, size: 36),
+            child: Icon(icon, color: iconColor, size: isPrimary ? 32 : 28),
           ),
         ),
-        const SizedBox(height: 10),
+        const SizedBox(height: 12),
         Text(
           label,
-          style: GoogleFonts.outfit(color: Colors.white, fontSize: 15),
+          style: GoogleFonts.inter(
+            color: Colors.white.withValues(alpha: 0.7),
+            fontSize: 14,
+            fontWeight: FontWeight.w500,
+          ),
         ),
       ],
     );

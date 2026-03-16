@@ -1,0 +1,8 @@
+
+gemini service provider example :
+
+const String _geminiAppkey = 'you-api-key';
+
+final geminiServiceProvider = Provider<GeminiService>((ref) {
+  return GeminiService(_geminiAppkey);
+});

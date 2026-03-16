@@ -6,11 +6,15 @@ import 'package:job_finder/core/theme/app_color.dart';
 class ApplyBottomSheet extends StatelessWidget {
   final bool isDark;
   final String jobId;
+  final String jobTitle;
+  final String jobDescription;
 
   const ApplyBottomSheet({
     super.key,
     required this.isDark,
     required this.jobId,
+    required this.jobTitle,
+    required this.jobDescription,
   });
 
   @override
@@ -52,7 +56,13 @@ class ApplyBottomSheet extends StatelessWidget {
                 child: ElevatedButton(
                   onPressed: () {
                     context.pop();
-                    context.push('${AppPath.applyJob}/$jobId');
+                    context.push(
+                      '${AppPath.applyJob}/$jobId',
+                      extra: {
+                        'jobTitle': jobTitle,
+                        'jobDescription': jobDescription,
+                      },
+                    );
                   },
                   style: ElevatedButton.styleFrom(
                     backgroundColor: isDark

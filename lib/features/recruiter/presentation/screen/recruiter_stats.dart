@@ -54,7 +54,8 @@ class RecruiterStatsPage extends HookConsumerWidget {
         toolbarHeight: 80,
         title: const HeaderSection(),
       ),
-      body: recruiterState.isLoading && dashboardData == null
+      body: (recruiterState.isLoading || recruiterState.isInitial) &&
+              dashboardData == null
           ? const _StatsShimmer()
           : RefreshIndicator(
               onRefresh: () async {

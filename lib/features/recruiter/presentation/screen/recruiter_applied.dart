@@ -5,7 +5,7 @@ import 'package:job_finder/core/routes/app_path.dart';
 import 'package:job_finder/features/recruiter/data/models/applicant_card_data.dart';
 import 'package:job_finder/features/recruiter/presentation/provider/applications/recruiter_applications_state.dart';
 import 'package:job_finder/features/recruiter/presentation/provider/recruiter_provider.dart';
-import 'package:job_finder/features/recruiter/presentation/screen/widgets/application_shimmer.dart';
+import 'package:job_finder/features/recruiter/presentation/widget/application_shimmer.dart';
 import 'package:job_finder/features/recruiter/presentation/widget/applicant_card.dart';
 
 class RecruiterAppliedPage extends ConsumerStatefulWidget {
@@ -87,8 +87,8 @@ class _RecruiterAppliedPageState extends ConsumerState<RecruiterAppliedPage>
     ColorScheme colorScheme,
     void Function()? onPressed,
   ) {
-    // 1. Loading state (only if we don't have existing data to show)
-    if (state.isLoading && state.applicants.isEmpty) {
+    // 1. Loading state OR Initial state (only if we don't have existing data to show)
+    if ((state.isLoading || state.isInitial) && state.applicants.isEmpty) {
       return const AppliedShimmer();
     }
 

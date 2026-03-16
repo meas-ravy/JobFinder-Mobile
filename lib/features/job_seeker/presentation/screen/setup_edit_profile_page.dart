@@ -226,10 +226,40 @@ class EditProfilePage extends HookConsumerWidget {
                               if (context.mounted) {
                                 ScaffoldMessenger.of(context).showSnackBar(
                                   SnackBar(
-                                    content: Text(
-                                      'Image upload failed: ${e.toString()}',
+                                    content: Row(
+                                      children: [
+                                        const Icon(
+                                          Icons.cloud_off_rounded,
+                                          color: Colors.white,
+                                          size: 20,
+                                        ),
+                                        const SizedBox(width: 12),
+                                        Expanded(
+                                          child: Text(
+                                            'Image upload failed: ${_cleanErrorMessage(e.toString())}',
+                                            style: const TextStyle(
+                                              fontWeight: FontWeight.w600,
+                                              fontSize: 14,
+                                            ),
+                                          ),
+                                        ),
+                                      ],
                                     ),
-                                    backgroundColor: Colors.red,
+                                    backgroundColor: const Color(0xffE53935),
+                                    behavior: SnackBarBehavior.floating,
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 16,
+                                      vertical: 12,
+                                    ),
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(16),
+                                    ),
+                                    margin: const EdgeInsets.fromLTRB(
+                                      24,
+                                      0,
+                                      24,
+                                      24,
+                                    ),
                                   ),
                                 );
                               }
@@ -275,11 +305,47 @@ class EditProfilePage extends HookConsumerWidget {
                             } else {
                               ScaffoldMessenger.of(context).showSnackBar(
                                 SnackBar(
-                                  content: Text(
-                                    profileState.errorMessage ??
-                                        'Failed to save profile',
+                                  content: Row(
+                                    children: [
+                                      const Icon(
+                                        Icons.error_outline_rounded,
+                                        color: Colors.white,
+                                        size: 20,
+                                      ),
+                                      const SizedBox(width: 12),
+                                      Expanded(
+                                        child: Text(
+                                          _cleanErrorMessage(
+                                            ref
+                                                    .read(
+                                                      profileControllerProvider,
+                                                    )
+                                                    .errorMessage ??
+                                                'Failed to save profile',
+                                          ),
+                                          style: const TextStyle(
+                                            fontWeight: FontWeight.w600,
+                                            fontSize: 14,
+                                          ),
+                                        ),
+                                      ),
+                                    ],
                                   ),
-                                  backgroundColor: Colors.red,
+                                  backgroundColor: const Color(0xffE53935),
+                                  behavior: SnackBarBehavior.floating,
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 16,
+                                    vertical: 12,
+                                  ),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(16),
+                                  ),
+                                  margin: const EdgeInsets.fromLTRB(
+                                    24,
+                                    0,
+                                    24,
+                                    24,
+                                  ),
                                 ),
                               );
                             }
@@ -477,5 +543,12 @@ class EditProfilePage extends HookConsumerWidget {
         ),
       ],
     );
+  }
+
+  String _cleanErrorMessage(String error) {
+    if (error.contains('Exception:')) {
+      return error.replaceAll('Exception:', '').trim();
+    }
+    return error;
   }
 }

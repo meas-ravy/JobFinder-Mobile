@@ -32,9 +32,6 @@ class RecruiterProfilePage extends HookConsumerWidget {
     final textTheme = Theme.of(context).textTheme;
     final l10n = AppLocalizations.of(context);
 
-    final recruiterState = ref.watch(companyProfileProvider);
-    final company = recruiterState.company;
-
     return Scaffold(
       backgroundColor: colorScheme.surface,
       appBar: AppBar(
@@ -47,9 +44,16 @@ class RecruiterProfilePage extends HookConsumerWidget {
         ),
       ),
       body: SafeArea(
-        child: recruiterState.isLoading
-            ? const _ProfileShimmer()
-            : ListView(
+        child: Consumer(
+          builder: (context, ref, child) {
+            final recruiterState = ref.watch(companyProfileProvider);
+            final company = recruiterState.company;
+
+            if (recruiterState.isLoading || recruiterState.isInitial) {
+              return const _ProfileShimmer();
+            }
+
+            return ListView(
                 padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
                 children: [
                   _ProfileProgressCard(
@@ -255,23 +259,27 @@ class RecruiterProfilePage extends HookConsumerWidget {
                         message: 'Logging out safely...',
                       );
 
-                      final success =
-                          await ref.read(authControllerProvider.notifier).logout();
+                      final success = await ref
+                          .read(authControllerProvider.notifier)
+                          .logout();
 
                       if (!context.mounted) return;
                       LoadingDialog.hide(context);
 
                       if (success) {
                         // Clear storage only after successful server logout
-                        final storage =
-                            TokenStorageImpl(const FlutterSecureStorage());
+                        final storage = TokenStorageImpl(
+                          const FlutterSecureStorage(),
+                        );
                         await storage.delete();
                         await storage.deleteRole();
 
                         if (!context.mounted) return;
                         context.go(AppPath.sendOtp);
                       } else {
-                        final error = ref.read(authControllerProvider).errorMessage;
+                        final error = ref
+                            .read(authControllerProvider)
+                            .errorMessage;
                         ScaffoldMessenger.of(context).showSnackBar(
                           SnackBar(
                             content: Text(error ?? 'Logout failed'),
@@ -286,9 +294,11 @@ class RecruiterProfilePage extends HookConsumerWidget {
                     },
                   ),
                 ],
-              ),
-      ),
-    );
+              );
+            },
+          ),
+        ),
+      );
   }
 }
 

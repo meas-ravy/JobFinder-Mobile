@@ -6,11 +6,25 @@ import 'package:job_finder/features/recruiter/presentation/shared/form_list_inpu
 import 'package:job_finder/features/recruiter/presentation/shared/form_text_input.dart';
 
 class JobDescriptionStep extends StatelessWidget {
-  const JobDescriptionStep({super.key});
+  const JobDescriptionStep({
+    super.key,
+    this.onAIGenerate,
+    this.onGenerateDescription,
+    this.onGenerateResponsibilities,
+    this.onGenerateRequirements,
+    this.onGenerateSkills,
+  });
+
+  final VoidCallback? onAIGenerate;
+  final VoidCallback? onGenerateDescription;
+  final VoidCallback? onGenerateResponsibilities;
+  final VoidCallback? onGenerateRequirements;
+  final VoidCallback? onGenerateSkills;
 
   @override
   Widget build(BuildContext context) {
     final textTheme = Theme.of(context).textTheme;
+    final colorScheme = Theme.of(context).colorScheme;
     final formState = FormBuilder.of(context);
     final category =
         formState?.fields['category']?.value as String? ?? 'Technology';
@@ -18,15 +32,37 @@ class JobDescriptionStep extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          'Job Description',
-          style: textTheme.titleLarge?.copyWith(
-            fontWeight: FontWeight.w800,
-            fontSize: 20,
-          ),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(
+              'Job Details',
+              style: textTheme.titleLarge?.copyWith(
+                fontWeight: FontWeight.w800,
+                fontSize: 20,
+              ),
+            ),
+            if (onAIGenerate != null)
+              TextButton.icon(
+                onPressed: onAIGenerate,
+                label: const Text('Fill All'),
+                icon: const Icon(Icons.auto_awesome_rounded, size: 20),
+                style: TextButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(horizontal: 12),
+                  backgroundColor: colorScheme.primary.withValues(alpha: 0.05),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+              ),
+          ],
         ),
         const SizedBox(height: 24),
-        const FormFieldLabel(label: 'Description'),
+        FormFieldLabel(
+          label: 'Description',
+          onAction: onGenerateDescription,
+          actionTooltip: 'Generate Description Only',
+        ),
         const SizedBox(height: 8),
         FormTextInput(
           name: 'description',
@@ -42,6 +78,7 @@ class JobDescriptionStep extends StatelessWidget {
           name: 'responsibilities',
           hint: 'Type a responsibility and press enter...',
           label: 'Responsibilities',
+          onAction: onGenerateResponsibilities,
           suggestions: _getResponsibilities(category),
           validators: [FormBuilderValidators.required()],
         ),
@@ -50,11 +87,16 @@ class JobDescriptionStep extends StatelessWidget {
           name: 'requirements',
           hint: 'Type a requirement and press enter...',
           label: 'Requirements',
+          onAction: onGenerateRequirements,
           suggestions: _getRequirements(category),
           validators: [FormBuilderValidators.required()],
         ),
         const SizedBox(height: 20),
-        const FormFieldLabel(label: 'Skills'),
+        FormFieldLabel(
+          label: 'Skills',
+          onAction: onGenerateSkills,
+          actionTooltip: 'Suggest Skills Only',
+        ),
         const SizedBox(height: 8),
         FormTextInput(
           name: 'skills',

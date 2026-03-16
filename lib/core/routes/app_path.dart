@@ -24,6 +24,7 @@ class AppPath {
   static const String applyJob = '/apply-job';
   static const String chatDetail = '/chat-detail';
   static const String jobSeekerChatDetail = '/jobseeker-chat-detail';
-  static const String jobSeekerApplicationDetail =
-      '/jobseeker-application-detail';
+  static const String jobSeekerApplicationDetail = '/jobseeker-application-detail';
+  static const String resumeHealth = '/resume-health';
+  static const String interviewCoach = '/interview-coach';
 }

@@ -1,6 +1,7 @@
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:job_finder/features/job_seeker/domain/usecase/profile_usecase.dart';
 import 'package:job_finder/features/job_seeker/presentation/provider/profile_state.dart';
+import 'package:dio/dio.dart';
 
 
 class ProfileController extends StateNotifier<ProfileState> {
@@ -41,10 +42,22 @@ class ProfileController extends StateNotifier<ProfileState> {
         state = state.copyWith(
           isLoading: false,
           isFetched: true,
-          errorMessage: e.toString(),
+          errorMessage: _mapError(e),
         );
       }
     }
+  }
+
+  String _mapError(dynamic e) {
+    if (e is DioException) {
+      final response = e.response;
+      if (response != null && response.data is Map) {
+        final data = response.data as Map;
+        if (data.containsKey('error')) return data['error'].toString();
+        if (data.containsKey('message')) return data['message'].toString();
+      }
+    }
+    return e.toString();
   }
 
   Future<bool> createProfile(Map<String, dynamic> body) async {
@@ -61,7 +74,7 @@ class ProfileController extends StateNotifier<ProfileState> {
       state = state.copyWith(
         isLoading: false,
         isFetched: true,
-        errorMessage: e.toString(),
+        errorMessage: _mapError(e),
       );
       return false;
     }
@@ -81,7 +94,7 @@ class ProfileController extends StateNotifier<ProfileState> {
       state = state.copyWith(
         isLoading: false,
         isFetched: true,
-        errorMessage: e.toString(),
+        errorMessage: _mapError(e),
       );
       return false;
     }

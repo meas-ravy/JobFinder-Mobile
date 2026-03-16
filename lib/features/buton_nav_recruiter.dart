@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:job_finder/core/constants/assets.dart';
 import 'package:job_finder/core/theme/app_color.dart';
@@ -11,7 +10,7 @@ import 'package:job_finder/features/recruiter/presentation/screen/recruiter_stat
 import 'package:job_finder/l10n/app_localizations.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:job_finder/features/recruiter/presentation/provider/recruiter_provider.dart';
-import 'package:job_finder/shared/provider/scroll_provider.dart';
+import 'package:job_finder/core/provider/scroll_provider.dart';
 
 class ButtonNavRecruit extends ConsumerStatefulWidget {
   final int? initIndex;
@@ -23,20 +22,15 @@ class ButtonNavRecruit extends ConsumerStatefulWidget {
 
 class _ButtonNavRecruitState extends ConsumerState<ButtonNavRecruit> {
   late int currentIndex;
-  late PageController pageController;
   int presIndex = -1;
+  late List<bool> activatedTabs;
 
   @override
   void initState() {
     super.initState();
     currentIndex = widget.initIndex ?? 0;
-    pageController = PageController(initialPage: currentIndex);
-  }
-
-  @override
-  void dispose() {
-    pageController.dispose();
-    super.dispose();
+    // Pre-initialize only the current starting tab
+    activatedTabs = List.generate(5, (index) => index == currentIndex);
   }
 
   void animatTap(int index) {
@@ -56,24 +50,30 @@ class _ButtonNavRecruitState extends ConsumerState<ButtonNavRecruit> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: PageView(
-        controller: pageController,
-        physics: const NeverScrollableScrollPhysics(),
-        children: const [
-          RecruiterHomePage(),
-          RecruiterAppliedPage(),
-          RecruiterStatsPage(),
-          RecruiterMessagePage(),
-          RecruiterProfilePage(),
-        ],
-      ),
+    const pages = [
+      RecruiterHomePage(),
+      RecruiterAppliedPage(),
+      RecruiterStatsPage(),
+      RecruiterMessagePage(),
+      RecruiterProfilePage(),
+    ];
 
+    return Scaffold(
+      body: IndexedStack(
+        index: currentIndex,
+        children: List.generate(pages.length, (index) {
+          if (activatedTabs[index]) {
+            return pages[index];
+          } else {
+            return const SizedBox.shrink();
+          }
+        }),
+      ),
       bottomNavigationBar: Container(
         decoration: BoxDecoration(
           border: Border(
             top: BorderSide(
-              color: Colors.grey.withValues(alpha: 0.2),
+              color: Colors.grey.withValues(alpha: 0.1),
               width: 1,
             ),
           ),
@@ -83,7 +83,6 @@ class _ButtonNavRecruitState extends ConsumerState<ButtonNavRecruit> {
           iconSize: 22,
           currentIndex: currentIndex,
           onTap: (index) {
-            HapticFeedback.selectionClick();
             animatTap(index);
             if (currentIndex == index && index == 0) {
               final scrollController = ref.read(
@@ -103,9 +102,13 @@ class _ButtonNavRecruitState extends ConsumerState<ButtonNavRecruit> {
                 }
               }
             } else {
-              currentIndex = index;
-              // tell pageview switch to new tap
-              pageController.jumpToPage(index);
+              setState(() {
+                currentIndex = index;
+                // Activate the tab if it hasn't been yet
+                if (!activatedTabs[index]) {
+                  activatedTabs[index] = true;
+                }
+              });
             }
           },
           items: [

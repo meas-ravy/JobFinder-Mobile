@@ -118,14 +118,14 @@ class JobDetailPage extends ConsumerWidget {
         error: (err, stack) => Center(child: Text('Error: $err')),
       ),
       bottomNavigationBar: jobAsync.when(
-        data: (job) => _buildBottomButton(context, isDark),
+        data: (job) => _buildBottomButton(context, isDark, job),
         loading: () => const SizedBox.shrink(),
         error: (err, stack) => const SizedBox.shrink(),
       ),
     );
   }
 
-  Widget _buildBottomButton(BuildContext context, bool isDark) {
+  Widget _buildBottomButton(BuildContext context, bool isDark, dynamic job) {
     return Container(
       padding: const EdgeInsets.fromLTRB(24, 12, 24, 32),
       decoration: BoxDecoration(
@@ -137,8 +137,12 @@ class JobDetailPage extends ConsumerWidget {
             context: context,
             backgroundColor: Colors.transparent,
             isScrollControlled: true,
-            builder: (context) =>
-                ApplyBottomSheet(isDark: isDark, jobId: jobId),
+            builder: (context) => ApplyBottomSheet(
+              isDark: isDark,
+              jobId: jobId,
+              jobTitle: job.title ?? '',
+              jobDescription: job.description ?? '',
+            ),
           );
         },
         style: ElevatedButton.styleFrom(

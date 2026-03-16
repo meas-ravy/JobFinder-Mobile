@@ -16,10 +16,18 @@ class RecruiterDashboardController
     final result = await _getRecruiterDashboardUseCase();
     result.fold(
       (failure) {
-        state = state.copyWith(isLoading: false, errorMessage: failure.message);
+        state = state.copyWith(
+          isLoading: false,
+          isInitial: false,
+          errorMessage: failure.message,
+        );
       },
       (data) {
-        state = state.copyWith(isLoading: false, dashboardData: data);
+        state = state.copyWith(
+          isLoading: false,
+          isInitial: false,
+          dashboardData: data,
+        );
       },
     );
   }

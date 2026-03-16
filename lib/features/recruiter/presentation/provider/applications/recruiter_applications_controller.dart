@@ -35,10 +35,18 @@ class RecruiterApplicationsController
     final result = await _getJobApplicationsUseCase(jobId);
     result.fold(
       (failure) {
-        state = state.copyWith(isLoading: false, errorMessage: failure.message);
+        state = state.copyWith(
+          isLoading: false,
+          isInitial: false,
+          errorMessage: failure.message,
+        );
       },
       (applicants) {
-        state = state.copyWith(isLoading: false, applicants: applicants);
+        state = state.copyWith(
+          isLoading: false,
+          isInitial: false,
+          applicants: applicants,
+        );
       },
     );
   }
@@ -50,10 +58,18 @@ class RecruiterApplicationsController
     final result = await _getAllApplicationsUseCase();
     result.fold(
       (failure) {
-        state = state.copyWith(isLoading: false, errorMessage: failure.message);
+        state = state.copyWith(
+          isLoading: false,
+          isInitial: false,
+          errorMessage: failure.message,
+        );
       },
       (applicants) {
-        state = state.copyWith(isLoading: false, applicants: applicants);
+        state = state.copyWith(
+          isLoading: false,
+          isInitial: false,
+          applicants: applicants,
+        );
       },
     );
   }
@@ -61,17 +77,23 @@ class RecruiterApplicationsController
   Future<void> getApplicationDetails(String id, {bool refresh = false}) async {
     state = state.copyWith(
       isLoading: !refresh,
+      isInitial: false,
       errorMessage: null,
       applicationDetails: refresh ? state.applicationDetails : null,
     );
     final result = await _getApplicationDetailsUseCase(id);
     result.fold(
       (failure) {
-        state = state.copyWith(isLoading: false, errorMessage: failure.message);
+        state = state.copyWith(
+          isLoading: false,
+          isInitial: false,
+          errorMessage: failure.message,
+        );
       },
       (application) {
         state = state.copyWith(
           isLoading: false,
+          isInitial: false,
           applicationDetails: application,
         );
       },

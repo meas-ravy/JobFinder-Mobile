@@ -3,9 +3,11 @@ import 'package:job_finder/core/helper/typedef.dart';
 import 'package:job_finder/features/recruiter/data/models/application_detail_model.dart';
 import 'package:job_finder/features/recruiter/data/models/application_model.dart';
 import 'package:job_finder/features/recruiter/data/models/company_model.dart';
+import 'package:job_finder/features/recruiter/data/models/job_model.dart';
 import 'package:job_finder/features/recruiter/data/server/recruiter_server.dart';
 import 'package:job_finder/features/recruiter/domain/entity/application_detail_entity.dart';
 import 'package:job_finder/features/recruiter/domain/entity/application_entity.dart';
+import 'package:job_finder/features/recruiter/domain/entity/job_entity.dart';
 import 'package:job_finder/features/recruiter/domain/repository/repository.dart';
 
 class RecruiterRepositoryImpl implements RecruiterRepository {
@@ -29,8 +31,34 @@ class RecruiterRepositoryImpl implements RecruiterRepository {
   }
 
   @override
-  ResultFuture<DataMap> createJob(DataMap job) {
-    return _server.createJob(job);
+  ResultFuture<DataMap> createJob(JobEntity job) {
+    final model = job is JobModel ? job : JobModel.fromMap(_entityToMap(job));
+    return _server.createJob(model.toJson());
+  }
+
+  // Helper for odd edge cases where we get a raw entity
+  DataMap _entityToMap(JobEntity entity) {
+    // This is just a fallback, usually it will already be a JobModel from the UI
+    return {
+      'title': entity.title,
+      'category': entity.category,
+      'location': entity.location,
+      'employmentType': entity.employmentType,
+      'workArrangement': entity.workArrangement,
+      'experienceLevel': entity.experienceLevel,
+      'positionsAvailable': entity.positionsAvailable,
+      'description': entity.description,
+      'responsibilities': entity.responsibilities,
+      'requirements': entity.requirements,
+      'skills': entity.skills,
+      'salaryType': entity.salaryType,
+      'salaryMin': entity.salaryMin,
+      'salaryMax': entity.salaryMax,
+      'salaryCurrency': entity.salaryCurrency,
+      'salaryPeriod': entity.salaryPeriod,
+      'benefits': entity.benefits,
+      'applicationDeadline': entity.applicationDeadline.toIso8601String(),
+    };
   }
 
   @override
@@ -49,8 +77,9 @@ class RecruiterRepositoryImpl implements RecruiterRepository {
   }
 
   @override
-  ResultFuture<DataMap> updateJob(String jobId, DataMap job) {
-    return _server.updateJob(jobId, job);
+  ResultFuture<DataMap> updateJob(String jobId, JobEntity job) {
+    final model = job is JobModel ? job : JobModel.fromMap(_entityToMap(job));
+    return _server.updateJob(jobId, model.toJson());
   }
 
   @override

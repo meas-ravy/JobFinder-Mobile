@@ -13,40 +13,42 @@ enum SecureStorageKey {
   appLockEnabled('app_lock_enabled'),
   securityQuestion('security_question'),
   securityAnswer('security_answer'),
-  firebaseToken('firebase_token');
+  firebaseToken('firebase_token'),
+  isPremium('is_premium'),
+  cvHealthScore('cv_health_score');
 
   final String keyName;
   const SecureStorageKey(this.keyName);
 }
 
-/// A service that wraps [FlutterSecureStorage] to provide type-safe access to stored data
+// A service to provide type-safe access to stored data
 class SecureStorageService {
   final FlutterSecureStorage _storage;
 
   const SecureStorageService(this._storage);
 
-  /// Writes a value to secure storage
+  // Writes a value to secure storage
   Future<void> write(SecureStorageKey key, String value) async {
     await _storage.write(key: key.keyName, value: value);
   }
 
-  /// Reads a value from secure storage
+  // Reads a value from secure storage
   Future<String?> read(SecureStorageKey key) async {
     return await _storage.read(key: key.keyName);
   }
 
-  /// Deletes a value from secure storage
+  // Deletes a value from secure storage
   Future<void> delete(SecureStorageKey key) async {
     await _storage.delete(key: key.keyName);
   }
 
-  /// Deletes all values from secure storage
+  // Deletes all values from secure storage
   Future<void> deleteAll() async {
     await _storage.deleteAll();
   }
 }
 
-/// Provider for the [SecureStorageService]
+// Provider 
 final secureStorageServiceProvider = Provider<SecureStorageService>((ref) {
   return const SecureStorageService(FlutterSecureStorage());
 });
@@ -74,7 +76,7 @@ class TokenStorageImpl implements TokenStorage<String> {
 
   @override
   Future<void> delete() async {
-    // We only clear authentication related data on logout/unauthorized
+    // clear authentication related data on logout/unauthorized
     await _service.delete(SecureStorageKey.accessToken);
     await _service.delete(SecureStorageKey.role);
     await _service.delete(SecureStorageKey.firebaseToken);

@@ -9,6 +9,7 @@ class FormListInput extends StatefulWidget {
   final String label;
   final List<String>? suggestions;
   final List<String? Function(String?)>? validators;
+  final VoidCallback? onAction;
 
   const FormListInput({
     super.key,
@@ -17,6 +18,7 @@ class FormListInput extends StatefulWidget {
     required this.label,
     this.suggestions,
     this.validators,
+    this.onAction,
   });
 
   @override
@@ -78,7 +80,7 @@ class _FormListInputState extends State<FormListInput> {
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            FormFieldLabel(label: widget.label),
+            FormFieldLabel(label: widget.label, onAction: widget.onAction),
             const SizedBox(height: 8),
             TextField(
               controller: _textController,

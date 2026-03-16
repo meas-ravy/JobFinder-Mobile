@@ -6,6 +6,7 @@ import 'package:job_finder/core/constants/assets.dart';
 import 'package:job_finder/core/routes/app_path.dart';
 import 'package:job_finder/features/recruiter/data/models/conversation_list_model.dart';
 import 'package:job_finder/features/recruiter/presentation/provider/recruiter_provider.dart';
+import 'package:job_finder/shared/widget/shimmer_loading.dart';
 import 'package:job_finder/shared/widget/svg_icon.dart';
 
 class RecruiterMessagePage extends ConsumerStatefulWidget {
@@ -30,7 +31,9 @@ class _RecruiterMessagePageState extends ConsumerState<RecruiterMessagePage> {
     });
     Future.microtask(() {
       if (mounted) {
-        ref.read(recruiterConversationsControllerProvider.notifier).getConversations();
+        ref
+            .read(recruiterConversationsControllerProvider.notifier)
+            .getConversations();
       }
     });
   }
@@ -58,7 +61,7 @@ class _RecruiterMessagePageState extends ConsumerState<RecruiterMessagePage> {
 
     // Isolate loading state
     final isConversationsLoading =
-        state.isLoading && conversations.isEmpty;
+        (state.isLoading || state.isInitial) && conversations.isEmpty;
 
     return Scaffold(
       appBar: AppBar(
@@ -135,14 +138,12 @@ class _RecruiterMessagePageState extends ConsumerState<RecruiterMessagePage> {
     const physics = AlwaysScrollableScrollPhysics();
 
     if (isLoading) {
-      return SingleChildScrollView(
+      return ListView.separated(
         physics: physics,
-        child: SizedBox(
-          height: 400,
-          child: Center(
-            child: CircularProgressIndicator(color: colorScheme.primary),
-          ),
-        ),
+        padding: const EdgeInsets.symmetric(vertical: 8),
+        itemCount: 8,
+        separatorBuilder: (context, index) => const SizedBox(height: 16),
+        itemBuilder: (context, index) => const _MessageShimmer(),
       );
     }
 
@@ -314,5 +315,30 @@ class _ConversationTile extends StatelessWidget {
     } catch (e) {
       return "";
     }
+  }
+}
+
+class _MessageShimmer extends StatelessWidget {
+  const _MessageShimmer();
+
+  @override
+  Widget build(BuildContext context) {
+    return const ListTile(
+      leading: ShimmerCircle(radius: 28),
+      title: Padding(
+        padding: EdgeInsets.only(bottom: 8.0),
+        child: ShimmerLoading(width: 120, height: 16),
+      ),
+      subtitle: ShimmerLoading(width: double.infinity, height: 12),
+      trailing: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        crossAxisAlignment: CrossAxisAlignment.end,
+        children: [
+          ShimmerLoading(width: 40, height: 12),
+          SizedBox(height: 8),
+          ShimmerCircle(radius: 8),
+        ],
+      ),
+    );
   }
 }

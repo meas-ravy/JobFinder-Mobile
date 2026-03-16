@@ -15,10 +15,74 @@ import 'package:job_finder/features/job_seeker/presentation/provider/tip_provide
 import 'package:job_finder/features/job_seeker/presentation/provider/job_provider.dart';
 import 'package:job_finder/features/job_seeker/presentation/widget/job_seeker_home_shimmer.dart';
 import 'package:job_finder/features/notifications/presentation/provider/notification_provider.dart';
-import 'package:job_finder/shared/provider/scroll_provider.dart';
+import 'package:job_finder/core/provider/scroll_provider.dart';
+import 'package:job_finder/features/job_seeker/presentation/provider/ai_assistant_provider.dart';
+import 'package:job_finder/features/job_seeker/presentation/provider/cv_provider.dart';
+import 'package:job_finder/features/job_seeker/domain/entities/cv_entity.dart';
+import 'package:job_finder/features/job_seeker/presentation/widget/ai_assistant/premium_paywall.dart';
+import 'package:job_finder/features/job_seeker/presentation/widget/ai_assistant/resume_pairing_sheet.dart';
+import 'package:job_finder/features/job_seeker/presentation/screen/ai_match_report_screen.dart';
+import 'package:job_finder/core/theme/app_color.dart';
 
 class JobSeekerHomePage extends HookConsumerWidget {
   const JobSeekerHomePage({super.key});
+
+  Future<void> _showAiAssistant(
+    BuildContext context,
+    WidgetRef ref, [
+    String? jobDesc,
+  ]) async {
+    final isPremium = ref.read(premiumStatusProvider);
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+
+    if (!isPremium) {
+      showModalBottomSheet(
+        context: context,
+        backgroundColor: Colors.transparent,
+        isScrollControlled: true,
+        builder: (context) => PremiumPaywall(
+          isDark: isDark,
+          onSuccess: () => _showAiAssistant(context, ref, jobDesc),
+        ),
+      );
+      return;
+    }
+
+    // Ensure CV list is loaded and not empty
+    final cvListAsync = ref.read(cvListProvider);
+    
+    // If it's loading, we might want to wait or show a simple indicator
+    List<CvEntity> cvList = [];
+    if (cvListAsync.isLoading) {
+      // Wait for it to finish loading
+      cvList = await ref.read(cvListProvider.future);
+    } else {
+      cvList = cvListAsync.value ?? [];
+    }
+
+    if (cvList.isEmpty) {
+      showModalBottomSheet(
+        context: context,
+        backgroundColor: Colors.transparent,
+        isScrollControlled: true,
+        builder: (context) => ResumePairingSheet(isDark: isDark),
+      );
+      return;
+    }
+
+    // Show full-screen report
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => AiMatchReportScreen(
+          isDark: isDark,
+          jobDescription: jobDesc ??
+              "Software Engineer - We are looking for a Flutter developer with 2+ years of experience in mobile app development. Must know Riverpod, Clean Architecture, and Gemini AI integration.",
+        ),
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -32,6 +96,21 @@ class JobSeekerHomePage extends HookConsumerWidget {
     const int initialPage = 5000;
     final pageController = usePageController(initialPage: initialPage);
     final currentPage = useState(initialPage);
+
+    // Responsive Dot Listener
+    useEffect(() {
+      void listener() {
+        if (pageController.hasClients) {
+          final page = pageController.page?.round() ?? initialPage;
+          if (currentPage.value != page) {
+            currentPage.value = page;
+          }
+        }
+      }
+
+      pageController.addListener(listener);
+      return () => pageController.removeListener(listener);
+    }, [pageController]);
 
     useEffect(
       () {
@@ -61,11 +140,11 @@ class JobSeekerHomePage extends HookConsumerWidget {
     useEffect(() {
       if (tipState.tips.length <= 1) return null;
 
-      final timer = Timer.periodic(const Duration(seconds: 5), (timer) {
+      final timer = Timer.periodic(const Duration(seconds: 10), (timer) {
         if (pageController.hasClients) {
           pageController.nextPage(
-            duration: const Duration(milliseconds: 800),
-            curve: Curves.easeInOut,
+            duration: const Duration(milliseconds: 400),
+            curve: Curves.easeOutQuart,
           );
         }
       });
@@ -88,7 +167,7 @@ class JobSeekerHomePage extends HookConsumerWidget {
     useEffect(() {
       void listener() {
         if (scrollController.position.pixels >=
-            scrollController.position.maxScrollExtent - 200) {
+            scrollController.position.maxScrollExtent - 100) {
           ref
               .read(jobControllerProvider.notifier)
               .fetchMoreRecentJobs(category: selectedCategory.value);
@@ -187,8 +266,9 @@ class JobSeekerHomePage extends HookConsumerWidget {
                             child: tipState.tips.length > 1
                                 ? PageView.builder(
                                     controller: pageController,
-                                    onPageChanged: (index) =>
-                                        currentPage.value = index,
+                                    onPageChanged: (index) {
+                                      // Dots are now handled by the controller listener
+                                    },
                                     itemCount: 10000,
                                     itemBuilder: (context, index) {
                                       final tip = tipState
@@ -373,6 +453,17 @@ class JobSeekerHomePage extends HookConsumerWidget {
               const SliverToBoxAdapter(child: SizedBox(height: 20)),
             ],
           ),
+        ),
+      ),
+      floatingActionButton: FloatingActionButton.extended(
+        onPressed: () => _showAiAssistant(context, ref),
+        backgroundColor: AppColor.primaryDark,
+        elevation: 8,
+        highlightElevation: 12,
+        icon: const Icon(Icons.auto_awesome, color: Colors.white),
+        label: const Text(
+          'AI Assistant',
+          style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
         ),
       ),
     );

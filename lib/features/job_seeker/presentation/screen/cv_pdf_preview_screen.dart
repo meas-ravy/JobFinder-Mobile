@@ -163,21 +163,19 @@ class CvPdfPreviewScreen extends StatelessWidget {
   Future<void> _downloadPdf(BuildContext context) async {
     try {
       final bytes = await _generatePdf(PdfPageFormat.a4);
-      final fileName = '${cv.fullName.replaceAll(' ', '_')}_CV.pdf';
-      final filePath = await _resolveDownloadPath(fileName);
 
-      if (filePath == null) {
-        if (context.mounted) {
-          _showErrorSnackBar(
-            context,
-            'Storage permission denied. Please allow storage access in Settings.',
-          );
-        }
-        return;
+      final directory = Directory('/storage/emulated/0/Download');
+
+      if (!directory.existsSync()) {
+        directory.createSync(recursive: true);
       }
 
+      final fileName = '${cv.fullName.replaceAll(' ', '_')}_CV.pdf';
+      final filePath = '${directory.path}/$fileName';
+
       final file = File(filePath);
-      await file.writeAsBytes(bytes);
+
+      await file.writeAsBytes(bytes, flush: true);
 
       if (context.mounted) {
         _showDownloadSuccessSheet(context, fileName, filePath);
@@ -189,33 +187,35 @@ class CvPdfPreviewScreen extends StatelessWidget {
     }
   }
 
-  Future<String?> _resolveDownloadPath(String fileName) async {
+  Future<String?> resolveDownloadPath(String fileName) async {
     if (Platform.isAndroid) {
-      // Android 10+ (API 29+): Scoped Storage — no permission needed for own files,
-      // but public Downloads requires MANAGE_EXTERNAL_STORAGE or MediaStore.
-      const publicDownloads = '/storage/emulated/0/Download';
-      final dir = Directory(publicDownloads);
-
-      if (await dir.exists()) {
-        return '$publicDownloads/$fileName';
-      }
-
-      // Fallback: request legacy storage permission (Android 9 and below)
+      // Request storage permission
       final status = await Permission.storage.request();
+
       if (status.isGranted) {
-        return '$publicDownloads/$fileName';
+        // Public Downloads directory
+        final downloadsDir = Directory('/storage/emulated/0/Download');
+
+        if (await downloadsDir.exists()) {
+          return '${downloadsDir.path}/$fileName';
+        }
       }
 
-      // Last resort: app-specific external directory
-      final fallback = await getExternalStorageDirectory();
-      if (fallback != null) return '${fallback.path}/$fileName';
+      // Fallback: app-specific external directory
+      final dir = await getExternalStorageDirectory();
+      if (dir != null) {
+        return '${dir.path}/$fileName';
+      }
 
       return null;
-    } else {
-      // iOS: use Documents directory
+    }
+
+    if (Platform.isIOS) {
       final dir = await getApplicationDocumentsDirectory();
       return '${dir.path}/$fileName';
     }
+
+    return null;
   }
 
   void _showDownloadSuccessSheet(
@@ -287,10 +287,28 @@ class CvPdfPreviewScreen extends StatelessWidget {
 
             // Subtitle
             Text(
-              'Your CV has been saved successfully.',
+              'Downloaded successfully to:',
               textAlign: TextAlign.center,
               style: textTheme.bodyMedium?.copyWith(
                 color: colorScheme.onSurface.withValues(alpha: 0.55),
+              ),
+            ),
+            const SizedBox(height: 8),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+              decoration: BoxDecoration(
+                color: successGreen.withValues(alpha: 0.08),
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(color: successGreen.withValues(alpha: 0.1)),
+              ),
+              child: Text(
+                filePath,
+                textAlign: TextAlign.center,
+                style: textTheme.labelSmall?.copyWith(
+                  color: successGreen,
+                  fontWeight: FontWeight.w600,
+                  fontSize: 11,
+                ),
               ),
             ),
             const SizedBox(height: 16),

@@ -48,7 +48,9 @@ class _RecruiterChatDetailScreenState
     Future.microtask(() {
       final state = ref.read(recruiterConversationsControllerProvider);
       if (state.conversations.isEmpty) {
-        ref.read(recruiterConversationsControllerProvider.notifier).getConversations();
+        ref
+            .read(recruiterConversationsControllerProvider.notifier)
+            .getConversations();
       }
     });
   }
@@ -83,10 +85,11 @@ class _RecruiterChatDetailScreenState
       );
 
       // 2. Sync to Backend
-      ref.read(recruiterConversationsControllerProvider.notifier).updateConversation(
-        widget.conversationId,
-        {"lastMessageContent": content},
-      );
+      ref
+          .read(recruiterConversationsControllerProvider.notifier)
+          .updateConversation(widget.conversationId, {
+            "lastMessageContent": content,
+          });
 
       // Scroll to bottom
       _scrollController.animateTo(
@@ -176,44 +179,94 @@ class _RecruiterChatDetailScreenState
 
     return Scaffold(
       appBar: AppBar(
+        backgroundColor: colorScheme.surface,
         elevation: 0,
-        leading: IconButton(
-          icon: Icon(Icons.arrow_back, color: colorScheme.onSurface, size: 24),
-          onPressed: () => Navigator.pop(context),
+        scrolledUnderElevation: 1,
+        titleSpacing: 0,
+        leadingWidth: 56,
+        leading: Padding(
+          padding: const EdgeInsets.only(left: 8),
+          child: IconButton(
+            icon: Icon(
+              Icons.arrow_back_ios_new_rounded,
+              color: colorScheme.onSurface,
+              size: 20,
+            ),
+            onPressed: () => Navigator.pop(context),
+          ),
         ),
         title: Row(
           children: [
-            CircleAvatar(
-              radius: 18,
-              backgroundColor: colorScheme.surfaceContainerHighest,
-              backgroundImage: displayAvatar != null
-                  ? NetworkImage(displayAvatar)
-                  : null,
-              child: displayAvatar == null
-                  ? Text(
-                      displayName[0].toUpperCase(),
-                      style: TextStyle(color: colorScheme.primary),
-                    )
-                  : null,
+            Stack(
+              children: [
+                CircleAvatar(
+                  radius: 20,
+                  backgroundColor: colorScheme.surfaceContainerHighest,
+                  backgroundImage: displayAvatar != null
+                      ? NetworkImage(displayAvatar)
+                      : null,
+                  child: displayAvatar == null
+                      ? Text(
+                          displayName.isNotEmpty
+                              ? displayName[0].toUpperCase()
+                              : "?",
+                          style: TextStyle(
+                            color: colorScheme.primary,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        )
+                      : null,
+                ),
+                Positioned(
+                  right: 0,
+                  bottom: 0,
+                  child: Container(
+                    padding: const EdgeInsets.all(2),
+                    decoration: BoxDecoration(
+                      color: colorScheme.surface,
+                      shape: BoxShape.circle,
+                    ),
+                    child: Container(
+                      width: 10,
+                      height: 10,
+                      decoration: const BoxDecoration(
+                        color: Colors.green,
+                        shape: BoxShape.circle,
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.green,
+                            blurRadius: 4,
+                            spreadRadius: 1,
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              ],
             ),
             const SizedBox(width: 12),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
                 children: [
                   Text(
                     displayName,
                     style: GoogleFonts.outfit(
                       fontSize: 16,
-                      fontWeight: FontWeight.bold,
+                      fontWeight: FontWeight.w600,
                       color: colorScheme.onSurface,
                     ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
                   ),
                   Text(
-                    "Online",
-                    style: GoogleFonts.outfit(
+                    "Active now",
+                    style: GoogleFonts.inter(
                       fontSize: 12,
-                      color: Colors.green,
+                      color: Colors.green.withValues(alpha: 0.8),
+                      fontWeight: FontWeight.w500,
                     ),
                   ),
                 ],
@@ -223,22 +276,18 @@ class _RecruiterChatDetailScreenState
         ),
         actions: [
           if (widget.participantId != null) ...[
-            IconButton(
-              tooltip: 'Voice Call',
-              icon: const Icon(Icons.call_rounded),
-              color: colorScheme.onSurface,
-              onPressed: () => _startAgoraCall(
+            _CircularAction(
+              icon: Icons.call_rounded,
+              onTap: () => _startAgoraCall(
                 context: context,
                 isVideoCall: false,
                 displayName: displayName,
                 displayAvatar: displayAvatar,
               ),
             ),
-            IconButton(
-              tooltip: 'Video Call',
-              icon: const Icon(Icons.videocam_rounded),
-              color: colorScheme.onSurface,
-              onPressed: () => _startAgoraCall(
+            _CircularAction(
+              icon: Icons.videocam_rounded,
+              onTap: () => _startAgoraCall(
                 context: context,
                 isVideoCall: true,
                 displayName: displayName,
@@ -246,7 +295,7 @@ class _RecruiterChatDetailScreenState
               ),
             ),
           ],
-          const SizedBox(width: 4),
+          const SizedBox(width: 12),
         ],
       ),
       body: Column(
@@ -336,17 +385,45 @@ class _RecruiterChatDetailScreenState
                 return ListView.builder(
                   controller: _scrollController,
                   reverse: true,
-                  padding: const EdgeInsets.all(16),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 20,
+                  ),
                   itemCount: displayMessages.length,
                   itemBuilder: (context, index) {
                     final message = displayMessages[index];
                     final isMe = message.senderId == currentRecruiterId;
 
-                    if (message.type == 'job_card') {
-                      return _JobPreviewCard(message: message);
+                    // Date grouping logic
+                    bool showDateHeader = false;
+                    if (index == displayMessages.length - 1) {
+                      showDateHeader = true;
+                    } else {
+                      final nextMessage = displayMessages[index + 1];
+                      if (!_isSameDay(
+                        message.timestamp,
+                        nextMessage.timestamp,
+                      )) {
+                        showDateHeader = true;
+                      }
                     }
 
-                    return _MessageBubble(message: message, isMe: isMe);
+                    Widget content;
+                    if (message.type == 'job_card') {
+                      content = _JobPreviewCard(message: message);
+                    } else {
+                      content = _MessageBubble(message: message, isMe: isMe);
+                    }
+
+                    if (showDateHeader) {
+                      return Column(
+                        children: [
+                          _DateHeader(date: _getGroupDate(message.timestamp)),
+                          content,
+                        ],
+                      );
+                    }
+                    return content;
                   },
                 );
               },
@@ -365,28 +442,37 @@ class _RecruiterChatDetailScreenState
         16,
         12,
         16,
-        MediaQuery.of(context).padding.bottom + 12,
+        MediaQuery.of(context).padding.bottom + 16,
       ),
       decoration: BoxDecoration(
         color: colorScheme.surface,
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.05),
-            blurRadius: 10,
-            offset: const Offset(0, -5),
+        border: Border(
+          top: BorderSide(
+            color: colorScheme.outlineVariant.withValues(alpha: 0.3),
+            width: 0.5,
           ),
-        ],
+        ),
       ),
       child: Row(
         children: [
           Container(
+            height: 44,
+            width: 44,
             decoration: BoxDecoration(
-              color: colorScheme.primary.withValues(alpha: 0.1),
-              borderRadius: BorderRadius.circular(12),
+              color: colorScheme.primary.withValues(alpha: 0.08),
+              borderRadius: BorderRadius.circular(14),
             ),
-            child: IconButton(
-              icon: Icon(Icons.add, color: colorScheme.primary),
-              onPressed: () {},
+            child: Material(
+              color: Colors.transparent,
+              child: InkWell(
+                borderRadius: BorderRadius.circular(14),
+                onTap: () {},
+                child: Icon(
+                  Icons.add_rounded,
+                  color: colorScheme.primary,
+                  size: 28,
+                ),
+              ),
             ),
           ),
           const SizedBox(width: 12),
@@ -394,32 +480,180 @@ class _RecruiterChatDetailScreenState
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 16),
               decoration: BoxDecoration(
-                color: colorScheme.surfaceContainerHighest,
+                color: colorScheme.surfaceContainerHighest.withValues(
+                  alpha: 0.5,
+                ),
                 borderRadius: BorderRadius.circular(24),
+                border: Border.all(
+                  color: colorScheme.outlineVariant.withValues(alpha: 0.3),
+                ),
               ),
               child: TextField(
                 controller: _messageController,
-                style: TextStyle(color: colorScheme.onSurface),
+                style: GoogleFonts.inter(
+                  fontSize: 15,
+                  color: colorScheme.onSurface,
+                ),
                 decoration: InputDecoration(
-                  hintText: "Type a message...",
+                  hintText: "Write your message...",
                   hintStyle: GoogleFonts.outfit(
-                    color: colorScheme.onSurfaceVariant,
+                    color: colorScheme.onSurfaceVariant.withValues(alpha: 0.6),
+                    fontSize: 14,
                   ),
                   border: InputBorder.none,
+                  isDense: true,
+                  contentPadding: const EdgeInsets.symmetric(vertical: 12),
                 ),
+                maxLines: 4,
+                minLines: 1,
+                textInputAction: TextInputAction.send,
                 onSubmitted: (_) => _sendMessage(),
               ),
             ),
           ),
           const SizedBox(width: 12),
           Container(
+            height: 48,
+            width: 48,
             decoration: BoxDecoration(
-              color: colorScheme.primary,
+              gradient: LinearGradient(
+                colors: [
+                  colorScheme.primary,
+                  colorScheme.primary.withValues(alpha: 0.8),
+                ],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
               shape: BoxShape.circle,
+              boxShadow: [
+                BoxShadow(
+                  color: colorScheme.primary.withValues(alpha: 0.3),
+                  blurRadius: 8,
+                  offset: const Offset(0, 4),
+                ),
+              ],
             ),
-            child: IconButton(
-              icon: Icon(Icons.send, color: Colors.white, size: 20),
-              onPressed: _sendMessage,
+            child: Material(
+              color: Colors.transparent,
+              child: InkWell(
+                customBorder: const CircleBorder(),
+                onTap: _sendMessage,
+                child: const Icon(
+                  Icons.send_rounded,
+                  color: Colors.white,
+                  size: 22,
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  bool _isSameDay(dynamic ts1, dynamic ts2) {
+    if (ts1 == null || ts2 == null) return false;
+    DateTime d1, d2;
+    try {
+      if (ts1 is int) {
+        d1 = DateTime.fromMillisecondsSinceEpoch(ts1);
+      } else {
+        d1 = DateTime.parse(ts1.toString());
+      }
+
+      if (ts2 is int) {
+        d2 = DateTime.fromMillisecondsSinceEpoch(ts2);
+      } else {
+        d2 = DateTime.parse(ts2.toString());
+      }
+      return d1.year == d2.year && d1.month == d2.month && d1.day == d2.day;
+    } catch (_) {
+      return false;
+    }
+  }
+
+  String _getGroupDate(dynamic timestamp) {
+    if (timestamp == null) return "";
+    try {
+      DateTime date;
+      if (timestamp is int) {
+        date = DateTime.fromMillisecondsSinceEpoch(timestamp);
+      } else {
+        date = DateTime.parse(timestamp.toString());
+      }
+
+      final now = DateTime.now();
+      final today = DateTime(now.year, now.month, now.day);
+      final yesterday = today.subtract(const Duration(days: 1));
+      final aDate = DateTime(date.year, date.month, date.day);
+
+      if (aDate == today) return "Today";
+      if (aDate == yesterday) return "Yesterday";
+      return DateFormat('EEEE, MMMM d').format(date);
+    } catch (_) {
+      return "";
+    }
+  }
+}
+
+class _CircularAction extends StatelessWidget {
+  final IconData icon;
+  final VoidCallback onTap;
+
+  const _CircularAction({required this.icon, required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    return Padding(
+      padding: const EdgeInsets.only(right: 8),
+      child: Container(
+        decoration: BoxDecoration(
+          color: colorScheme.surfaceContainerHighest.withValues(alpha: 0.4),
+          shape: BoxShape.circle,
+        ),
+        child: IconButton(
+          icon: Icon(icon, size: 20),
+          color: colorScheme.onSurface,
+          onPressed: onTap,
+          visualDensity: VisualDensity.compact,
+        ),
+      ),
+    );
+  }
+}
+
+class _DateHeader extends StatelessWidget {
+  final String date;
+  const _DateHeader({required this.date});
+
+  @override
+  Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    return Container(
+      margin: const EdgeInsets.symmetric(vertical: 24),
+      child: Row(
+        children: [
+          Expanded(
+            child: Divider(
+              color: colorScheme.outlineVariant.withValues(alpha: 0.3),
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            child: Text(
+              date,
+              style: GoogleFonts.inter(
+                fontSize: 11,
+                fontWeight: FontWeight.w600,
+                color: colorScheme.onSurfaceVariant.withValues(alpha: 0.6),
+                letterSpacing: 0.5,
+              ),
+            ),
+          ),
+          Expanded(
+            child: Divider(
+              color: colorScheme.outlineVariant.withValues(alpha: 0.3),
             ),
           ),
         ],
@@ -439,81 +673,96 @@ class _MessageBubble extends StatelessWidget {
     final colorScheme = Theme.of(context).colorScheme;
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
-    // Deep Navy Blue for Sender (Matches the screenshot)
     final bubbleColor = isMe
-        ? const Color(0xFF2C4E70)
+        ? colorScheme.primary
         : (isDark
               ? colorScheme.surfaceContainerHighest
-              : const Color(0xFFE8E8E8));
+              : const Color(0xFFF2F2F7));
 
     final textColor = isMe
         ? Colors.white
-        : (isDark ? Colors.white : Colors.black87);
-    final timeColor = isMe ? Colors.white70 : colorScheme.onSurfaceVariant;
+        : (isDark ? Colors.white : const Color(0xFF1C1C1E));
+
+    final timeColor = isMe
+        ? Colors.white.withValues(alpha: 0.7)
+        : colorScheme.onSurfaceVariant.withValues(alpha: 0.6);
 
     return Align(
       alignment: isMe ? Alignment.centerRight : Alignment.centerLeft,
       child: Container(
         margin: EdgeInsets.only(
-          top: 4,
-          bottom: 4,
-          left: isMe ? 60 : 0,
-          right: isMe ? 0 : 60,
+          top: 2,
+          bottom: 2,
+          left: isMe ? 64 : 0,
+          right: isMe ? 0 : 64,
         ),
         constraints: BoxConstraints(
-          maxWidth: MediaQuery.of(context).size.width * 0.85,
+          maxWidth: MediaQuery.of(context).size.width * 0.75,
         ),
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
         decoration: BoxDecoration(
-          color: bubbleColor,
+          gradient: isMe
+              ? LinearGradient(
+                  colors: [
+                    colorScheme.primary,
+                    colorScheme.primary.withValues(alpha: 0.85),
+                  ],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                )
+              : null,
+          color: isMe ? null : bubbleColor,
           borderRadius: BorderRadius.only(
-            topLeft: const Radius.circular(16),
-            topRight: const Radius.circular(16),
-            bottomLeft: Radius.circular(isMe ? 16 : 0),
-            bottomRight: Radius.circular(isMe ? 0 : 16),
+            topLeft: const Radius.circular(20),
+            topRight: const Radius.circular(20),
+            bottomLeft: Radius.circular(isMe ? 20 : 4),
+            bottomRight: Radius.circular(isMe ? 4 : 20),
           ),
           boxShadow: [
-            if (!isMe && !isDark)
+            if (isMe)
               BoxShadow(
-                color: Colors.black.withValues(alpha: 0.05),
-                blurRadius: 2,
-                offset: const Offset(0, 1),
+                color: colorScheme.primary.withValues(alpha: 0.2),
+                blurRadius: 4,
+                offset: const Offset(0, 2),
               ),
           ],
         ),
-        child: Stack(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
           children: [
-            Padding(
-              padding: const EdgeInsets.only(bottom: 16, right: 70),
-              child: Text(
-                message.content,
-                style: GoogleFonts.inter(
-                  fontSize: 15,
-                  color: textColor,
-                  fontWeight: FontWeight.w400,
-                ),
+            Text(
+              message.content,
+              style: GoogleFonts.inter(
+                fontSize: 15,
+                color: textColor,
+                height: 1.4,
+                fontWeight: FontWeight.w400,
               ),
             ),
-            Positioned(
-              bottom: 0,
-              right: 0,
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(
-                    _formatDate(message.timestamp),
-                    style: GoogleFonts.inter(fontSize: 10, color: timeColor),
+            const SizedBox(height: 4),
+            Row(
+              mainAxisSize: MainAxisSize.min,
+              mainAxisAlignment: MainAxisAlignment.end,
+              children: [
+                const Spacer(),
+                Text(
+                  _formatTime(message.timestamp),
+                  style: GoogleFonts.inter(
+                    fontSize: 10,
+                    color: timeColor,
+                    fontWeight: FontWeight.w500,
                   ),
-                  if (isMe) ...[
-                    const SizedBox(width: 4),
-                    const Icon(
-                      Icons.done_all,
-                      size: 14,
-                      color: Color(0xFF74C2FF),
-                    ),
-                  ],
+                ),
+                if (isMe) ...[
+                  const SizedBox(width: 4),
+                  Icon(
+                    Icons.done_all_rounded,
+                    size: 14,
+                    color: Colors.white.withValues(alpha: 0.8),
+                  ),
                 ],
-              ),
+              ],
             ),
           ],
         ),
@@ -521,18 +770,19 @@ class _MessageBubble extends StatelessWidget {
     );
   }
 
-  String _formatDate(dynamic timestamp) {
+  String _formatTime(dynamic timestamp) {
     if (timestamp == null) return "Sending...";
     try {
+      DateTime date;
       if (timestamp is int) {
-        final date = DateTime.fromMillisecondsSinceEpoch(timestamp);
-        return DateFormat('h:mm a').format(date);
-      } else if (timestamp is String) {
-        final date = DateTime.parse(timestamp);
-        return DateFormat('h:mm a').format(date);
+        date = DateTime.fromMillisecondsSinceEpoch(timestamp);
+      } else {
+        date = DateTime.parse(timestamp.toString());
       }
-    } catch (_) {}
-    return "";
+      return DateFormat('h:mm a').format(date);
+    } catch (_) {
+      return "";
+    }
   }
 }
 

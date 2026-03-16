@@ -25,7 +25,7 @@ import 'package:job_finder/features/job_seeker/presentation/screen/search_page.d
 import 'package:job_finder/features/job_seeker/presentation/screen/job_detail_page.dart';
 import 'package:job_finder/features/job_seeker/presentation/screen/apply_job_page.dart';
 import 'package:job_finder/features/job_seeker/presentation/screen/message_detail_screen.dart';
-import 'package:job_finder/features/job_seeker/presentation/screen/job_seeker_application_detail.dart';
+import 'package:job_finder/features/job_seeker/presentation/screen/interview_coach_screen.dart';
 
 // Global navigator key for accessing navigation from outside widget tree (e.g., 401 interceptor)
 final GlobalKey<NavigatorState> rootNavigatorKey = GlobalKey<NavigatorState>();
@@ -186,7 +186,12 @@ class AppRouter {
         path: '${AppPath.applyJob}/:id',
         builder: (context, state) {
           final jobId = state.pathParameters['id'];
-          return ApplyJobPage(jobId: jobId ?? '');
+          final extra = state.extra as Map<String, dynamic>?;
+          return ApplyJobPage(
+            jobId: jobId ?? '',
+            jobTitle: extra?['jobTitle'] ?? 'Job Application',
+            jobDescription: extra?['jobDescription'] ?? '',
+          );
         },
       ),
       GoRoute(
@@ -218,10 +223,13 @@ class AppRouter {
         },
       ),
       GoRoute(
-        path: '${AppPath.jobSeekerApplicationDetail}/:id',
+        path: AppPath.interviewCoach,
         builder: (context, state) {
-          final id = state.pathParameters['id'];
-          return JobSeekerApplicationDetailPage(id: id ?? '');
+          final extra = state.extra as Map<String, dynamic>?;
+          return InterviewCoachScreen(
+            jobDescription: extra?['jobDescription'] ?? '',
+            jobTitle: extra?['jobTitle'] ?? 'Job Interview',
+          );
         },
       ),
     ],

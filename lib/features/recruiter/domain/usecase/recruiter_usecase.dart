@@ -2,6 +2,7 @@ import 'package:job_finder/core/helper/typedef.dart';
 import 'package:job_finder/core/helper/usecase.dart';
 import 'package:job_finder/features/recruiter/domain/entity/application_detail_entity.dart';
 import 'package:job_finder/features/recruiter/domain/entity/application_entity.dart';
+import 'package:job_finder/features/recruiter/domain/entity/job_entity.dart';
 import 'package:job_finder/features/recruiter/domain/repository/repository.dart';
 
 class CreateCompanyParams {
@@ -48,7 +49,7 @@ class UpdateCompanyUseCase
 
 class CreateJobParams {
   const CreateJobParams({required this.job});
-  final DataMap job;
+  final JobEntity job;
 }
 
 class CreateJobUseCase extends UseCaseWithParams<DataMap, CreateJobParams> {
@@ -111,7 +112,7 @@ class UpdateJobStatusUseCase
 class UpdateJobParams {
   const UpdateJobParams({required this.jobId, required this.job});
   final String jobId;
-  final DataMap job;
+  final JobEntity job;
 }
 
 class UpdateJobUseCase extends UseCaseWithParams<DataMap, UpdateJobParams> {

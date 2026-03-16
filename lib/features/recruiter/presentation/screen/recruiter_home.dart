@@ -8,10 +8,10 @@ import 'package:job_finder/features/recruiter/data/models/job_card_data.dart';
 import 'package:job_finder/features/recruiter/presentation/provider/company/company_profile_controller.dart';
 import 'package:job_finder/features/recruiter/presentation/provider/company/company_profile_state.dart';
 import 'package:job_finder/features/recruiter/presentation/provider/recruiter_provider.dart';
-import 'package:job_finder/features/recruiter/presentation/screen/widgets/job_card_widget.dart';
-import 'package:job_finder/features/recruiter/presentation/screen/widgets/recruiter_home_shimmer.dart';
 import 'package:job_finder/features/recruiter/presentation/widget/header_section.dart';
-import 'package:job_finder/shared/provider/scroll_provider.dart';
+import 'package:job_finder/features/recruiter/presentation/widget/job_card_widget.dart';
+import 'package:job_finder/features/recruiter/presentation/widget/recruiter_home_shimmer.dart';
+import 'package:job_finder/core/provider/scroll_provider.dart';
 
 class RecruiterHomePage extends ConsumerWidget {
   const RecruiterHomePage({super.key});
@@ -283,7 +283,7 @@ class RecruiterHomePage extends ConsumerWidget {
                 final job = (jobItem is Map)
                     ? DataMap.from(jobItem)
                     : <String, dynamic>{};
-                final jobId = job['_id'] ?? job['id'];
+                final jobId = job['id'];
                 return JobCard(
                   data: JobCardData.fromJson(
                     job,
@@ -294,21 +294,17 @@ class RecruiterHomePage extends ConsumerWidget {
                     if (status == 'edit') {
                       context.push(AppPath.postJob, extra: job);
                     } else if (status == 'delete') {
-                      _showDeleteConfirmation(
-                        context,
-                        ref,
-                        job['_id'] ?? job['id'],
-                      );
+                      _showDeleteConfirmation(context, ref, job['id']);
                     } else if (status == 'submit' || status == 'resubmit') {
                       ref
                           .read(recruiterJobsControllerProvider.notifier)
-                          .submitJob(job['_id'] ?? job['id']);
+                          .submitJob(job['id']);
                     } else if (status == 'view_candidates') {
                       context.push('${AppPath.viewApplicants}/$jobId');
                     } else {
                       ref
                           .read(recruiterJobsControllerProvider.notifier)
-                          .updateJobStatus(job['_id'] ?? job['id'], status);
+                          .updateJobStatus(job['id'], status);
                     }
                   },
                 );

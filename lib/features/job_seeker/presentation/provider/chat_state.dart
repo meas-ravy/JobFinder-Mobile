@@ -8,6 +8,7 @@ enum ChatAction {
 class ChatState {
   const ChatState({
     this.isLoading = false,
+    this.isInitial = true,
     this.errorMessage,
     this.conversations = const [],
     this.lastAction,
@@ -17,6 +18,7 @@ class ChatState {
   });
 
   final bool isLoading;
+  final bool isInitial;
   final String? errorMessage;
   final List<dynamic> conversations;
   final ChatAction? lastAction;
@@ -26,6 +28,7 @@ class ChatState {
 
   ChatState copyWith({
     bool? isLoading,
+    bool? isInitial,
     String? errorMessage,
     List<dynamic>? conversations,
     ChatAction? lastAction,
@@ -35,6 +38,7 @@ class ChatState {
   }) {
     return ChatState(
       isLoading: isLoading ?? this.isLoading,
+      isInitial: isInitial ?? this.isInitial,
       errorMessage: errorMessage ?? this.errorMessage,
       conversations: conversations ?? this.conversations,
       lastAction: lastAction ?? this.lastAction,

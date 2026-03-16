@@ -20,12 +20,20 @@ class RecruiterConversationsController
     final result = await _getConversationsUseCase();
     result.fold(
       (failure) {
-        state = state.copyWith(isLoading: false, errorMessage: failure.message);
+        state = state.copyWith(
+          isLoading: false,
+          isInitial: false,
+          errorMessage: failure.message,
+        );
       },
       (data) {
         final List<dynamic> conversations =
             data['conversations'] ?? data['data'] ?? [];
-        state = state.copyWith(isLoading: false, conversations: conversations);
+        state = state.copyWith(
+          isLoading: false,
+          isInitial: false,
+          conversations: conversations,
+        );
       },
     );
   }

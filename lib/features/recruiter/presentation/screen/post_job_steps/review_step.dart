@@ -1,16 +1,16 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_form_builder/flutter_form_builder.dart';
 import 'package:intl/intl.dart';
 
 class ReviewStep extends StatelessWidget {
-  const ReviewStep({super.key});
+  const ReviewStep({super.key, required this.data});
+
+  final Map<String, dynamic> data;
 
   @override
   Widget build(BuildContext context) {
     final textTheme = Theme.of(context).textTheme;
     final colorScheme = Theme.of(context).colorScheme;
-    final formState = FormBuilder.of(context);
-    final values = formState?.value ?? {};
+    final values = data;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,

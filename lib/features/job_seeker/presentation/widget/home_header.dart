@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:job_finder/core/constants/assets.dart';
-import 'package:job_finder/core/theme/app_color.dart';
 import 'package:job_finder/shared/widget/svg_icon.dart';
 import 'package:job_finder/shared/widget/shimmer_loading.dart';
+import 'package:hooks_riverpod/hooks_riverpod.dart';
+import 'package:job_finder/features/job_seeker/presentation/provider/ai_assistant_provider.dart';
 
-class HomeHeader extends StatelessWidget {
+class HomeHeader extends ConsumerWidget {
   final String userName;
   final String? userAvatarUrl;
   final VoidCallback? onNotificationTap;
@@ -21,9 +22,11 @@ class HomeHeader extends StatelessWidget {
   });
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
     final isDark = theme.brightness == Brightness.dark;
+    final healthScore = ref.watch(cvHealthScoreProvider);
 
     final hour = DateTime.now().hour;
     String greeting;
@@ -47,34 +50,94 @@ class HomeHeader extends StatelessWidget {
       padding: const EdgeInsets.fromLTRB(20, 20, 20, 16),
       child: Row(
         children: [
-          // Profile Avatar
+          // Profile Avatar with AI Match Ring
           isLoading
               ? const ShimmerCircle(radius: 25)
-              : Container(
-                  width: 50,
-                  height: 50,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    border: Border.all(
-                      color: AppColor.primaryDark.withValues(alpha: 0.3),
-                      width: 2,
+              : Stack(
+                  alignment: Alignment.center,
+                  clipBehavior: Clip.none,
+                  children: [
+                    // AI Health Score Ring (Mini)
+                    SizedBox(
+                      width: 62,
+                      height: 62,
+                      child: CircularProgressIndicator(
+                        value: (healthScore ?? 0) / 100,
+                        strokeWidth: 3,
+                        backgroundColor: colorScheme.surfaceContainerHighest,
+                        valueColor: AlwaysStoppedAnimation<Color>(
+                          healthScore == null
+                              ? theme.primaryColor.withValues(alpha: 0.2)
+                              : (healthScore > 70
+                                    ? Colors.green
+                                    : Colors.orange),
+                        ),
+                      ),
                     ),
-                    color: isDark ? Colors.grey[900] : Colors.grey[100],
-                  ),
-                  child: userAvatarUrl != null && userAvatarUrl!.isNotEmpty
-                      ? ClipOval(
-                          child: Image.network(
-                            userAvatarUrl!,
-                            fit: BoxFit.cover,
+                    // Main Avatar
+                    Container(
+                      width: 50,
+                      height: 50,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: isDark ? Colors.grey[900] : Colors.grey[100],
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withValues(alpha: 0.1),
+                            blurRadius: 8,
+                            offset: const Offset(0, 4),
                           ),
-                        )
-                      : const Center(
-                          child: AppSvgIcon(
-                            assetName: AppIcon.profileBold,
-                            size: 24,
-                            color: Colors.grey,
+                        ],
+                      ),
+                      child: userAvatarUrl != null && userAvatarUrl!.isNotEmpty
+                          ? ClipOval(
+                              child: Image.network(
+                                userAvatarUrl!,
+                                fit: BoxFit.cover,
+                              ),
+                            )
+                          : Center(
+                              child: AppSvgIcon(
+                                assetName: AppIcon.profileBold,
+                                size: 24,
+                                color: theme.primaryColor,
+                              ),
+                            ),
+                    ),
+                    // mini percentage/badge
+                    if (healthScore != null)
+                      Positioned(
+                        bottom: -4,
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 8,
+                            vertical: 2,
+                          ),
+                          decoration: BoxDecoration(
+                            color: (healthScore > 70
+                                ? Colors.green
+                                : Colors.orange),
+                            borderRadius: BorderRadius.circular(10),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withValues(alpha: 0.2),
+                                blurRadius: 4,
+                                offset: const Offset(0, 2),
+                              ),
+                            ],
+                          ),
+                          child: Text(
+                            '$healthScore%',
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 9,
+                              fontWeight: FontWeight.bold,
+                              letterSpacing: -0.5,
+                            ),
                           ),
                         ),
+                      ),
+                  ],
                 ),
           const SizedBox(width: 12),
           // Greeting

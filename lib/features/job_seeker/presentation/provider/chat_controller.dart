@@ -15,13 +15,18 @@ class JobSeekerChatController extends StateNotifier<ChatState> {
     final result = await _chatServer.getConversations();
     result.fold(
       (failure) {
-        state = state.copyWith(isLoading: false, errorMessage: failure.message);
+        state = state.copyWith(
+          isLoading: false,
+          isInitial: false,
+          errorMessage: failure.message,
+        );
       },
       (data) {
         final List<dynamic> conversations =
             data['conversations'] ?? data['data'] ?? [];
         state = state.copyWith(
           isLoading: false,
+          isInitial: false,
           conversations: conversations,
           lastAction: ChatAction.getConversations,
         );
