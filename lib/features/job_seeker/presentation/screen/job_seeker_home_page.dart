@@ -152,13 +152,14 @@ class JobSeekerHomePage extends HookConsumerWidget {
       return timer.cancel;
     }, [tipState.tips, pageController]);
 
-    // Fetch profile on init if not fetched yet
+    // Fetch profile and notifications on init
     useEffect(() {
-      if (!profileState.isFetched) {
-        Future.microtask(() {
+      Future.microtask(() {
+        if (!profileState.isFetched) {
           ref.read(profileControllerProvider.notifier).fetchProfile();
-        });
-      }
+        }
+        ref.read(notificationControllerProvider.notifier).getNotifications();
+      });
       return null;
     }, []);
 

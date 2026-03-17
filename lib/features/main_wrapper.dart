@@ -60,6 +60,12 @@ class _MainWrapper extends ConsumerState<MainWrapper> {
   @override
   Widget build(BuildContext context) {
     final currentIndex = ref.watch(mainWrapperIndexProvider);
+
+    // controll for when apply job sucess is navigation to application page with ative tap
+    if (currentIndex < activatedTabs.length && !activatedTabs[currentIndex]) {
+      activatedTabs[currentIndex] = true;
+    }
+
     const pages = [
       JobSeekerHomePage(),
       JobSeekerSavePage(),

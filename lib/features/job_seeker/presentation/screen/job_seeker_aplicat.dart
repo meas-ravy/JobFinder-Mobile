@@ -126,70 +126,95 @@ class JobSeekerAplicatPage extends HookConsumerWidget {
             ),
           ),
           Expanded(
-            child: applicationsAsync.when(
-              data: (applications) {
-                final query = searchController.text.toLowerCase();
-                final filters = selectedFilters.value;
+            child: RefreshIndicator(
+              onRefresh: () async {
+                // ignore: unused_result
+                await ref.refresh(myApplicationsProvider.future);
+              },
+              child: applicationsAsync.when(
+                data: (applications) {
+                  final query = searchController.text.toLowerCase();
+                  final filters = selectedFilters.value;
 
-                final filteredApps = applications.where((app) {
-                  final job = app.job;
-                  if (job == null) return false;
+                  final filteredApps = applications.where((app) {
+                    final job = app.job;
+                    if (job == null) return false;
 
-                  // Search logic
-                  final matchesQuery =
-                      job.title.toLowerCase().contains(query) ||
-                      (job.companyProfile?.name.toLowerCase().contains(query) ??
-                          false);
-                  if (!matchesQuery) return false;
+                    // Search logic
+                    final matchesQuery =
+                        job.title.toLowerCase().contains(query) ||
+                        (job.companyProfile?.name.toLowerCase().contains(
+                              query,
+                            ) ??
+                            false);
+                    if (!matchesQuery) return false;
 
-                  // Filter logic
-                  if (filters.location != null &&
-                      filters.location!.isNotEmpty) {
-                    if (!(job.location?.toLowerCase().contains(
-                          filters.location!.toLowerCase(),
-                        ) ??
-                        false)) {
-                      return false;
+                    // Filter logic
+                    if (filters.location != null &&
+                        filters.location!.isNotEmpty) {
+                      if (!(job.location?.toLowerCase().contains(
+                            filters.location!.toLowerCase(),
+                          ) ??
+                          false)) {
+                        return false;
+                      }
                     }
-                  }
-                  if (filters.category != null &&
-                      filters.category!.isNotEmpty &&
-                      filters.category != 'Other') {
-                    if (job.category != filters.category) return false;
-                  }
-                  if (filters.workArrangement != null &&
-                      filters.workArrangement!.isNotEmpty) {
-                    if (job.workArrangement != filters.workArrangement) {
-                      return false;
+                    if (filters.category != null &&
+                        filters.category!.isNotEmpty &&
+                        filters.category != 'Other') {
+                      if (job.category != filters.category) return false;
                     }
-                  }
-                  if (filters.experienceLevel != null &&
-                      filters.experienceLevel!.isNotEmpty) {
-                    if (job.experienceLevel != filters.experienceLevel) {
-                      return false;
+                    if (filters.workArrangement != null &&
+                        filters.workArrangement!.isNotEmpty) {
+                      if (job.workArrangement != filters.workArrangement) {
+                        return false;
+                      }
                     }
-                  }
-                  if (filters.employmentType != null &&
-                      filters.employmentType!.isNotEmpty) {
-                    if (job.employmentType != filters.employmentType) {
-                      return false;
+                    if (filters.experienceLevel != null &&
+                        filters.experienceLevel!.isNotEmpty) {
+                      if (job.experienceLevel != filters.experienceLevel) {
+                        return false;
+                      }
                     }
+                    if (filters.employmentType != null &&
+                        filters.employmentType!.isNotEmpty) {
+                      if (job.employmentType != filters.employmentType) {
+                        return false;
+                      }
+                    }
+
+                    return true;
+                  }).toList();
+
+                  if (applications.isEmpty) {
+                    return CustomScrollView(
+                      physics: const AlwaysScrollableScrollPhysics(),
+                      slivers: [
+                        SliverFillRemaining(
+                          hasScrollBody: false,
+                          child: _buildEmptyState(theme, isDark),
+                        ),
+                      ],
+                    );
                   }
 
-                  return true;
-                }).toList();
+                  if (filteredApps.isEmpty) {
+                    return CustomScrollView(
+                      physics: const AlwaysScrollableScrollPhysics(),
+                      slivers: [
+                        SliverFillRemaining(
+                          hasScrollBody: false,
+                          child: _buildNoResultsState(
+                            theme,
+                            searchController.text,
+                          ),
+                        ),
+                      ],
+                    );
+                  }
 
-                if (applications.isEmpty) {
-                  return _buildEmptyState(theme, isDark);
-                }
-
-                if (filteredApps.isEmpty) {
-                  return _buildNoResultsState(theme, searchController.text);
-                }
-
-                return RefreshIndicator(
-                  onRefresh: () async => ref.refresh(myApplicationsProvider),
-                  child: ListView.separated(
+                  return ListView.separated(
+                    physics: const AlwaysScrollableScrollPhysics(),
                     padding: const EdgeInsets.fromLTRB(20, 0, 20, 100),
                     itemCount: filteredApps.length,
                     separatorBuilder: (context, index) => Divider(
@@ -199,22 +224,28 @@ class JobSeekerAplicatPage extends HookConsumerWidget {
                     ),
                     itemBuilder: (context, index) => InkWell(
                       onTap: () async {
-                        // await context.push(
+                        // context.push(
                         //   '${AppPath.jobSeekerApplicationDetail}/${filteredApps[index].id}',
                         // );
-                        // Refresh the list when returning to ensure latest status
-                        //ref.invalidate(myApplicationsProvider);
                       },
                       child: ApplicationCard(
                         key: ValueKey(filteredApps[index].id),
                         application: filteredApps[index],
                       ),
                     ),
-                  ),
-                );
-              },
-              loading: () => _buildLoadingState(isDark),
-              error: (err, stack) => Center(child: Text('Error: $err')),
+                  );
+                },
+                loading: () => _buildLoadingState(isDark),
+                error: (err, stack) => CustomScrollView(
+                  physics: const AlwaysScrollableScrollPhysics(),
+                  slivers: [
+                    SliverFillRemaining(
+                      hasScrollBody: false,
+                      child: Center(child: Text('Error: $err')),
+                    ),
+                  ],
+                ),
+              ),
             ),
           ),
         ],
@@ -287,6 +318,7 @@ class JobSeekerAplicatPage extends HookConsumerWidget {
 
   Widget _buildLoadingState(bool isDark) {
     return ListView.separated(
+      physics: const AlwaysScrollableScrollPhysics(),
       padding: const EdgeInsets.fromLTRB(20, 0, 20, 100),
       itemCount: 5,
       separatorBuilder: (context, index) => Divider(

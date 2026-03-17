@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:job_finder/core/helper/secure_storage.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:job_finder/features/notifications/data/models/notification_model.dart';
@@ -60,14 +61,33 @@ class NotificationController extends StateNotifier<NotificationState> {
     final result = await _getNotificationsUseCase(role);
     result.fold(
       (failure) {
+        debugPrint('❌ [Notification] Fetch failed: ${failure.message}');
         state = state.copyWith(isLoading: false, errorMessage: failure.message);
       },
       (data) {
-        final List<dynamic> list = data['notifications'] ?? data['data'] ?? [];
-        final notifications = list
-            .map((e) => NotificationModel.fromJson(e as Map<String, dynamic>))
-            .toList();
-        state = state.copyWith(isLoading: false, notifications: notifications);
+        try {
+          final List<dynamic> list = data['notifications'] ?? data['data'] ?? [];
+          final notifications = list.map((e) {
+            try {
+              return NotificationModel.fromJson(e as Map<String, dynamic>);
+            } catch (err) {
+              debugPrint('⚠️ [Notification] Parsing individual item failed: $err');
+              debugPrint('   Trace: $e');
+              return null;
+            }
+          }).whereType<NotificationModel>().toList();
+          
+          final unread = notifications.where((n) => !n.isRead).length;
+          debugPrint('🔔 [Notification] Parsed ${notifications.length} notifications, $unread unread');
+          
+          state = state.copyWith(isLoading: false, notifications: notifications);
+        } catch (e) {
+          debugPrint('❌ [Notification] Global parsing error: $e');
+          state = state.copyWith(
+            isLoading: false, 
+            errorMessage: 'Failed to process notifications'
+          );
+        }
       },
     );
   }

@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:job_finder/core/helper/typedef.dart';
 import 'package:job_finder/core/routes/app_path.dart';
 import 'package:job_finder/core/theme/app_color.dart';
+import 'package:job_finder/features/notifications/presentation/provider/notification_provider.dart';
 import 'package:job_finder/features/recruiter/data/models/job_card_data.dart';
 import 'package:job_finder/features/recruiter/presentation/provider/company/company_profile_controller.dart';
 import 'package:job_finder/features/recruiter/presentation/provider/company/company_profile_state.dart';
@@ -13,7 +15,7 @@ import 'package:job_finder/features/recruiter/presentation/widget/job_card_widge
 import 'package:job_finder/features/recruiter/presentation/widget/recruiter_home_shimmer.dart';
 import 'package:job_finder/core/provider/scroll_provider.dart';
 
-class RecruiterHomePage extends ConsumerWidget {
+class RecruiterHomePage extends HookConsumerWidget {
   const RecruiterHomePage({super.key});
 
   // Tab metadata: label, icon, color
@@ -35,6 +37,22 @@ class RecruiterHomePage extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    useEffect(() {
+      Future.microtask(() {
+        ref.read(notificationControllerProvider.notifier).getNotifications();
+        final state = GoRouterState.of(context);
+        final subTab = state.uri.queryParameters['subTab'];
+        if (subTab != null) {
+          final index = int.tryParse(subTab);
+          if (index != null) {
+            ref.read(recruiterHomeTabProvider.notifier).state = index;
+            // call refresh all job when deep link navigation to ative refresh page
+            ref.read(recruiterJobsControllerProvider.notifier).refreshAllJobs();
+          }
+        }
+      });
+      return null;
+    }, [GoRouterState.of(context).uri.queryParameters['subTab']]);
     final jobsState = ref.watch(recruiterJobsControllerProvider);
     final companyState = ref.watch(companyProfileProvider);
     final activeTab = ref.watch(recruiterHomeTabProvider);
@@ -222,8 +240,12 @@ class RecruiterHomePage extends ConsumerWidget {
     final jobsState = ref.watch(recruiterJobsControllerProvider);
 
     return RefreshIndicator(
-      onRefresh: () =>
+      onRefresh: () async {
+        await Future.wait([
           ref.read(recruiterJobsControllerProvider.notifier).refreshAllJobs(),
+          ref.read(notificationControllerProvider.notifier).getNotifications(),
+        ]);
+      },
       child: jobs.isEmpty
           ? SingleChildScrollView(
               controller: ref.watch(recruiterHomeScrollControllerProvider),

@@ -82,6 +82,31 @@ Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
 
     await FlutterCallkitIncoming.showCallkitIncoming(callKitParams);
     debugPrint('✅ [FCM Background] CallKit shown');
+  } else {
+    // Show static notification for other types (e.g., job approval)
+    final notification = message.notification;
+    final title = notification?.title ?? data['title'];
+    final body = notification?.body ?? data['body'];
+
+    if (title != null || body != null) {
+      debugPrint('🔔 [FCM Background] Showing static notification: $title');
+      // Note: We can't use instance methods here as it's a top-level isolate
+      final local = FlutterLocalNotificationsPlugin();
+      await local.show(
+        id: notification?.hashCode ?? DateTime.now().millisecond,
+        title: title,
+        body: body,
+        payload: data['link']?.toString(), // Added payload for deep linking
+        notificationDetails: const NotificationDetails(
+          android: AndroidNotificationDetails(
+            'high_importance_channel',
+            'High Importance Notifications',
+            importance: Importance.max,
+            priority: Priority.high,
+          ),
+        ),
+      );
+    }
   }
 }
 
@@ -243,10 +268,13 @@ class NotificationService {
       final activeRole = await storage.readRole();
       final targetRole = data['targetRole'] ?? 'Both';
 
-      // Filtering Logic
-      if (targetRole != 'Both' &&
+      // Filtering Logic (Case-insensitive to prevent silent drops)
+      if (targetRole.toString().toLowerCase() != 'both' &&
           activeRole != null &&
-          targetRole != activeRole) {
+          targetRole.toString().toLowerCase() != activeRole.toLowerCase()) {
+        debugPrint(
+          "Notification dropped: targetRole=$targetRole, activeRole=$activeRole",
+        );
         return;
       }
 
@@ -380,7 +408,13 @@ class NotificationService {
     }
 
     // Use push to keep the back stack
-    final String targetPath = link.startsWith('/') ? link : '/$link';
+    String targetPath = link.startsWith('/') ? link : '/$link';
+
+    // If target is recruiter home, force it to the "Active" tab (subTab=0)
+    if (targetPath == '/recruiter') {
+      targetPath = '/recruiter?subTab=0';
+    }
+
     context.push(targetPath);
   }
 

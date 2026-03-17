@@ -491,7 +491,6 @@ class ApplyJobPage extends HookConsumerWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            // Drag handle (visual only as we disabled dragging to force interaction)
             Container(
               width: 40,
               height: 4,
@@ -573,7 +572,10 @@ class ApplyJobPage extends HookConsumerWidget {
                     icon: const Icon(Icons.auto_awesome, size: 20),
                     label: const Text(
                       'Practice Interview with AI',
-                      style: TextStyle(fontWeight: FontWeight.w700, fontSize: 16),
+                      style: TextStyle(
+                        fontWeight: FontWeight.w700,
+                        fontSize: 16,
+                      ),
                     ),
                   ),
                 ),
@@ -583,13 +585,21 @@ class ApplyJobPage extends HookConsumerWidget {
                   height: 52,
                   child: OutlinedButton(
                     style: OutlinedButton.styleFrom(
-                      side: BorderSide(color: successGreen.withValues(alpha: 0.5)),
+                      side: BorderSide(
+                        color: successGreen.withValues(alpha: 0.5),
+                      ),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(16),
                       ),
                     ),
                     onPressed: () {
+                      // Close the dialog FIRST for a smooth transition
+                      Navigator.pop(context);
+                      
+                      // Refresh the data so the new application is there
                       ref.invalidate(myApplicationsProvider);
+                      
+                      // Switch tab and go home
                       ref.read(mainWrapperIndexProvider.notifier).state = 2;
                       context.go(AppPath.jobSeekerHome);
                     },

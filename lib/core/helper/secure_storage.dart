@@ -86,6 +86,16 @@ class TokenStorageImpl implements TokenStorage<String> {
   Future<String?> readRole() async {
     final role = await _service.read(SecureStorageKey.role);
     if (role == null || role.isEmpty) return null;
+
+    // Normalization to ensure internal consistency
+    final lowerRole = role.toLowerCase();
+    if (lowerRole == 'job_finder' || lowerRole == 'job seeker') {
+      return 'Job_finder';
+    }
+    if (lowerRole == 'recruiter' || lowerRole == 'employer') {
+      return 'Recruiter';
+    }
+
     return role;
   }
 

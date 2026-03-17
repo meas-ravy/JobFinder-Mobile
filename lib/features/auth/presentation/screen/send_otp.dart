@@ -78,7 +78,17 @@ class _SendOtpScreenState extends ConsumerState<SendOtpScreen> {
               if (user is Map) {
                 final roles = user['roles'];
                 if (roles is List && roles.isNotEmpty) {
-                  role = roles.first.toString();
+                  final rawRole = roles.first.toString();
+                  // Normalize role to ensure consistency across the app
+                  if (rawRole.toLowerCase() == 'job_finder' ||
+                      rawRole.toLowerCase() == 'job seeker') {
+                    role = 'Job_finder';
+                  } else if (rawRole.toLowerCase() == 'recruiter' ||
+                      rawRole.toLowerCase() == 'employer') {
+                    role = 'Recruiter';
+                  } else {
+                    role = rawRole;
+                  }
                   // Store role if it exists to match the main.dart logic
                   ref.read(tokenStorageProvider).writeRole(role);
                 }

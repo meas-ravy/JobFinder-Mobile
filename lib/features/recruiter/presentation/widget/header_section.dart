@@ -102,8 +102,8 @@ class HeaderSection extends ConsumerWidget {
               ),
               if (unreadCount > 0)
                 Positioned(
-                  right: -2,
-                  top: -2,
+                  right: 1,
+                  top: 1,
                   child: Container(
                     padding: const EdgeInsets.all(4),
                     decoration: BoxDecoration(
@@ -112,8 +112,8 @@ class HeaderSection extends ConsumerWidget {
                       border: Border.all(color: colorScheme.surface, width: 2),
                     ),
                     constraints: const BoxConstraints(
-                      minWidth: 18,
-                      minHeight: 18,
+                      minWidth: 22,
+                      minHeight: 22,
                     ),
                     child: Center(
                       child: Text(
