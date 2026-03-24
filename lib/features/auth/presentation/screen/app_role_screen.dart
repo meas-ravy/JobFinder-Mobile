@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:job_finder/core/theme/app_color.dart';
@@ -12,19 +11,67 @@ import 'package:job_finder/features/job_seeker/presentation/provider/profile_pro
 import 'package:job_finder/shared/widget/role_select_widget.dart';
 import 'package:job_finder/shared/widget/svg_icon.dart';
 
-class AppRoleScreen extends HookConsumerWidget {
+class AppRoleScreen extends ConsumerStatefulWidget {
   const AppRoleScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final selectRole = useState<UserRole?>(null);
+  ConsumerState<AppRoleScreen> createState() => _AppRoleScreenState();
+}
+
+class _AppRoleScreenState extends ConsumerState<AppRoleScreen> {
+  UserRole? _selectedRole;
+
+  Future<void> _onContinue() async {
+    final roleString = _selectedRole == UserRole.jobSeeker
+        ? 'Job_finder'
+        : 'Recruiter';
+
+    final ok = await ref
+        .read(authControllerProvider.notifier)
+        .selectRole(roleString);
+    if (!mounted) return;
+
+    if (!ok) {
+      final errorMessage = ref.read(authControllerProvider).errorMessage;
+      _error(context, errorMessage);
+      return;
+    }
+
+    if (_selectedRole == UserRole.jobSeeker) {
+      final profileController = ref.read(profileControllerProvider.notifier);
+      await profileController.fetchProfile();
+      if (!mounted) return;
+
+      final profile = ref.read(profileControllerProvider).profile;
+
+      if (profile == null ||
+          profile.fullName == null ||
+          profile.fullName!.isEmpty) {
+        profileController.markSetupShown();
+        context.go(AppPath.setupProfile);
+      } else {
+        context.go(AppPath.jobSeekerHome);
+      }
+    } else {
+      context.go(AppPath.recruiterHome);
+    }
+  }
+
+  void _error(BuildContext context, String? message) {
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text(message ?? "Error selete role")));
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final authState = ref.watch(authControllerProvider);
 
     return Scaffold(
       body: Column(
         children: [
           const SizedBox(height: 75),
-          logoSection(context),
+          _logoSection(context),
           const SizedBox(height: 32),
           Container(height: 1.5, color: Colors.grey.withValues(alpha: 0.08)),
           const SizedBox(height: 45),
@@ -34,22 +81,24 @@ class AppRoleScreen extends HookConsumerWidget {
               children: [
                 Expanded(
                   child: RoleSelectWidget(
-                    isSelected: selectRole.value == UserRole.jobSeeker,
+                    isSelected: _selectedRole == UserRole.jobSeeker,
                     title: 'Find a job',
                     subtitle: 'Find your dream job here',
                     icon: AppIcon.applicationBold,
                     iconColor: AppColor.findJob,
                     bagColor: Colors.blue,
-                    onTap: () => selectRole.value = UserRole.jobSeeker,
+                    onTap: () =>
+                        setState(() => _selectedRole = UserRole.jobSeeker),
                   ),
                 ),
-                SizedBox(width: 16),
+                const SizedBox(width: 16),
                 Expanded(
                   child: RoleSelectWidget(
-                    isSelected: selectRole.value == UserRole.employer,
+                    isSelected: _selectedRole == UserRole.employer,
                     title: 'Find an Employee',
                     subtitle: 'I want to find employees.',
-                    onTap: () => selectRole.value = UserRole.employer,
+                    onTap: () =>
+                        setState(() => _selectedRole = UserRole.employer),
                     icon: AppIcon.profileBold,
                     iconColor: AppColor.findEmp,
                     bagColor: Colors.orange,
@@ -69,67 +118,20 @@ class AppRoleScreen extends HookConsumerWidget {
           child: PrimaryButton(
             label: 'Continue',
             isLoading: authState.isLoading,
-            onPressed: selectRole.value == null
-                ? null
-                : () {
-                    () async {
-                      final roleString = selectRole.value == UserRole.jobSeeker
-                          ? 'Job_finder'
-                          : 'Recruiter';
-
-                      final ok = await ref
-                          .read(authControllerProvider.notifier)
-                          .selectRole(roleString);
-                      if (!context.mounted) return;
-
-                      if (!ok) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(
-                            content: Text(
-                              authState.errorMessage ?? 'Failed to select role',
-                            ),
-                          ),
-                        );
-                        return;
-                      }
-
-                      if (selectRole.value == UserRole.jobSeeker) {
-                        // Check if profile is empty
-                        final profileController = ref.read(
-                          profileControllerProvider.notifier,
-                        );
-                        await profileController.fetchProfile();
-                        final profile = ref
-                            .read(profileControllerProvider)
-                            .profile;
-
-                        if (profile == null ||
-                            profile.fullName == null ||
-                            profile.fullName!.isEmpty) {
-                          profileController.markSetupShown();
-                          context.go(AppPath.setupProfile);
-                        } else {
-                          context.go(AppPath.jobSeekerHome);
-                        }
-                      } else {
-                        context.go(AppPath.recruiterHome);
-                      }
-                    }();
-                  },
+            onPressed: _selectedRole == null ? null : _onContinue,
           ),
         ),
       ),
     );
   }
 
-  Widget logoSection(BuildContext context) {
+  Widget _logoSection(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 24),
       child: Column(
         children: [
           AppSvgIcon(assetName: AppIcon.appLogoTwo, size: 82),
           const SizedBox(height: 60),
-
           const Align(
             alignment: Alignment.centerLeft,
             child: Text(
